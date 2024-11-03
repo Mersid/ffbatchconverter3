@@ -1,7 +1,7 @@
-import { ReactElement, useState } from "react"
+import { ReactElement, useState } from "react";
 
 export default function Versions(): ReactElement {
-    const [versions] = useState(window.electron.process.versions)
+    const [versions] = useState(window.electron.process.versions);
 
     return (
         <ul className="versions">
@@ -9,5 +9,5 @@ export default function Versions(): ReactElement {
             <li className="chrome-version">Chromium v{versions.chrome}</li>
             <li className="node-version">Node v{versions.node}</li>
         </ul>
-    )
+    );
 }

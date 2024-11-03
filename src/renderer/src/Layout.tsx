@@ -1,7 +1,7 @@
-import { ReactElement } from "react"
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import Sidebar from "@renderer/components/Sidebar"
-import { Outlet } from "react-router-dom"
+import { ReactElement } from "react";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import Sidebar from "@renderer/components/Sidebar";
+import { Outlet } from "react-router-dom";
 
 export default function Layout(): ReactElement {
     return (
@@ -12,5 +12,5 @@ export default function Layout(): ReactElement {
                 <Outlet />
             </main>
         </SidebarProvider>
-    )
+    );
 }

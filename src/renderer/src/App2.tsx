@@ -1,11 +1,11 @@
 import { ReactElement } from "react";
 
-export default function App(): ReactElement {
+export default function App2(): ReactElement {
     const ipcHandle = (): void => window.electron.ipcRenderer.send("ping");
 
     return (
         <>
-            <p>asdf</p>
+            <p>Hello world!</p>
         </>
     );
 }

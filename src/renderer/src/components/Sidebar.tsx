@@ -1,39 +1,30 @@
-import {
-    Sidebar as ShadcnSidebar,
-    SidebarContent,
-    SidebarFooter,
-    SidebarGroup,
-    SidebarGroupContent,
-    SidebarGroupLabel,
-    SidebarHeader,
-    SidebarMenu
-} from "@/components/ui/sidebar"
-import { ReactElement } from "react"
+import { Sidebar as SidebarComponent, SidebarContent, SidebarFooter } from "@/components/ui/sidebar";
+import { ReactElement } from "react";
+import { Link } from "react-router-dom";
+import { FaHome } from "react-icons/fa";
+import { IconContext } from "react-icons";
 
 export default function Sidebar(): ReactElement {
     return (
-        <ShadcnSidebar>
-            <SidebarHeader>
-                <h1>Header</h1>
-            </SidebarHeader>
-            <SidebarContent>
-                <SidebarGroup>
-                    <p>Group 1</p>
-                </SidebarGroup>
-                <SidebarGroup>
-                    <SidebarGroupLabel>Group 2</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
-                            <p>Menu 1</p>
-                            <p>Menu 2</p>
-                            <p>Menu 3</p>
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
-            </SidebarContent>
-            <SidebarFooter>
-                <p>Footer</p>
-            </SidebarFooter>
-        </ShadcnSidebar>
-    )
+        <IconContext.Provider value={{ color: "gray" }}>
+            <SidebarComponent>
+                <SidebarContent>
+                    <ul>
+                        <li>
+                            <Link
+                                to={"/home"}
+                                className={"py-2 pl-4 hover:bg-gray-300 text-gray-600 flex items-center"}
+                            >
+                                <FaHome className={"mr-2"} />
+                                Home
+                            </Link>
+                        </li>
+                    </ul>
+                </SidebarContent>
+                <SidebarFooter>
+                    <p>Put options here</p>
+                </SidebarFooter>
+            </SidebarComponent>
+        </IconContext.Provider>
+    );
 }

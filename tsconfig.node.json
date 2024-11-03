@@ -3,10 +3,12 @@
     "include": [
         "electron.vite.config.*",
         "src/main/**/*",
-        "src/preload/**/*"
+        "src/preload/**/*",
+        "src/shared/**/*"
     ],
     "compilerOptions": {
         "composite": true,
+        "noUnusedLocals": false,
         "types": [
             "electron-vite/node"
         ]
