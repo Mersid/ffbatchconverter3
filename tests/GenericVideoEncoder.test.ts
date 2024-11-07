@@ -3,10 +3,15 @@ import { GenericVideoEncoder } from "../src/main/encoders/encoders/GenericVideoE
 import { tmpdir } from "os";
 
 describe("Test generic video encoder", async () => {
-    test("Test that the generic video encoder can encode a sample video.", async () => {
+    test("Test that the generic video encoder can encode a sample video.", { timeout: 0 }, async () => {
         const tempDir = tmpdir();
         const encoder = await GenericVideoEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpat.webm");
         await encoder.start("-c:v libx264 -c:a aac", `${tempDir}/peepoheadpat.mp4`);
+
+        expect(encoder.state).toBe("Success");
+
+        // This tests that the current duration isn't broken and stuck at 0.
+        expect(encoder.currentDuration).toBeGreaterThan(0);
     });
 
     test("Test that the generic video encoder can gracefully exit from an invalid video.", async () => {

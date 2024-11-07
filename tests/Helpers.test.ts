@@ -1,17 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 import { findCommand } from "../src/main/encoders/misc/Helpers";
 
-// vi.mock("node:child_process", () => ({
-//     spawnSync: vi.fn((command, args) => {
-//         // Return a predefined output
-//         return {
-//             stdout: '{"format": "json"}',
-//             stderr: "",
-//             status: 0
-//         };
-//     })
-// }));
-
 describe("Test helpers", async () => {
     describe("Test findCommand", async () => {
         test("Test that a common, OS-installed command, can be found.", async () => {

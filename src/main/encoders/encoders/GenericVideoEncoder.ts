@@ -4,6 +4,7 @@ import { probe } from "../misc/Helpers";
 import { stat } from "node:fs/promises";
 import { ChildProcessWithoutNullStreams } from "child_process";
 import sleep from "../../../shared/functions/sleep";
+import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
 
 export type GenericVideoEncoderOptions = {
     ffprobePath: string;
@@ -20,7 +21,7 @@ export class GenericVideoEncoder {
 
     private log: string = "";
 
-    private currentDuration: number = 0;
+    private _currentDuration: number = 0;
     private duration: number = 0;
 
     /**
@@ -114,7 +115,7 @@ export class GenericVideoEncoder {
         if (data.includes("time=")) {
             const time = data.split("time=")[1].split(" ")[0];
 
-            this.currentDuration = parseFloat(time);
+            this.currentDuration = formatFFmpegTimeToSeconds(time);
 
             if (isNaN(this.currentDuration)) {
                 this.logLine("Could not parse the current duration of the video.");
@@ -128,11 +129,19 @@ export class GenericVideoEncoder {
         this.log += `>> ${data}\n`;
     }
 
+    public get state(): EncodingState {
+        return this._state;
+    }
+
     private set state(value: EncodingState) {
         this._state = value;
     }
 
-    public get state(): EncodingState {
-        return this._state;
+    public get currentDuration(): number {
+        return this._currentDuration;
+    }
+
+    private set currentDuration(value: number) {
+        this._currentDuration = value;
     }
 }
