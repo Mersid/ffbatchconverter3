@@ -3,7 +3,6 @@ import { EncodingState } from "../misc/EncodingState";
 import { probe } from "../misc/Helpers";
 import { stat } from "node:fs/promises";
 import { ChildProcessWithoutNullStreams } from "child_process";
-import sleep from "../../../shared/functions/sleep";
 import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
 
 export type GenericVideoEncoderOptions = {
@@ -44,11 +43,7 @@ export class GenericVideoEncoder {
         this.inputFilePath = inputFilePath;
     }
 
-    public static async createNew(
-        ffprobePath: string,
-        ffmpegPath: string,
-        inputFilePath: string
-    ): Promise<GenericVideoEncoder> {
+    public static async createNew(ffprobePath: string, ffmpegPath: string, inputFilePath: string): Promise<GenericVideoEncoder> {
         const encoder = new GenericVideoEncoder(ffprobePath, ffmpegPath, inputFilePath);
         const probeData = probe(ffprobePath, inputFilePath);
 
@@ -78,7 +73,7 @@ export class GenericVideoEncoder {
     }
 
     public async start(ffmpegArguments: string, outputFilePath: string): Promise<void> {
-        const promise = new Promise<void>((resolve, reject) => {
+        const promise = new Promise<void>((resolve, _) => {
             this.resolve = resolve;
         });
 

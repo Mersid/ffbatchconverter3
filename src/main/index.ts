@@ -2,9 +2,6 @@ import { app, BrowserWindow, ipcMain, shell } from "electron";
 import { join } from "path";
 import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
-import { spawn } from "node:child_process";
-import sleep from "../shared/functions/sleep";
-import probe from "./encoders/misc/Probe";
 
 async function createWindow(): Promise<void> {
     // Create the browser window.

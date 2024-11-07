@@ -11,13 +11,15 @@ export default function Sidebar(): ReactElement {
                 <SidebarContent>
                     <ul>
                         <li>
-                            <Link
-                                to={"/home"}
-                                className={"py-2 pl-4 hover:bg-gray-300 text-gray-600 flex items-center"}
-                            >
+                            <Link to={"/home"} className={"py-2 pl-4 hover:bg-gray-300 text-gray-600 flex items-center"}>
                                 <FaHome className={"mr-2"} />
                                 Home
                             </Link>
+
+                            <button className={"py-2 pl-4 hover:bg-gray-300 text-gray-600 flex items-center w-full"} onClick={() => console.log("Hello world")}>
+                                <FaHome className={"mr-2"} />
+                                Click me!
+                            </button>
                         </li>
                     </ul>
                 </SidebarContent>
