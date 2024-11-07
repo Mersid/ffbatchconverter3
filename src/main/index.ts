@@ -4,6 +4,7 @@ import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import { spawn } from "node:child_process";
 import sleep from "../shared/functions/sleep";
+import probe from "./encoders/misc/Probe";
 
 async function createWindow(): Promise<void> {
     // Create the browser window.
@@ -23,7 +24,7 @@ async function createWindow(): Promise<void> {
         mainWindow.show();
     });
 
-    mainWindow.webContents.setWindowOpenHandler((details) => {
+    mainWindow.webContents.setWindowOpenHandler(details => {
         shell.openExternal(details.url);
         return { action: "deny" };
     });
@@ -61,22 +62,6 @@ app.whenReady().then(async () => {
         // dock icon is clicked and there are no other windows open.
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
-
-    const test = spawn("ffmpeg -y -i _test.mp4 -c:v libx264 -c:a aac _out.mp4", {
-        shell: true
-    });
-    await sleep(5000);
-    test.stdout.on("data", (data) => {
-        console.log(`stdout: ${data}`);
-    });
-    test.stderr.on("data", (data) => {
-        console.log(`stderr: ${data}`);
-    });
-
-    test.on("error", (error) => {
-        console.error(`error: ${error.message}`);
-    });
-    console.log("test started");
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
