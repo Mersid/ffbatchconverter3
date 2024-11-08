@@ -1,22 +1,20 @@
-import { spawn } from "node:child_process";
 import { EncodingState } from "../misc/EncodingState";
-import { probe } from "../misc/Helpers";
-import { stat } from "node:fs/promises";
 import { ChildProcessWithoutNullStreams } from "child_process";
+import { probe } from "../misc/Helpers";
+import { stat } from "fs/promises";
+import { spawn } from "node:child_process";
 import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
 
-export type GenericVideoEncoderOptions = {
-    ffprobePath: string;
-    ffmpegPath: string;
-    inputFilePath: string;
-};
-
-export class GenericVideoEncoder {
+/**
+ * FFmpeg encoder that uses the built-in VMAF scoring model to score the quality of the encoded video,
+ * given a reference video and a distorted (encoded) video.
+ */
+export class VMAFScoringEncoder {
     private ffprobePath: string;
     private ffmpegPath: string;
 
-    private inputFilePath: string;
-    private outputFilePath: string = "";
+    private referenceFilePath: string;
+    private distortedFilePath: string = "";
 
     private log: string = "";
 
@@ -31,24 +29,30 @@ export class GenericVideoEncoder {
     private _state: EncodingState = "Pending";
 
     /**
+     * The VMAF score of the encoded video.
+     */
+    private _vmafScore: number = 0;
+
+    /**
      * Function that resolves the promise provided by the start method. This is undefined until the start method is called.
      */
     private resolve: ((value: void | PromiseLike<void>) => void) | undefined = undefined;
 
     private process: ChildProcessWithoutNullStreams | undefined = undefined;
 
-    private constructor(ffprobePath: string, ffmpegPath: string, inputFilePath: string) {
+    private constructor(ffprobePath: string, ffmpegPath: string, referenceFilePath: string) {
         this.ffprobePath = ffprobePath;
         this.ffmpegPath = ffmpegPath;
-        this.inputFilePath = inputFilePath;
+        this.referenceFilePath = referenceFilePath;
     }
 
-    public static async createNew(ffprobePath: string, ffmpegPath: string, inputFilePath: string): Promise<GenericVideoEncoder> {
-        const encoder = new GenericVideoEncoder(ffprobePath, ffmpegPath, inputFilePath);
-        const probeData = probe(ffprobePath, inputFilePath);
+    public static async createNew(ffprobePath: string, ffmpegPath: string, referenceFilePath: string) {
+        const encoder = new VMAFScoringEncoder(ffprobePath, ffmpegPath, referenceFilePath);
+
+        const probeData = probe(ffprobePath, referenceFilePath);
 
         try {
-            encoder.fileSize = (await stat(inputFilePath)).size;
+            encoder.fileSize = (await stat(referenceFilePath)).size;
         } catch (e) {
             encoder.logLine("Could not determine the size of the input file. It is likely that the file does not exist.");
             encoder.logLine((e as Error).stack ?? "No stack trace!");
@@ -66,37 +70,34 @@ export class GenericVideoEncoder {
             encoder.state = "Error";
         } else {
             encoder.duration = duration;
-            encoder.state = "Pending";
         }
 
         return encoder;
     }
 
-    public async start(ffmpegArguments: string, outputFilePath: string): Promise<void> {
+    public async start(distortedFilePath: string): Promise<void> {
         const promise = new Promise<void>((resolve, _) => {
             this.resolve = resolve;
         });
 
-        this.outputFilePath = outputFilePath;
+        this.distortedFilePath = distortedFilePath;
 
         if (this.state != "Pending") {
             this.logLine(`Cannot start encoding when the state is not pending. Current state: ${this.state}`);
             throw new Error(`Cannot start encoding when the state is not pending. Current state: ${this.state}`);
         }
 
-        this.process = spawn(`"${this.ffmpegPath}" -y -i "${this.inputFilePath}" ${ffmpegArguments} "${outputFilePath}"`, {
-            shell: true
+        this.process = spawn(
+            `"${this.ffmpegPath}" -y -i "${this.referenceFilePath}" -i "${this.distortedFilePath}" -filter_complex "[0:v]setpts=PTS-STARTPTS[reference]; [1:v]setpts=PTS-STARTPTS[distorted]; [distorted][reference]libvmaf=model=version=vmaf_v0.6.1:n_threads=30" -f null -"`,
+            {
+                shell: true
         });
 
         this.state = "Encoding";
 
         this.process.stdout.on("data", data => this.onProcessReceivedData(data.toString()));
         this.process.stderr.on("data", data => this.onProcessReceivedData(data.toString()));
-        this.process.on("close", async code => {
-            this.state = code == 0 ? "Success" : "Error";
-            this.logLine(`Process exited with code ${code}`);
-            this.resolve?.();
-        });
+        this.process.on("close", code => this.onProcessExit(code as number));
 
         return promise;
     }
@@ -120,6 +121,24 @@ export class GenericVideoEncoder {
         this.log += data;
     }
 
+    private onProcessExit(code: number) {
+        this.state = code == 0 ? "Success" : "Error";
+        this.logLine(`Process exited with code ${code}`);
+
+        const regex = /(?<=VMAF score: )[0-9.]+/;
+        const vmafScoreString = this.log.match(regex)?.[0];
+        const vmafScore = parseFloat(vmafScoreString ?? "0");
+        if (isNaN(vmafScore)) {
+            this.logLine("Could not parse the VMAF score from the output.");
+            this.state = "Error";
+        } else {
+            this.logLine(`VMAF score: ${vmafScore}`);
+            this.vmafScore = vmafScore;
+        }
+
+        this.resolve?.();
+    }
+
     private logLine(data: string): void {
         this.log += `>> ${data}\n`;
     }
@@ -138,5 +157,13 @@ export class GenericVideoEncoder {
 
     private set currentDuration(value: number) {
         this._currentDuration = value;
+    }
+
+    public get vmafScore(): number {
+        return this._vmafScore;
+    }
+
+    private set vmafScore(value: number) {
+        this._vmafScore = value;
     }
 }

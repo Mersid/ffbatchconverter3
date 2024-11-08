@@ -3,7 +3,7 @@ import { GenericVideoEncoder } from "../src/main/encoders/encoders/GenericVideoE
 import { tmpdir } from "os";
 
 describe("Test generic video encoder", async () => {
-    test("Test that the generic video encoder can encode a sample video.", { timeout: 0 }, async () => {
+    test("Test that the generic video encoder can encode a sample video.", { timeout: 10000 }, async () => {
         const tempDir = tmpdir();
         const encoder = await GenericVideoEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpat.webm");
         await encoder.start("-c:v libx264 -c:a aac", `${tempDir}/peepoheadpat.mp4`);
