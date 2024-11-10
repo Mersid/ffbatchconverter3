@@ -4,12 +4,18 @@ import { probe } from "../misc/Helpers";
 import { stat } from "fs/promises";
 import { spawn } from "node:child_process";
 import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
+import EventEmitter from "events";
+import { Emitter } from "strict-event-emitter";
+
+type Events = {
+    log: [data: string, internal: boolean];
+};
 
 /**
  * FFmpeg encoder that uses the built-in VMAF scoring model to score the quality of the encoded video,
  * given a reference video and a distorted (encoded) video.
  */
-export class VMAFScoringEncoder {
+export class VMAFScoringEncoder extends Emitter<Events> {
     private ffprobePath: string;
     private ffmpegPath: string;
 
@@ -46,6 +52,7 @@ export class VMAFScoringEncoder {
     public readonly updateCallback: () => void;
 
     private constructor(ffprobePath: string, ffmpegPath: string, referenceFilePath: string, updateCallback: () => void) {
+        super();
         this.ffprobePath = ffprobePath;
         this.ffmpegPath = ffmpegPath;
         this.referenceFilePath = referenceFilePath;
@@ -66,7 +73,7 @@ export class VMAFScoringEncoder {
             return encoder;
         }
 
-        encoder.log += probeData + "\n";
+        encoder.logInternal(probeData + "\n");
 
         const json = JSON.parse(probeData);
         const duration = json.format?.duration as number | undefined;
@@ -124,7 +131,7 @@ export class VMAFScoringEncoder {
             }
         }
 
-        this.log += data;
+        this.logInternal(data);
 
         this.updateCallback();
     }
@@ -148,8 +155,24 @@ export class VMAFScoringEncoder {
         this.resolve?.();
     }
 
+    /**
+     * Logs a line to the log. Use this for log data that does not come from ffmpeg or ffprobe.
+     * @param data Data to log.
+     * @private
+     */
     private logLine(data: string): void {
         this.log += `>> ${data}\n`;
+        this.emit("log", data, false);
+    }
+
+    /**
+     * Logs data to the log. Use this for log data that comes from ffmpeg or ffprobe.
+     * @param data Data to log.
+     * @private
+     */
+    private logInternal(data: string): void {
+        this.log += data;
+        this.emit("log", data, true);
     }
 
     public get state(): EncodingState {

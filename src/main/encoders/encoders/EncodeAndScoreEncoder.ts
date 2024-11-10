@@ -4,8 +4,14 @@ import { probe } from "../misc/Helpers";
 import { stat } from "node:fs/promises";
 import { GenericVideoEncoder } from "./GenericVideoEncoder";
 import { VMAFScoringEncoder } from "./VMAFScoringEncoder";
+import { EventEmitter } from "node:events";
+import { Emitter } from "strict-event-emitter";
 
-export class EncodeAndScoreEncoder {
+type Events = {
+    log: [data: string, internal: boolean];
+};
+
+export class EncodeAndScoreEncoder extends Emitter<Events> {
     private ffprobePath: string;
     private ffmpegPath: string;
 
@@ -42,6 +48,7 @@ export class EncodeAndScoreEncoder {
     public readonly updateCallback: () => void;
 
     private constructor(ffprobePath: string, ffmpegPath: string, inputFilePath: string, updateCallback: () => void) {
+        super();
         this.ffprobePath = ffprobePath;
         this.ffmpegPath = ffmpegPath;
         this.inputFilePath = inputFilePath;
@@ -80,15 +87,18 @@ export class EncodeAndScoreEncoder {
         this.outputFilePath = outputFilePath;
 
         this.encoder = await GenericVideoEncoder.createNew(this.ffprobePath, this.ffmpegPath, this.inputFilePath, () => this.onChildUpdate());
+        this.encoder.on("log", (data, internal) => this.onChildLog(data, internal));
+
         await this.encoder.start(ffmpegArguments, outputFilePath);
 
         if (this.encoder.state != "Success") {
-            // TODO: Integrate logs
             this.state = "Error";
             return;
         }
 
         this.scorer = await VMAFScoringEncoder.createNew(this.ffprobePath, this.ffmpegPath, outputFilePath, () => this.onChildUpdate());
+        this.scorer.on("log", (data, internal) => this.onChildLog(data, internal));
+
         await this.scorer.start(this.inputFilePath);
 
         if (this.scorer.state != "Success") {
@@ -107,8 +117,32 @@ export class EncodeAndScoreEncoder {
         this.updateCallback();
     }
 
+    private onChildLog(data: string, internal: boolean) {
+        if (internal) {
+            this.logInternal(data);
+        } else {
+            this.logLine(data);
+        }
+    }
+
+    /**
+     * Logs a line to the log. Use this for log data that does not come from ffmpeg or ffprobe.
+     * @param data Data to log.
+     * @private
+     */
     private logLine(data: string): void {
         this.log += `>> ${data}\n`;
+        this.emit("log", data, false);
+    }
+
+    /**
+     * Logs data to the log. Use this for log data that comes from ffmpeg or ffprobe.
+     * @param data Data to log.
+     * @private
+     */
+    private logInternal(data: string): void {
+        this.log += data;
+        this.emit("log", data, true);
     }
 
     public get state(): EncodingState {

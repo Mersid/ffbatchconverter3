@@ -4,8 +4,14 @@ import { probe } from "../misc/Helpers";
 import { stat } from "node:fs/promises";
 import { ChildProcessWithoutNullStreams } from "child_process";
 import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
+import { EventEmitter } from "node:events";
+import { Emitter } from "strict-event-emitter";
 
-export class GenericVideoEncoder {
+type Events = {
+    log: [data: string, internal: boolean];
+};
+
+export class GenericVideoEncoder extends Emitter<Events> {
     private ffprobePath: string;
     private ffmpegPath: string;
 
@@ -37,6 +43,7 @@ export class GenericVideoEncoder {
     public readonly updateCallback: () => void;
 
     private constructor(ffprobePath: string, ffmpegPath: string, inputFilePath: string, updateCallback: () => void) {
+        super();
         this.ffprobePath = ffprobePath;
         this.ffmpegPath = ffmpegPath;
         this.inputFilePath = inputFilePath;
@@ -56,7 +63,7 @@ export class GenericVideoEncoder {
             return encoder;
         }
 
-        encoder.log += probeData + "\n";
+        encoder.logInternal(probeData + "\n");
 
         const json = JSON.parse(probeData);
         const duration = json.format?.duration as number | undefined;
@@ -121,13 +128,29 @@ export class GenericVideoEncoder {
             }
         }
 
-        this.log += data;
+        this.logInternal(data);
 
         this.updateCallback();
     }
 
+    /**
+     * Logs a line to the log. Use this for log data that does not come from ffmpeg or ffprobe.
+     * @param data Data to log.
+     * @private
+     */
     private logLine(data: string): void {
         this.log += `>> ${data}\n`;
+        this.emit("log", data, false);
+    }
+
+    /**
+     * Logs data to the log. Use this for log data that comes from ffmpeg or ffprobe.
+     * @param data Data to log.
+     * @private
+     */
+    private logInternal(data: string): void {
+        this.log += data;
+        this.emit("log", data, true);
     }
 
     public get state(): EncodingState {
