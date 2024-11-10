@@ -1,11 +1,11 @@
-import { spawn } from "node:child_process";
 import { EncodingState } from "../misc/EncodingState";
+import { ChildProcessWithoutNullStreams } from "child_process";
 import { probe } from "../misc/Helpers";
 import { stat } from "node:fs/promises";
-import { ChildProcessWithoutNullStreams } from "child_process";
-import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
+import { GenericVideoEncoder } from "./GenericVideoEncoder";
+import { VMAFScoringEncoder } from "./VMAFScoringEncoder";
 
-export class GenericVideoEncoder {
+export class EncodeAndScoreEncoder {
     private ffprobePath: string;
     private ffmpegPath: string;
 
@@ -29,7 +29,12 @@ export class GenericVideoEncoder {
      */
     private resolve: ((value: void | PromiseLike<void>) => void) | undefined = undefined;
 
-    private process: ChildProcessWithoutNullStreams | undefined = undefined;
+    private encoder: GenericVideoEncoder | undefined = undefined;
+
+    /**
+     * Scorer is undefined until the encoding is complete.
+     */
+    private scorer: VMAFScoringEncoder | undefined = undefined;
 
     /**
      * Callback that is called whenever the encoder receives new information. This is a good time for listeners to check the state.
@@ -43,8 +48,8 @@ export class GenericVideoEncoder {
         this.updateCallback = updateCallback;
     }
 
-    public static async createNew(ffprobePath: string, ffmpegPath: string, inputFilePath: string, updateCallback: () => void): Promise<GenericVideoEncoder> {
-        const encoder = new GenericVideoEncoder(ffprobePath, ffmpegPath, inputFilePath, updateCallback);
+    public static async createNew(ffprobePath: string, ffmpegPath: string, inputFilePath: string, updateCallback: () => void): Promise<EncodeAndScoreEncoder> {
+        const encoder = new EncodeAndScoreEncoder(ffprobePath, ffmpegPath, inputFilePath, updateCallback);
         const probeData = probe(ffprobePath, inputFilePath);
 
         try {
@@ -62,67 +67,43 @@ export class GenericVideoEncoder {
         const duration = json.format?.duration as number | undefined;
 
         if (duration == undefined) {
-            encoder.logLine("Could not determine duration of the video.");
+            encoder.logLine("Could not determine the duration of the input file.");
             encoder.state = "Error";
-        } else {
-            encoder.duration = duration;
-            encoder.state = "Pending";
+            return encoder;
         }
 
+        encoder.duration = duration;
         return encoder;
     }
 
-    /**
-     * Starts encoding the video with the given ffmpeg arguments. The promise resolves when the encoding is complete.
-     */
     public async start(ffmpegArguments: string, outputFilePath: string): Promise<void> {
-        const promise = new Promise<void>((resolve, _) => {
-            this.resolve = resolve;
-        });
-
         this.outputFilePath = outputFilePath;
 
-        if (this.state != "Pending") {
-            this.logLine(`Cannot start encoding when the state is not pending. Current state: ${this.state}`);
-            throw new Error(`Cannot start encoding when the state is not pending. Current state: ${this.state}`);
-        }
+        this.encoder = await GenericVideoEncoder.createNew(this.ffprobePath, this.ffmpegPath, this.inputFilePath, () => this.onChildUpdate());
+        await this.encoder.start(ffmpegArguments, outputFilePath);
 
-        this.process = spawn(`"${this.ffmpegPath}" -y -i "${this.inputFilePath}" ${ffmpegArguments} "${outputFilePath}"`, {
-            shell: true
-        });
-
-        this.state = "Encoding";
-
-        this.process.stdout.on("data", data => this.onProcessReceivedData(data.toString()));
-        this.process.stderr.on("data", data => this.onProcessReceivedData(data.toString()));
-        this.process.on("close", async code => {
-            this.state = code == 0 ? "Success" : "Error";
-            this.logLine(`Process exited with code ${code}`);
-            this.updateCallback();
-            this.resolve?.();
-        });
-
-        return promise;
-    }
-
-    private onProcessReceivedData(data: string) {
-        if (this.state != "Encoding") {
+        if (this.encoder.state != "Success") {
+            // TODO: Integrate logs
+            this.state = "Error";
             return;
         }
 
-        // Extract timestamp
-        if (data.includes("time=")) {
-            const time = data.split("time=")[1].split(" ")[0];
+        this.scorer = await VMAFScoringEncoder.createNew(this.ffprobePath, this.ffmpegPath, outputFilePath, () => this.onChildUpdate());
+        await this.scorer.start(this.inputFilePath);
 
-            this.currentDuration = formatFFmpegTimeToSeconds(time);
-
-            if (isNaN(this.currentDuration)) {
-                this.logLine("Could not parse the current duration of the video.");
-            }
+        if (this.scorer.state != "Success") {
+            this.state = "Error";
+            return;
         }
 
-        this.log += data;
+        this.logLine(`Encoding and scoring complete. Score is ${this.scorer.vmafScore}.`);
 
+        this.state = "Success";
+        this.updateCallback();
+    }
+
+    private onChildUpdate() {
+        this.currentDuration = this.scorer?.currentDuration ?? this.encoder?.currentDuration ?? 0;
         this.updateCallback();
     }
 

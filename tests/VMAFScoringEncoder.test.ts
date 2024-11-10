@@ -5,7 +5,7 @@ import { VMAFScoringEncoder } from "../src/main/encoders/encoders/VMAFScoringEnc
 describe("Test VMAF scoring encoder", async () => {
     test("Test that the VMAF scoring encoder can score a sample video.", { timeout: 10000 }, async () => {
         const tempDir = tmpdir();
-        const encoder = await VMAFScoringEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpat.webm");
+        const encoder = await VMAFScoringEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpat.webm", () => {});
         await encoder.start("./tests/resources/distorted peepoheadpat.mp4");
 
         expect(encoder.state).toBe("Success");
@@ -21,7 +21,7 @@ describe("Test VMAF scoring encoder", async () => {
         const tempDir = tmpdir();
 
         // Notice that the requested file doesn't actually exist.
-        const encoder = await VMAFScoringEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpatbutitsnotvalid.webm");
+        const encoder = await VMAFScoringEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpatbutitsnotvalid.webm", () => {});
 
         // Since the above video is not valid, it should be in an error state.
         expect(encoder.state).toBe("Error");

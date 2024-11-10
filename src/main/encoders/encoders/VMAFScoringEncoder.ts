@@ -40,14 +40,20 @@ export class VMAFScoringEncoder {
 
     private process: ChildProcessWithoutNullStreams | undefined = undefined;
 
-    private constructor(ffprobePath: string, ffmpegPath: string, referenceFilePath: string) {
+    /**
+     * Callback that is called whenever the encoder receives new information. This is a good time for listeners to check the state.
+     */
+    public readonly updateCallback: () => void;
+
+    private constructor(ffprobePath: string, ffmpegPath: string, referenceFilePath: string, updateCallback: () => void) {
         this.ffprobePath = ffprobePath;
         this.ffmpegPath = ffmpegPath;
         this.referenceFilePath = referenceFilePath;
+        this.updateCallback = updateCallback;
     }
 
-    public static async createNew(ffprobePath: string, ffmpegPath: string, referenceFilePath: string) {
-        const encoder = new VMAFScoringEncoder(ffprobePath, ffmpegPath, referenceFilePath);
+    public static async createNew(ffprobePath: string, ffmpegPath: string, referenceFilePath: string, updateCallback: () => void) {
+        const encoder = new VMAFScoringEncoder(ffprobePath, ffmpegPath, referenceFilePath, updateCallback);
 
         const probeData = probe(ffprobePath, referenceFilePath);
 
@@ -119,6 +125,8 @@ export class VMAFScoringEncoder {
         }
 
         this.log += data;
+
+        this.updateCallback();
     }
 
     private onProcessExit(code: number) {
@@ -136,6 +144,7 @@ export class VMAFScoringEncoder {
             this.vmafScore = vmafScore;
         }
 
+        this.updateCallback();
         this.resolve?.();
     }
 
