@@ -46,53 +46,15 @@ describe("Test encode and score encoder", async () => {
 
     test("Test that the target encoder fails appropriately when a CRF of 0 still produces a VMAF score below the target threshold.", async () => {
         const encoder = await VMAFTargetVideoEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpat.webm", tempDir);
-        const child = vi.spyOn(VMAFTargetVideoEncoder.prototype, "encoder", "get");
-        const x = 8;
+        await encoder.start("-c:a aac", false, 99, `${tempDir}/peepoheadpat_targeted_0.mp4`);
+
+        expect(encoder.state).toBe("Error");
     });
 
     test("Test that the target encoder fails appropriately when a CRF of 51 still produces a VMAF score above the target threshold.", async () => {
-        // TODO: Write this test case.
-        expect(true).toBe(false);
+        const encoder = await VMAFTargetVideoEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpat.webm", tempDir);
+        await encoder.start("-c:a aac", false, 1, `${tempDir}/peepoheadpat_targeted_51.mp4`);
+
+        expect(encoder.state).toBe("Error");
     });
-});
-
-describe("VMAFTargetVideoEncoder", async () => {
-    let encoderMock: VMAFTargetVideoEncoder;
-    const tempDir = `${tmpdir()}/ffbatchconverter3_test`;
-
-    beforeEach(async () => {
-        // Create an instance of the VMAFTargetVideoEncoder class
-        encoderMock = await VMAFTargetVideoEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpat.webm", "tempDir");
-    });
-
-    test("fails when a CRF of 0 produces a VMAF score below the target threshold", async () => {
-        // Set up the mock behavior for the getVMAFScore() method
-        const crfToVmafMap = new Map([
-            [0, 85], // CRF 0 returns a VMAF score of 85
-            [10, 92], // CRF 10 returns a VMAF score of 92
-            // Add more CRF-VMAF mappings as needed
-        ]);
-
-        // Create a spy on the getVMAFScore() method of the VMAFScoringEncoder class
-        const getVMAFScoreSpy = vi.spyOn(VMAFTargetVideoEncoder.prototype, "encodeVideoWithCRF");
-
-        // Define the mock implementation for the getVMAFScore() method
-        getVMAFScoreSpy.mockImplementation((ffmpegArguments: string, crf: number) => {
-            // return Promise.resolve(crfToVmafMap.get(crf) || 2);
-            return 90;
-        });
-
-        // Call the encode() method with a CRF of 0 and a target threshold of 90
-        const result = await encoderMock.start("-c:a aac", false, 60, `${tempDir}/peepoheadpat_targeted.mp4`);
-
-
-        // Assert the expected behavior
-        expect(result).toBe(false);
-        expect(getVMAFScoreSpy).toHaveBeenCalledWith(0);
-
-        // Restore the original implementation of the getVMAFScore() method
-        getVMAFScoreSpy.mockRestore();
-    });
-
-    // Add more test cases as needed
 });
