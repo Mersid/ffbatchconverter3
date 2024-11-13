@@ -4,7 +4,6 @@ import { probe } from "../misc/Helpers";
 import { stat } from "node:fs/promises";
 import { ChildProcessWithoutNullStreams } from "child_process";
 import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
-import { EventEmitter } from "node:events";
 import { Emitter } from "strict-event-emitter";
 
 type Events = {

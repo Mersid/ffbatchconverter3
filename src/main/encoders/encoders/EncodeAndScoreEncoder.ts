@@ -1,10 +1,8 @@
 import { EncodingState } from "../misc/EncodingState";
-import { ChildProcessWithoutNullStreams } from "child_process";
 import { probe } from "../misc/Helpers";
 import { stat } from "node:fs/promises";
 import { GenericVideoEncoder } from "./GenericVideoEncoder";
 import { VMAFScoringEncoder } from "./VMAFScoringEncoder";
-import { EventEmitter } from "node:events";
 import { Emitter } from "strict-event-emitter";
 
 type Events = {

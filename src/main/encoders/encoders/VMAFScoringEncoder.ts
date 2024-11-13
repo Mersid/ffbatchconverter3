@@ -4,7 +4,6 @@ import { probe } from "../misc/Helpers";
 import { stat } from "fs/promises";
 import { spawn } from "node:child_process";
 import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
-import EventEmitter from "events";
 import { Emitter } from "strict-event-emitter";
 
 type Events = {
@@ -104,7 +103,8 @@ export class VMAFScoringEncoder extends Emitter<Events> {
             `"${this.ffmpegPath}" -y -i "${this.referenceFilePath}" -i "${this.distortedFilePath}" -filter_complex "[0:v]setpts=PTS-STARTPTS[reference]; [1:v]setpts=PTS-STARTPTS[distorted]; [distorted][reference]libvmaf=model=version=vmaf_v0.6.1:n_threads=30" -f null -"`,
             {
                 shell: true
-        });
+            }
+        );
 
         this.state = "Encoding";
 
