@@ -169,6 +169,7 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
                 // If we get to that point, do a linear scan in the next stage.
                 if (crfRange <= 4) {
                     stage = "IterateSubset";
+                    thisCrf = lowCRF;
                     continue;
                 }
 
