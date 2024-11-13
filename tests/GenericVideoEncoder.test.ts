@@ -10,8 +10,9 @@ describe("Test generic video encoder", async () => {
 
         expect(encoder.state).toBe("Success");
 
-        // This tests that the current duration isn't broken and stuck at 0.
+        // This tests that the duration isn't broken and stuck at 0.
         expect(encoder.currentDuration).toBeGreaterThan(0);
+        expect(encoder.duration).toBeGreaterThan(0);
     });
 
     test("Test that the generic video encoder can gracefully exit from an invalid video.", async () => {
@@ -36,6 +37,8 @@ describe("Test generic video encoder", async () => {
 
         // Notice that the requested file doesn't actually exist.
         const encoder = await GenericVideoEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpat.webm", () => {});
+
+        expect(encoder.state).toBe("Pending");
 
         await encoder.start("-c:v libx264butitsnotvalid -c:a aacbutitsnotvalid --someinvalidparam helloworld", `${tempDir}/butitsnotvalid.mp4`);
 

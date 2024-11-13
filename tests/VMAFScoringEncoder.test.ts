@@ -10,8 +10,9 @@ describe("Test VMAF scoring encoder", async () => {
 
         expect(encoder.state).toBe("Success");
 
-        // This tests that the current duration isn't broken and stuck at 0.
+        // This tests that the duration isn't broken and stuck at 0.
         expect(encoder.currentDuration).toBeGreaterThan(0);
+        expect(encoder.duration).toBeGreaterThan(0);
 
         // This tests that the VMAF score is a valid number.
         expect(encoder.vmafScore).toBeGreaterThan(5);

@@ -21,7 +21,7 @@ export class GenericVideoEncoder extends Emitter<Events> {
     private log: string = "";
 
     private _currentDuration: number = 0;
-    private duration: number = 0;
+    private _duration: number = 0;
 
     /**
      * Size of the input file in bytes.
@@ -66,13 +66,13 @@ export class GenericVideoEncoder extends Emitter<Events> {
         encoder.logInternal(probeData + "\n");
 
         const json = JSON.parse(probeData);
-        const duration = json.format?.duration as number | undefined;
+        const duration = json.format?.duration as string | undefined;
 
         if (duration == undefined) {
             encoder.logLine("Could not determine duration of the video.");
             encoder.state = "Error";
         } else {
-            encoder.duration = duration;
+            encoder.duration = parseFloat(duration);
             encoder.state = "Pending";
         }
 
@@ -159,6 +159,14 @@ export class GenericVideoEncoder extends Emitter<Events> {
 
     private set state(value: EncodingState) {
         this._state = value;
+    }
+
+    public get duration(): number {
+        return this._duration;
+    }
+
+    private set duration(value: number) {
+        this._duration = value;
     }
 
     public get currentDuration(): number {

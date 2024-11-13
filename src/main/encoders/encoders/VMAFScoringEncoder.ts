@@ -25,7 +25,7 @@ export class VMAFScoringEncoder extends Emitter<Events> {
     private log: string = "";
 
     private _currentDuration: number = 0;
-    private duration: number = 0;
+    private _duration: number = 0;
 
     /**
      * Size of the input file in bytes.
@@ -76,13 +76,13 @@ export class VMAFScoringEncoder extends Emitter<Events> {
         encoder.logInternal(probeData + "\n");
 
         const json = JSON.parse(probeData);
-        const duration = json.format?.duration as number | undefined;
+        const duration = json.format?.duration as string | undefined;
 
         if (duration == undefined) {
             encoder.logLine("Could not determine duration of the video.");
             encoder.state = "Error";
         } else {
-            encoder.duration = duration;
+            encoder.duration = parseFloat(duration);
         }
 
         return encoder;
@@ -140,9 +140,7 @@ export class VMAFScoringEncoder extends Emitter<Events> {
         this.state = code == 0 ? "Success" : "Error";
         this.logLine(`Process exited with code ${code}`);
 
-        const regex = /(?<=VMAF score: )[0-9.]+/;
-        const vmafScoreString = this.log.match(regex)?.[0];
-        const vmafScore = parseFloat(vmafScoreString ?? "0");
+        const vmafScore = this.getVMAFScore();
         if (isNaN(vmafScore)) {
             this.logLine("Could not parse the VMAF score from the output.");
             this.state = "Error";
@@ -153,6 +151,13 @@ export class VMAFScoringEncoder extends Emitter<Events> {
 
         this.updateCallback();
         this.resolve?.();
+    }
+
+    private getVMAFScore(): number {
+        const regex = /(?<=VMAF score: )[0-9.]+/;
+        const vmafScoreString = this.log.match(regex)?.[0];
+        const vmafScore = parseFloat(vmafScoreString ?? "0");
+        return vmafScore;
     }
 
     /**
@@ -181,6 +186,14 @@ export class VMAFScoringEncoder extends Emitter<Events> {
 
     private set state(value: EncodingState) {
         this._state = value;
+    }
+
+    public get duration(): number {
+        return this._duration;
+    }
+
+    private set duration(value: number) {
+        this._duration = value;
     }
 
     public get currentDuration(): number {

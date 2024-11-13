@@ -21,7 +21,7 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
     private log: string = "";
 
     private _currentDuration: number = 0;
-    private duration: number = 0;
+    private _duration: number = 0;
 
     /**
      * Size of the input file in bytes.
@@ -41,6 +41,12 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
      * Scorer is undefined until the encoding is complete.
      */
     private scorer: VMAFScoringEncoder | undefined = undefined;
+
+    /**
+     * The VMAF score of the encoded video. This is zero until the scoring is complete.
+     * @private
+     */
+    private _vmafScore: number = 0;
 
     /**
      * Callback that is called whenever the encoder receives new information. This is a good time for listeners to check the state.
@@ -71,7 +77,7 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
         encoder.log += probeData + "\n";
 
         const json = JSON.parse(probeData);
-        const duration = json.format?.duration as number | undefined;
+        const duration = json.format?.duration as string | undefined;
 
         if (duration == undefined) {
             encoder.logLine("Could not determine the duration of the input file.");
@@ -79,7 +85,7 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
             return encoder;
         }
 
-        encoder.duration = duration;
+        encoder.duration = parseFloat(duration);
         return encoder;
     }
 
@@ -105,6 +111,8 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
             this.state = "Error";
             return;
         }
+
+        this.vmafScore = this.scorer.vmafScore;
 
         this.logLine(`Encoding and scoring complete. Score is ${this.scorer.vmafScore}.`);
 
@@ -153,11 +161,27 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
         this._state = value;
     }
 
+    public get duration(): number {
+        return this._duration;
+    }
+
+    private set duration(value: number) {
+        this._duration = value;
+    }
+
     public get currentDuration(): number {
         return this._currentDuration;
     }
 
     private set currentDuration(value: number) {
         this._currentDuration = value;
+    }
+
+    public get vmafScore(): number {
+        return this._vmafScore;
+    }
+
+    private set vmafScore(value: number) {
+        this._vmafScore = value;
     }
 }
