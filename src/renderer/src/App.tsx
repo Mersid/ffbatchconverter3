@@ -1,7 +1,10 @@
-import { ReactElement } from "react";
+import { ReactElement, useEffect } from "react";
 
 export default function App(): ReactElement {
-    const ipcHandle = (): void => window.electron.ipcRenderer.send("ping");
+    useEffect(() => {
+        window.api.send.ping();
+        console.log(window.api);
+    });
 
     return (
         <>
