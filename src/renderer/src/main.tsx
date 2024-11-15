@@ -2,10 +2,9 @@ import "./assets/main.css";
 
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App";
+import EncoderBase from "./pages/EncoderBase";
 import { createHashRouter, RouterProvider } from "react-router-dom";
 import Layout from "@renderer/Layout";
-import App2 from "@renderer/App2";
 
 const router = createHashRouter([
     {
@@ -14,11 +13,11 @@ const router = createHashRouter([
         children: [
             {
                 path: "/",
-                element: <App />
+                element: <EncoderBase />
             },
             {
-                path: "/home",
-                element: <App2 />
+                path: "/:id",
+                element: <EncoderBase />
             }
         ]
     }

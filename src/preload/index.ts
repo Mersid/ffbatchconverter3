@@ -5,7 +5,7 @@ import { registerSend } from "./register";
  * Register one-way calls from the renderer to the main process here.
  */
 const send = {
-    ping: registerSend("ping")
+    ping: registerSend<string>("ping")
 };
 
 const events = {};

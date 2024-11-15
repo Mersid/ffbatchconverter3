@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, shell } from "electron";
 import { join } from "path";
 import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
+import { SendChannel } from "../preload/channels";
 
 async function createWindow(): Promise<void> {
     // Create the browser window.
@@ -24,6 +25,10 @@ async function createWindow(): Promise<void> {
     mainWindow.webContents.setWindowOpenHandler(details => {
         shell.openExternal(details.url);
         return { action: "deny" };
+    });
+
+    ipcMain.on(<SendChannel>"ping", (event, args) => {
+        console.log(`pong ${args}`);
     });
 
     // HMR for renderer base on electron-vite cli.
