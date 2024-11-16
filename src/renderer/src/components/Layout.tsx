@@ -1,16 +1,14 @@
 import { ReactElement } from "react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import Sidebar from "@renderer/components/Sidebar";
 import { Outlet } from "react-router-dom";
 
 export default function Layout(): ReactElement {
     return (
-        <SidebarProvider>
+        <div>
             <Sidebar />
-            <main>
-                <SidebarTrigger />
+            <main className={"pl-64"}>
                 <Outlet />
             </main>
-        </SidebarProvider>
+        </div>
     );
 }

@@ -4,7 +4,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import EncoderBase from "./pages/EncoderBase";
 import { createHashRouter, RouterProvider } from "react-router-dom";
-import Layout from "@renderer/Layout";
+import Layout from "@renderer/components/Layout";
 
 const router = createHashRouter([
     {
@@ -13,7 +13,7 @@ const router = createHashRouter([
         children: [
             {
                 path: "/",
-                element: <EncoderBase />
+                element: <></>
             },
             {
                 path: "/:id",

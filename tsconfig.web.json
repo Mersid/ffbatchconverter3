@@ -5,7 +5,6 @@
         "src/renderer/src/**/*",
         "src/renderer/src/**/*.tsx",
         "src/preload/*.d.ts",
-        "src/renderer/shadcn/**/*"
     ],
     "compilerOptions": {
         "composite": true,
@@ -16,9 +15,6 @@
             "@renderer/*": [
                 "src/renderer/src/*"
             ],
-            "@/*": [
-                "src/renderer/src/shadcn/*"
-            ]
         }
     }
 }

@@ -1,4 +1,3 @@
-import { Sidebar as SidebarComponent, SidebarContent, SidebarFooter, SidebarHeader } from "@/components/ui/sidebar";
 import { ReactElement, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaEdit } from "react-icons/fa";
@@ -19,8 +18,8 @@ export default function Sidebar(): ReactElement {
 
     return (
         <IconContext.Provider value={{ color: "gray" }}>
-            <SidebarComponent>
-                <SidebarHeader className={""}>
+            <nav className={"w-64 bg-gray-100 fixed top-0 left-0 h-screen"}>
+                <header className={"pb-0.5 pl-2"}>
                     <div className={"flex"}>
                         <button
                             className={"p-1"}
@@ -47,8 +46,8 @@ export default function Sidebar(): ReactElement {
                             <FaEdit color={"#38c0ff"} className={"block"} />
                         </button>
                     </div>
-                </SidebarHeader>
-                <SidebarContent>
+                </header>
+                <div>
                     <ul>
                         {tabs.map(tab => {
                             return (
@@ -67,11 +66,8 @@ export default function Sidebar(): ReactElement {
                             );
                         })}
                     </ul>
-                </SidebarContent>
-                <SidebarFooter>
-                    <p>Put options here</p>
-                </SidebarFooter>
-            </SidebarComponent>
+                </div>
+            </nav>
         </IconContext.Provider>
     );
 }
