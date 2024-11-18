@@ -1,38 +1,43 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { EncoderCreationPageSerializationData } from "@renderer/misc/EncoderCreationPageSerializationData";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@renderer/redux/Store";
+import { addEncoderCreationData } from "@renderer/redux/EncoderCreationDataSlice";
 
 export default function EncoderCreationPage() {
     const params = useParams();
+    const creationData = useSelector((state: RootState) => state.encoderCreationData).find(data => data.id === params.id);
+    const dispatch = useDispatch();
 
     const [taskName, setTaskName] = useState("");
     const [taskType, setTaskType] = useState(1);
     const [ffmpegPath, setFFmpegPath] = useState("");
     const [ffprobePath, setFFprobePath] = useState("");
 
+    // Load existing data if it exists
     useEffect(() => {
-        const settings = window.sessionStorage.getItem(`encoderCreationSettings_${params.id}`);
-        if (settings) {
-            const parsedSettings = JSON.parse(settings) as EncoderCreationPageSerializationData;
-            setTaskName(parsedSettings.taskName);
-            setTaskType(parsedSettings.taskType);
-            setFFmpegPath(parsedSettings.ffmpegPath);
-            setFFprobePath(parsedSettings.ffprobePath);
+        if (creationData) {
+            setTaskName(creationData.taskName);
+            setTaskType(creationData.taskType);
+            setFFmpegPath(creationData.ffmpegPath);
+            setFFprobePath(creationData.ffprobePath);
         }
-
-        return () => {
-            const serializedData: EncoderCreationPageSerializationData = {
-                encoderCreated: false,
-                id: params.id as string,
-                taskName,
-                taskType,
-                ffmpegPath,
-                ffprobePath
-            };
-            window.sessionStorage.setItem(`encoderCreationSettings_${params.id}`, JSON.stringify(serializedData));
-            console.log(`Saved data for ${params.id}: ${JSON.stringify(serializedData)}`);
-        };
     }, []);
+
+    // Save data to Redux when it changes
+    useEffect(() => {
+        const serializedData: EncoderCreationPageSerializationData = {
+            encoderCreated: false,
+            id: params.id as string,
+            taskName,
+            taskType,
+            ffmpegPath,
+            ffprobePath
+        };
+
+        dispatch(addEncoderCreationData(serializedData));
+    }, [taskName, taskType, ffmpegPath, ffprobePath]);
 
     return (
         <>

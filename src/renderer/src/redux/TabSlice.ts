@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { Tab } from "@renderer/misc/Tab";
 
 export const tabSlice = createSlice({
     name: "tabs",

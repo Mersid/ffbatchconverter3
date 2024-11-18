@@ -1,9 +1,12 @@
 import { ReactElement, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import EncoderCreationPage from "@renderer/pages/EncoderCreationPage";
+import { useSelector } from "react-redux";
+import { RootState } from "@renderer/redux/Store";
 
 export default function EncoderBase(): ReactElement {
     const params = useParams();
+    const creationData = useSelector((state: RootState) => state.encoderCreationData).find(data => data.id === params.id);
 
     useEffect(() => {
         window.api.send.ping(`${params.id} mounted`);
@@ -15,12 +18,12 @@ export default function EncoderBase(): ReactElement {
 
     const shouldShowCreationPage = () => {
         // If we don't have the key, this is a new encoder. Display the page.
-        if (!window.sessionStorage.getItem((`encoderCreationSettings_${params.id}`))) {
+        if (!creationData) {
             return true;
         }
 
         // Otherwise, if we already have the key, but it's not marked as completed, user likely switched out and back. Show it again with existing data.
-        if (JSON.parse(window.sessionStorage.getItem(`encoderCreationSettings_${params.id}`) as string).encoderCreated == false) {
+        if (creationData.encoderCreated == false) {
             return true;
         }
 

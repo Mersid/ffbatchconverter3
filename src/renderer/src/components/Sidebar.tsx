@@ -9,7 +9,6 @@ import { addTitle, removeTitle } from "@renderer/redux/TabSlice";
 
 export default function Sidebar(): ReactElement {
     const [nextId, setNextId] = useState(0);
-    // const [tabs, setTabs] = useState<Tab[]>([]);
     const [selectedTabId, setSelectedTabId] = useState<number | undefined>(undefined);
 
     const tabs = useSelector((state: RootState) => state.tabs);
@@ -27,6 +26,7 @@ export default function Sidebar(): ReactElement {
                                 const id = nextId;
                                 setNextId(() => id + 1);
                                 dispatch(addTitle({ id, title: `New task ${id}`, url: `/${id}` }));
+                                setSelectedTabId(id);
                                 navigate(`/${id}`);
                             }}
                         >
