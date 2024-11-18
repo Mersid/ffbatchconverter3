@@ -28,7 +28,7 @@ async function createWindow(): Promise<void> {
         return { action: "deny" };
     });
 
-    ipcMain.on(<SendChannel>"ping", (event, args) => {
+    ipcMain.on(<SendChannel>"ping", (_event, args) => {
         console.log(`pong ${args}`);
     });
 

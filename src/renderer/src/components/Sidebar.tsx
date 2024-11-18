@@ -4,7 +4,8 @@ import { FaEdit } from "react-icons/fa";
 import { IconContext } from "react-icons";
 import { FaMinus, FaPlus } from "react-icons/fa6";
 import { useDispatch, useSelector } from "react-redux";
-import { addTitle, removeTitle, RootState } from "@renderer/misc/TitleContext";
+import { RootState } from "@renderer/redux/Store";
+import { addTitle, removeTitle } from "@renderer/redux/TabSlice";
 
 export default function Sidebar(): ReactElement {
     const [nextId, setNextId] = useState(0);

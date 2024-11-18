@@ -5,8 +5,8 @@ import ReactDOM from "react-dom/client";
 import EncoderBase from "./pages/EncoderBase";
 import { createHashRouter, RouterProvider } from "react-router-dom";
 import Layout from "@renderer/components/Layout";
-import {Provider} from "react-redux"
-import { store } from "@renderer/misc/TitleContext";
+import { Provider } from "react-redux";
+import { store } from "@renderer/redux/Store";
 
 const router = createHashRouter([
     {
