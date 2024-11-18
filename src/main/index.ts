@@ -3,6 +3,7 @@ import { join } from "path";
 import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import { SendChannel } from "../preload/channels";
+import { installExtension, REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from "electron-extension-installer";
 
 async function createWindow(): Promise<void> {
     // Create the browser window.
@@ -44,6 +45,10 @@ async function createWindow(): Promise<void> {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
+    // Load devtools
+    await installExtension(REACT_DEVELOPER_TOOLS);
+    await installExtension(REDUX_DEVTOOLS);
+
     // Set app user model id for windows
     electronApp.setAppUserModelId("com.electron");
 

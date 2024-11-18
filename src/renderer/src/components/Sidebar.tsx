@@ -1,20 +1,19 @@
 import { ReactElement, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaEdit } from "react-icons/fa";
 import { IconContext } from "react-icons";
 import { FaMinus, FaPlus } from "react-icons/fa6";
-
-// TODO: Put in separate type
-type Tab = {
-    id: number;
-    title: string;
-    url: string;
-};
+import { useDispatch, useSelector } from "react-redux";
+import { addTitle, removeTitle, RootState } from "@renderer/misc/TitleContext";
 
 export default function Sidebar(): ReactElement {
     const [nextId, setNextId] = useState(0);
-    const [tabs, setTabs] = useState<Tab[]>([]);
+    // const [tabs, setTabs] = useState<Tab[]>([]);
     const [selectedTabId, setSelectedTabId] = useState<number | undefined>(undefined);
+
+    const tabs = useSelector((state: RootState) => state.tabs);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     return (
         <IconContext.Provider value={{ color: "gray" }}>
@@ -26,7 +25,8 @@ export default function Sidebar(): ReactElement {
                             onClick={async () => {
                                 const id = nextId;
                                 setNextId(() => id + 1);
-                                setTabs([...tabs, { id, title: `New task ${id}`, url: `/${id}` }]);
+                                dispatch(addTitle({ id, title: `New task ${id}`, url: `/${id}` }));
+                                navigate(`/${id}`);
                             }}
                         >
                             <FaPlus color={"#00dc00"} className={"block"} />
@@ -35,8 +35,9 @@ export default function Sidebar(): ReactElement {
                             className={"p-1"}
                             onClick={() => {
                                 if (selectedTabId != undefined) {
-                                    setTabs(tabs.filter(tab => tab.id != selectedTabId));
+                                    dispatch(removeTitle(selectedTabId));
                                     setSelectedTabId(() => undefined);
+                                    navigate("/");
                                 }
                             }}
                         >

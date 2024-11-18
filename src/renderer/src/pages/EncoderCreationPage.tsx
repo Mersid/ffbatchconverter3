@@ -30,6 +30,7 @@ export default function EncoderCreationPage() {
                 ffprobePath
             };
             window.sessionStorage.setItem(`encoderCreationSettings_${params.id}`, JSON.stringify(serializedData));
+            console.log(`Saved data for ${params.id}: ${JSON.stringify(serializedData)}`);
         };
     }, []);
 
@@ -45,7 +46,7 @@ export default function EncoderCreationPage() {
                         id={`taskName_${params.id}`}
                         name={"taskName"}
                         value={taskName}
-                        onChange={e => setTaskName(e.target.value)}
+                        onChange={e => setTaskName(() => e.target.value)}
                         className={`px-2 py-1 w-full text-gray-700 placeholder-gray-400 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-blue-500 inline-block`}
                     />
                 </div>
