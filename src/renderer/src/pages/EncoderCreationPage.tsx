@@ -4,16 +4,22 @@ import { EncoderCreationPageSerializationData } from "@renderer/misc/EncoderCrea
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@renderer/redux/Store";
 import { addEncoderCreationData } from "@renderer/redux/EncoderCreationDataSlice";
+import { updateTitle } from "@renderer/redux/TabSlice";
+import { Tab } from "@renderer/misc/Tab";
 
 export default function EncoderCreationPage() {
     const params = useParams();
     const creationData = useSelector((state: RootState) => state.encoderCreationData).find(data => data.id === params.id);
     const dispatch = useDispatch();
 
-    const [taskName, setTaskName] = useState("");
+    const tab = useSelector((state: RootState) => state.tabs).find(tab => tab.id == parseInt(params.id as string)) as Tab;
+
+    const [taskName, setTaskName] = useState(`New task ${params.id}`);
     const [taskType, setTaskType] = useState(1);
     const [ffmpegPath, setFFmpegPath] = useState("");
     const [ffprobePath, setFFprobePath] = useState("");
+
+    const [encoderCreated, setEncoderCreated] = useState(false);
 
     // Load existing data if it exists
     useEffect(() => {
@@ -28,7 +34,7 @@ export default function EncoderCreationPage() {
     // Save data to Redux when it changes
     useEffect(() => {
         const serializedData: EncoderCreationPageSerializationData = {
-            encoderCreated: false,
+            encoderCreated,
             id: params.id as string,
             taskName,
             taskType,
@@ -36,8 +42,16 @@ export default function EncoderCreationPage() {
             ffprobePath
         };
 
+        // Update the sidebar title as well
+        dispatch(
+            updateTitle({
+                ...tab,
+                title: taskName
+            })
+        );
+
         dispatch(addEncoderCreationData(serializedData));
-    }, [taskName, taskType, ffmpegPath, ffprobePath]);
+    }, [taskName, taskType, ffmpegPath, ffprobePath, encoderCreated]);
 
     return (
         <>
@@ -103,7 +117,12 @@ export default function EncoderCreationPage() {
             </div>
 
             <div className={"absolute right-0 bottom-0 mb-4 mr-4"}>
-                <button className={"bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded"}>
+                <button
+                    className={"bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded"}
+                    onClick={() => {
+                        setEncoderCreated(() => true);
+                    }}
+                >
                     Submit {params.id}
                 </button>
             </div>

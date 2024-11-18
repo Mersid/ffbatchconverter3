@@ -56,7 +56,7 @@ export default function Sidebar(): ReactElement {
                                 <li key={tab.id}>
                                     <Link
                                         to={tab.url}
-                                        className={`py-2 pl-4 hover:bg-gray-200 text-gray-600 flex items-center ${
+                                        className={`py-2 pl-4 min-h-10 hover:bg-gray-200 text-gray-600 flex items-center ${
                                             selectedTabId === tab.id ? "bg-gray-300" : ""
                                         }`}
                                         onClick={() => setSelectedTabId(tab.id)}

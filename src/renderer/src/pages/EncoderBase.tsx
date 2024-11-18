@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import EncoderCreationPage from "@renderer/pages/EncoderCreationPage";
 import { useSelector } from "react-redux";
 import { RootState } from "@renderer/redux/Store";
+import GenericVideoEncoderPage from "@renderer/pages/GenericVideoEncoderPage";
+import NotImplementedPage from "@renderer/pages/NotImplementedPage";
 
 export default function EncoderBase(): ReactElement {
     const params = useParams();
@@ -30,6 +32,16 @@ export default function EncoderBase(): ReactElement {
         return false;
     };
 
+    const showEncoderPage = () => {
+        if (!creationData) {
+            throw new Error("Creation data not found!");
+        }
+        if (creationData.taskType == 1) {
+            return <GenericVideoEncoderPage />;
+        }
+        return <NotImplementedPage />;
+    };
+
     return (
         // If we don't have the key, switching between consecutive creation pages will retain data in the form!
         <div className={"pl-1"} key={params.id}>
@@ -38,7 +50,7 @@ export default function EncoderBase(): ReactElement {
             {
                 shouldShowCreationPage() ?
                     <EncoderCreationPage />
-                    : <></>
+                    : showEncoderPage()
             }
         </div>
     );
