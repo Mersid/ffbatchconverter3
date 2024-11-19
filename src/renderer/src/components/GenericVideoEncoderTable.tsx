@@ -1,36 +1,50 @@
-import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import {
+    ColumnDef,
+    createColumnHelper,
+    flexRender,
+    getCoreRowModel,
+    getSortedRowModel,
+    useReactTable
+} from "@tanstack/react-table";
 
+const columnHelper = createColumnHelper<GenericVideoEncoderRow>();
 const columns = [
-    {
-        accessorKey: "fileName",
+    columnHelper.accessor(row => row.fileName, {
+        id: "fileName",
         header: "File Name",
         cell: props => <p>{props.getValue()}</p>
-    },
-    {
-        accessorKey: "duration",
+    }),
+    columnHelper.accessor(row => row.duration, {
         header: "Duration",
         cell: props => <p>{props.getValue()}</p>
-    },
-    {
-        accessorKey: "size",
+    }),
+    columnHelper.accessor(row => row.size, {
         header: "Size",
         cell: props => <p>{props.getValue()}</p>
-    },
-    {
-        accessorKey: "status",
+    }),
+    columnHelper.accessor(row => row.status, {
         header: "Status",
         cell: props => <p>{props.getValue()}</p>
-    }
+    })
 ];
 
 export default function GenericVideoEncoderTable() {
     const table = useReactTable({
         data: sampleData,
-        columns,
-        getCoreRowModel: getCoreRowModel<GenericVideoEncoderRow>()
+        columns: columns,
+        getCoreRowModel: getCoreRowModel<GenericVideoEncoderRow>(),
+        getSortedRowModel: getSortedRowModel<GenericVideoEncoderRow>(),
+        state: {
+            sorting: [
+                {
+                    id: "fileName",
+                    desc: true
+                }
+            ]
+        }
     });
 
-    console.log(table.getHeaderGroups());
+    console.log(table.getState().sorting);
 
     return (
         <table>
@@ -39,8 +53,10 @@ export default function GenericVideoEncoderTable() {
                     {
                         table.getHeaderGroups().map(headerGroup => (
                             headerGroup.headers.map(header => (
-                                <th>
-                                    {header.column.columnDef.header}
+                                <th key={header.id}>
+                                    {/*{header.column.columnDef.header}*/}
+                                    {flexRender(header.column.columnDef.header, header.getContext())}
+                                    {/*<div className={"absolute opacity-0 top-0 right-0 h-full w-1 hover:cursor-col-resize"}>a</div>*/}
                                 </th>
                             ))
                         ))
@@ -50,10 +66,11 @@ export default function GenericVideoEncoderTable() {
             <tbody>
             {
                 table.getRowModel().rows.map(row => (
-                    <tr>
+                    <tr key={row.id}>
                         {
                             row.getVisibleCells().map(cell => (
-                                <td className={"border border-gray-200"}>
+                                <td key={cell.id
+                                } className={"border border-gray-200"}>
                                     {
                                         flexRender(cell.column.columnDef.cell, cell.getContext())
                                     }

@@ -11,6 +11,9 @@ export default function Sidebar(): ReactElement {
     const [nextId, setNextId] = useState(0);
     const [selectedTabId, setSelectedTabId] = useState<number | undefined>(undefined);
 
+    const [sidebarWidth, setSidebarWidth] = useState(64);
+    const [isDragging, setIsDragging] = useState(false);
+
     const tabs = useSelector((state: RootState) => state.tabs);
     const dispatch = useDispatch();
     const navigate = useNavigate();
