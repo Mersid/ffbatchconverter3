@@ -8,8 +8,8 @@ import { installExtension, REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from "electro
 async function createWindow(): Promise<void> {
     // Create the browser window.
     const mainWindow = new BrowserWindow({
-        width: 900,
-        height: 670,
+        width: 1500,
+        height: 800,
         show: false,
         autoHideMenuBar: true,
         ...(process.platform === "linux" ? { icon } : {}),

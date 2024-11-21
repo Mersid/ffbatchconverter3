@@ -1,11 +1,12 @@
 import {
-    ColumnDef,
     createColumnHelper,
     flexRender,
     getCoreRowModel,
     getSortedRowModel,
+    SortingState,
     useReactTable
 } from "@tanstack/react-table";
+import { useState } from "react";
 
 const columnHelper = createColumnHelper<GenericVideoEncoderRow>();
 const columns = [
@@ -29,18 +30,16 @@ const columns = [
 ];
 
 export default function GenericVideoEncoderTable() {
+    const [sorting, setSorting] = useState<SortingState>([]);
+
     const table = useReactTable({
         data: sampleData,
         columns: columns,
         getCoreRowModel: getCoreRowModel<GenericVideoEncoderRow>(),
         getSortedRowModel: getSortedRowModel<GenericVideoEncoderRow>(),
+        onSortingChange: setSorting,
         state: {
-            sorting: [
-                {
-                    id: "fileName",
-                    desc: true
-                }
-            ]
+            sorting
         }
     });
 
@@ -50,36 +49,25 @@ export default function GenericVideoEncoderTable() {
         <table>
             <thead>
                 <tr>
-                    {
-                        table.getHeaderGroups().map(headerGroup => (
-                            headerGroup.headers.map(header => (
-                                <th key={header.id}>
-                                    {/*{header.column.columnDef.header}*/}
-                                    {flexRender(header.column.columnDef.header, header.getContext())}
-                                    {/*<div className={"absolute opacity-0 top-0 right-0 h-full w-1 hover:cursor-col-resize"}>a</div>*/}
-                                </th>
-                            ))
+                    {table.getHeaderGroups().map(headerGroup =>
+                        headerGroup.headers.map(header => (
+                            <th key={header.id} onClick={header.column.getToggleSortingHandler()} className={"hover:cursor-pointer hover:text-green-800"}>
+                                {flexRender(header.column.columnDef.header, header.getContext())}
+                            </th>
                         ))
-                    }
+                    )}
                 </tr>
             </thead>
             <tbody>
-            {
-                table.getRowModel().rows.map(row => (
+                {table.getRowModel().rows.map(row => (
                     <tr key={row.id}>
-                        {
-                            row.getVisibleCells().map(cell => (
-                                <td key={cell.id
-                                } className={"border border-gray-200"}>
-                                    {
-                                        flexRender(cell.column.columnDef.cell, cell.getContext())
-                                    }
-                                </td>
-                            ))
-                        }
+                        {row.getVisibleCells().map(cell => (
+                            <td key={cell.id} className={"border border-gray-200"}>
+                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </td>
+                        ))}
                     </tr>
-                ))
-            }
+                ))}
             </tbody>
         </table>
     );
