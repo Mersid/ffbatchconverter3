@@ -47,11 +47,7 @@ export default function EncoderBase(): ReactElement {
         <div className={"pl-1"} key={params.id}>
             <p>Hello world!</p>
             <p className={"text-blue-300"}>{params.id}</p>
-            {
-                shouldShowCreationPage() ?
-                    <EncoderCreationPage />
-                    : showEncoderPage()
-            }
+            {shouldShowCreationPage() ? <EncoderCreationPage /> : showEncoderPage()}
         </div>
     );
 }

@@ -45,7 +45,9 @@ export default function GenericVideoEncoderPage() {
                     <div className={"bg-green-300 w-full flex flex-col-reverse justify-end items-end"}>
                         <button className={"bg-white hover:bg-gray-300 py-0 px-2 rounded"}>Add folders</button>
                         <button className={"bg-white hover:bg-gray-300 py-0 px-2 rounded"}>Add files</button>
-                        <button className={"bg-white hover:bg-gray-300 py-0 px-2 rounded"}>Start</button>
+                        <button className={"bg-white hover:bg-gray-300 py-0 px-2 rounded"} onClick={() => {
+                            window.api.send.log("Starting!");
+                        }}>Start</button>
                     </div>
                 </div>
             </div>

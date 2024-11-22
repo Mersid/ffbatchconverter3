@@ -18,7 +18,7 @@ export function registerSend(channel: SendChannel) {
 }
 
 /**
- * Helper function to register one-way calls from the main process ot the renderer.
+ * Helper function to register one-way calls from the main process to the renderer.
  * @param channel
  */
 export function registerEvent<T extends unknown[]>(channel: EventChannel): (callback: (event: Electron.IpcRendererEvent, ...args: T) => void) => void;

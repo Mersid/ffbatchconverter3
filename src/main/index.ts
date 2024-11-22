@@ -4,6 +4,7 @@ import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import { SendChannel } from "../preload/channels";
 import { installExtension, REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from "electron-extension-installer";
+import { registerIPCHandlers } from "./encoders/misc/IPCHandlers";
 
 async function createWindow(): Promise<void> {
     // Create the browser window.
@@ -23,13 +24,11 @@ async function createWindow(): Promise<void> {
         mainWindow.show();
     });
 
+    registerIPCHandlers();
+
     mainWindow.webContents.setWindowOpenHandler(details => {
         shell.openExternal(details.url);
         return { action: "deny" };
-    });
-
-    ipcMain.on(<SendChannel>"ping", (_event, args) => {
-        console.log(`pong ${args}`);
     });
 
     // HMR for renderer base on electron-vite cli.
