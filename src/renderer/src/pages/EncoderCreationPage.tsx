@@ -24,10 +24,15 @@ export default function EncoderCreationPage() {
     // Load existing data if it exists
     useEffect(() => {
         if (creationData) {
-            setTaskName(creationData.taskName);
-            setTaskType(creationData.taskType);
-            setFFmpegPath(creationData.ffmpegPath);
-            setFFprobePath(creationData.ffprobePath);
+            setTaskName(() => creationData.taskName);
+            setTaskType(() => creationData.taskType);
+            setFFmpegPath(() => creationData.ffmpegPath);
+            setFFprobePath(() => creationData.ffprobePath);
+        } else {
+            window.api.fetch.getExternalLibraryPaths().then(data => {
+                setFFmpegPath(() => data.ffmpeg);
+                setFFprobePath(() => data.ffprobe);
+            });
         }
     }, []);
 

@@ -10,14 +10,6 @@ export default function EncoderBase(): ReactElement {
     const params = useParams();
     const creationData = useSelector((state: RootState) => state.encoderCreationData).find(data => data.id === params.id);
 
-    useEffect(() => {
-        window.api.send.ping(`${params.id} mounted`);
-
-        return () => {
-            window.api.send.ping(`${params.id} unmounted`);
-        };
-    });
-
     const shouldShowCreationPage = () => {
         // If we don't have the key, this is a new encoder. Display the page.
         if (!creationData) {

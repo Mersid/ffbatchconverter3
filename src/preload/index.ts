@@ -1,18 +1,19 @@
 import { contextBridge } from "electron";
-import { registerSend } from "./registerRenderer";
-import { SendChannelArgumentsType } from "./channels";
+import { registerFetch, registerSend } from "./registerRenderer2";
 
 /**
  * Register one-way calls from the renderer to the main process here.
  */
 const send = {
-    ping: registerSend<SendChannelArgumentsType<"ping">>("ping"),
-    log: registerSend<SendChannelArgumentsType<"log">>("log")
+    ping: registerSend("ping"),
+    log: registerSend("log"),
 };
 
 const events = {};
 
-const fetch = {};
+const fetch = {
+    getExternalLibraryPaths: registerFetch("getExternalLibraryPaths")
+};
 
 export const api = {
     send,
