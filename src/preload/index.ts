@@ -6,7 +6,7 @@ import { registerFetch, registerSend } from "./registerRenderer2";
  */
 const send = {
     ping: registerSend("ping"),
-    log: registerSend("log"),
+    log: registerSend("log")
 };
 
 const events = {};

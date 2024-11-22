@@ -1,4 +1,4 @@
-import { ReactElement, useEffect } from "react";
+import { ReactElement } from "react";
 import { useParams } from "react-router-dom";
 import EncoderCreationPage from "@renderer/pages/EncoderCreationPage";
 import { useSelector } from "react-redux";

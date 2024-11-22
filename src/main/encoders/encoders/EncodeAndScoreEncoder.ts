@@ -10,46 +10,28 @@ type Events = {
 };
 
 export class EncodeAndScoreEncoder extends Emitter<Events> {
-    private ffprobePath: string;
-    private ffmpegPath: string;
-
-    private inputFilePath: string;
-    private outputFilePath: string = "";
-
-    private log: string = "";
-
-    private _currentDuration: number = 0;
-    private _duration: number = 0;
-
-    /**
-     * Size of the input file in bytes.
-     */
-    private fileSize: number = 0;
-
-    private _state: EncodingState = "Pending";
-
-    /**
-     * Function that resolves the promise provided by the start method. This is undefined until the start method is called.
-     */
-    private resolve: ((value: void | PromiseLike<void>) => void) | undefined = undefined;
-
-    private encoder: GenericVideoEncoder | undefined = undefined;
-
-    /**
-     * Scorer is undefined until the encoding is complete.
-     */
-    private scorer: VMAFScoringEncoder | undefined = undefined;
-
-    /**
-     * The VMAF score of the encoded video. This is zero until the scoring is complete.
-     * @private
-     */
-    private _vmafScore: number = 0;
-
     /**
      * Callback that is called whenever the encoder receives new information. This is a good time for listeners to check the state.
      */
     public readonly updateCallback: () => void;
+    private ffprobePath: string;
+    private ffmpegPath: string;
+    private inputFilePath: string;
+    private outputFilePath: string = "";
+    private log: string = "";
+    /**
+     * Size of the input file in bytes.
+     */
+    private fileSize: number = 0;
+    /**
+     * Function that resolves the promise provided by the start method. This is undefined until the start method is called.
+     */
+    private resolve: ((value: void | PromiseLike<void>) => void) | undefined = undefined;
+    private encoder: GenericVideoEncoder | undefined = undefined;
+    /**
+     * Scorer is undefined until the encoding is complete.
+     */
+    private scorer: VMAFScoringEncoder | undefined = undefined;
 
     private constructor(ffprobePath: string, ffmpegPath: string, inputFilePath: string, updateCallback: () => void) {
         super();
@@ -57,6 +39,50 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
         this.ffmpegPath = ffmpegPath;
         this.inputFilePath = inputFilePath;
         this.updateCallback = updateCallback;
+    }
+
+    private _currentDuration: number = 0;
+
+    public get currentDuration(): number {
+        return this._currentDuration;
+    }
+
+    private set currentDuration(value: number) {
+        this._currentDuration = value;
+    }
+
+    private _duration: number = 0;
+
+    public get duration(): number {
+        return this._duration;
+    }
+
+    private set duration(value: number) {
+        this._duration = value;
+    }
+
+    private _state: EncodingState = "Pending";
+
+    public get state(): EncodingState {
+        return this._state;
+    }
+
+    private set state(value: EncodingState) {
+        this._state = value;
+    }
+
+    /**
+     * The VMAF score of the encoded video. This is zero until the scoring is complete.
+     * @private
+     */
+    private _vmafScore: number = 0;
+
+    public get vmafScore(): number {
+        return this._vmafScore;
+    }
+
+    private set vmafScore(value: number) {
+        this._vmafScore = value;
     }
 
     public static async createNew(ffprobePath: string, ffmpegPath: string, inputFilePath: string, updateCallback: () => void): Promise<EncodeAndScoreEncoder> {
@@ -149,37 +175,5 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
     private logInternal(data: string): void {
         this.log += data;
         this.emit("log", data, true);
-    }
-
-    public get state(): EncodingState {
-        return this._state;
-    }
-
-    private set state(value: EncodingState) {
-        this._state = value;
-    }
-
-    public get duration(): number {
-        return this._duration;
-    }
-
-    private set duration(value: number) {
-        this._duration = value;
-    }
-
-    public get currentDuration(): number {
-        return this._currentDuration;
-    }
-
-    private set currentDuration(value: number) {
-        this._currentDuration = value;
-    }
-
-    public get vmafScore(): number {
-        return this._vmafScore;
-    }
-
-    private set vmafScore(value: number) {
-        this._vmafScore = value;
     }
 }

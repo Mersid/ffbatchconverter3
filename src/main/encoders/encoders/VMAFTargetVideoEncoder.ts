@@ -35,21 +35,12 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
     private tempDirectory: string;
 
     private log: string = "";
-
-    private _currentDuration: number = 0;
-    private _duration: number = 0;
-
     /**
      * Size of the input file in bytes.
      */
     private fileSize: number = 0;
-
     private crfToVMAF: CRFToVMAFMapping[] = [];
-
-    private _state: EncodingState = "Pending";
-
     private encoder: EncodeAndScoreEncoder | undefined = undefined;
-
     /**
      * Function that resolves the promise provided by the start method. This is undefined until the start method is called.
      */
@@ -61,6 +52,36 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
         this.ffmpegPath = ffmpegPath;
         this.inputFilePath = inputFilePath;
         this.tempDirectory = tempDirectory;
+    }
+
+    private _currentDuration: number = 0;
+
+    public get currentDuration(): number {
+        return this._currentDuration;
+    }
+
+    private set currentDuration(value: number) {
+        this._currentDuration = value;
+    }
+
+    private _duration: number = 0;
+
+    public get duration(): number {
+        return this._duration;
+    }
+
+    private set duration(value: number) {
+        this._duration = value;
+    }
+
+    private _state: EncodingState = "Pending";
+
+    public get state(): EncodingState {
+        return this._state;
+    }
+
+    private set state(value: EncodingState) {
+        this._state = value;
     }
 
     public static async createNew(ffprobePath: string, ffmpegPath: string, inputFilePath: string, tempDirectory: string): Promise<VMAFTargetVideoEncoder> {
@@ -322,29 +343,5 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
     private logInternal(data: string): void {
         this.log += data;
         this.emit("log", data, true);
-    }
-
-    public get state(): EncodingState {
-        return this._state;
-    }
-
-    private set state(value: EncodingState) {
-        this._state = value;
-    }
-
-    public get duration(): number {
-        return this._duration;
-    }
-
-    private set duration(value: number) {
-        this._duration = value;
-    }
-
-    public get currentDuration(): number {
-        return this._currentDuration;
-    }
-
-    private set currentDuration(value: number) {
-        this._currentDuration = value;
     }
 }

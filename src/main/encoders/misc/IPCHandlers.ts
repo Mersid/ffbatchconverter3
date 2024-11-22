@@ -1,5 +1,3 @@
-import { ipcMain } from "electron";
-import { SendChannel } from "../../../preload/channels";
 import { registerFetch, registerReceive } from "../../../preload/registerMain";
 import { getFFmpegPath, getFFprobePath } from "./Helpers";
 
