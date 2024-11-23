@@ -116,7 +116,8 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
     public async start(ffmpegArguments: string, outputFilePath: string): Promise<void> {
         this.outputFilePath = outputFilePath;
 
-        this.encoder = await GenericVideoEncoder.createNew(this.ffprobePath, this.ffmpegPath, this.inputFilePath, () => this.onChildUpdate());
+        this.encoder = await GenericVideoEncoder.createNew(this.ffprobePath, this.ffmpegPath, this.inputFilePath);
+        this.encoder.on("update", () => this.onChildUpdate());
         this.encoder.on("log", (data, internal) => this.onChildLog(data, internal));
 
         await this.encoder.start(ffmpegArguments, outputFilePath);

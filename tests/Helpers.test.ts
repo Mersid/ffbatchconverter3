@@ -1,5 +1,5 @@
-import { describe, expect, test, vi } from "vitest";
-import { findCommand } from "../src/main/encoders/misc/Helpers";
+import { describe, expect, test } from "vitest";
+import { findCommand, getFilesRecursive } from "../src/main/encoders/misc/Helpers";
 
 describe("Test helpers", async () => {
     describe("Test findCommand", async () => {
@@ -13,6 +13,17 @@ describe("Test helpers", async () => {
             const r = findCommand("nonexistent_asdfahsdfkajsf"); // Don't actually create a command with this name.
             console.log(`Value: ${r}`);
             expect(r).toBeUndefined();
+        });
+    });
+
+    describe("Test recursive file finder", async () => {
+        test("Test that a file can be found recursively.", async () => {
+            const r = await getFilesRecursive("tests/dirs");
+            expect(r.length).toBe(4);
+            expect(r).toContain("tests/dirs/file.txt");
+            expect(r).toContain("tests/dirs/1/file2.txt");
+            expect(r).toContain("tests/dirs/1/2/file3.txt");
+            expect(r).toContain("tests/dirs/1/2/file4.txt");
         });
     });
 });

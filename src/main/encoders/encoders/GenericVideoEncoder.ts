@@ -5,19 +5,37 @@ import { stat } from "node:fs/promises";
 import { ChildProcessWithoutNullStreams } from "child_process";
 import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
 import { Emitter } from "strict-event-emitter";
+import { randomUUID } from "node:crypto";
+import { v4 as uuid4 } from "uuid";
+import * as Events from "node:events";
+import { stat } from "fs/promises";
+import { resolve } from "path";
+import { data } from "autoprefixer";
 
 type Events = {
     log: [data: string, internal: boolean];
+
+    /**
+     * Event that is emitted whenever the encoder receives new information. This is a good time for listeners to check the state.
+     */
+    update: [];
 };
 
 export class GenericVideoEncoder extends Emitter<Events> {
-    /**
-     * Callback that is called whenever the encoder receives new information. This is a good time for listeners to check the state.
-     */
-    public readonly updateCallback: () => void;
+
+    private _encoderId: string;
+    public get encoderId(): string {
+        return this._encoderId;
+    }
+
     private ffprobePath: string;
     private ffmpegPath: string;
-    private inputFilePath: string;
+
+    private _inputFilePath: string;
+    public get inputFilePath(): string {
+        return this._inputFilePath;
+    }
+
     private outputFilePath: string = "";
     private log: string = "";
     /**
@@ -30,12 +48,12 @@ export class GenericVideoEncoder extends Emitter<Events> {
     private resolve: ((value: void | PromiseLike<void>) => void) | undefined = undefined;
     private process: ChildProcessWithoutNullStreams | undefined = undefined;
 
-    private constructor(ffprobePath: string, ffmpegPath: string, inputFilePath: string, updateCallback: () => void) {
+    private constructor(ffprobePath: string, ffmpegPath: string, inputFilePath: string) {
         super();
+        this._encoderId = uuid4();
         this.ffprobePath = ffprobePath;
         this.ffmpegPath = ffmpegPath;
-        this.inputFilePath = inputFilePath;
-        this.updateCallback = updateCallback;
+        this._inputFilePath = inputFilePath;
     }
 
     private _currentDuration: number = 0;
@@ -68,8 +86,8 @@ export class GenericVideoEncoder extends Emitter<Events> {
         this._state = value;
     }
 
-    public static async createNew(ffprobePath: string, ffmpegPath: string, inputFilePath: string, updateCallback: () => void): Promise<GenericVideoEncoder> {
-        const encoder = new GenericVideoEncoder(ffprobePath, ffmpegPath, inputFilePath, updateCallback);
+    public static async createNew(ffprobePath: string, ffmpegPath: string, inputFilePath: string): Promise<GenericVideoEncoder> {
+        const encoder = new GenericVideoEncoder(ffprobePath, ffmpegPath, inputFilePath);
         const probeData = probe(ffprobePath, inputFilePath);
 
         try {
@@ -112,7 +130,7 @@ export class GenericVideoEncoder extends Emitter<Events> {
             throw new Error(`Cannot start encoding when the state is not pending. Current state: ${this.state}`);
         }
 
-        this.process = spawn(`"${this.ffmpegPath}" -y -i "${this.inputFilePath}" ${ffmpegArguments} "${outputFilePath}"`, {
+        this.process = spawn(`"${this.ffmpegPath}" -y -i "${this._inputFilePath}" ${ffmpegArguments} "${outputFilePath}"`, {
             shell: true
         });
 
@@ -123,7 +141,7 @@ export class GenericVideoEncoder extends Emitter<Events> {
         this.process.on("close", async code => {
             this.state = code == 0 ? "Success" : "Error";
             this.logLine(`Process exited with code ${code}`);
-            this.updateCallback();
+            this.emit("update");
             this.resolve?.();
         });
 
@@ -148,7 +166,7 @@ export class GenericVideoEncoder extends Emitter<Events> {
 
         this.logInternal(data);
 
-        this.updateCallback();
+        this.emit("update");
     }
 
     /**

@@ -15,9 +15,9 @@ export default function EncoderCreationPage() {
     const tab = useSelector((state: RootState) => state.tabs).find(tab => tab.id == parseInt(params.id as string)) as Tab;
 
     const [taskName, setTaskName] = useState(`New task ${params.id}`);
-    const [taskType, setTaskType] = useState(1);
-    const [ffmpegPath, setFFmpegPath] = useState("");
-    const [ffprobePath, setFFprobePath] = useState("");
+    const [taskType, setTaskType] = useState(creationData ? creationData.taskType : 1);
+    const [ffmpegPath, setFFmpegPath] = useState(creationData ? creationData.ffmpegPath : "");
+    const [ffprobePath, setFFprobePath] = useState(creationData ? creationData.ffprobePath : "");
 
     const [encoderCreated, setEncoderCreated] = useState(false);
 
@@ -67,7 +67,7 @@ export default function EncoderCreationPage() {
                     </label>
                     <input
                         type={"text"}
-                        id={`taskName_${params.id}`}
+                        id={"taskName"}
                         name={"taskName"}
                         value={taskName}
                         onChange={e => setTaskName(() => e.target.value)}
@@ -80,7 +80,7 @@ export default function EncoderCreationPage() {
                         Task type
                     </label>
                     <select
-                        id={`taskType_${params.id}`}
+                        id={"taskType"}
                         name={"taskType"}
                         value={taskType}
                         onChange={e => setTaskType(parseInt(e.target.value))}
@@ -99,7 +99,7 @@ export default function EncoderCreationPage() {
                 </label>
                 <input
                     type={"text"}
-                    id={`ffmpegPath_${params.id}`}
+                    id={"ffmpegPath"}
                     name={"ffmpegPath"}
                     value={ffmpegPath}
                     onChange={e => setFFmpegPath(e.target.value)}
@@ -113,7 +113,7 @@ export default function EncoderCreationPage() {
                 </label>
                 <input
                     type={"text"}
-                    id={`ffprobePath_${params.id}`}
+                    id={"ffprobePath"}
                     name={"ffprobePath"}
                     value={ffprobePath}
                     onChange={e => setFFprobePath(e.target.value)}

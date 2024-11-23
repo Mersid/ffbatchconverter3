@@ -1,4 +1,6 @@
+import { Stats } from "fs";
 import { spawnSync } from "node:child_process";
+import { stat, readdir } from "node:fs/promises";
 
 export function getFFmpegPath(): string | undefined {
     return findCommand("ffmpeg");
@@ -33,4 +35,36 @@ export function findCommand(command: string): string | undefined {
     }
 
     return result;
+}
+
+/**
+ * Given a file path, returns a list of all files in the directory and subdirectories.
+ * If it's a file, just returns itself in a list.
+ * An empty list is returned if the path does not exist.
+ * File paths that are absolute will return an absolute path.
+ * Relative paths will return a relative path.
+ * @returns
+ * @param filePath
+ */
+export async function getFilesRecursive(filePath: string): Promise<string[]> {
+    const files: string[] = [];
+    let stats: Stats;
+    try {
+        stats = await stat(filePath);
+    } catch (e) {
+        return [];
+    }
+
+    if (stats.isDirectory()) {
+        const dirContents = await readdir(filePath);
+        for (const dir of dirContents) {
+            files.push(...(await getFilesRecursive(`${filePath}/${dir}`)));
+        }
+    }
+
+    if (stats.isFile()) {
+        files.push(filePath);
+    }
+
+    return files;
 }
