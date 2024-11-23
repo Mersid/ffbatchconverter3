@@ -1,53 +1,56 @@
 import { GenericVideoEncoder } from "../encoders/GenericVideoEncoder";
 import { getFilesRecursive } from "../misc/Helpers";
-import {mkdir} from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
 export class GenericVideoEncoderController {
+    /**
+     * Output directory relative to the input file. Do not use absolute paths!
+     */
+    public outputSubdirectory: string = "";
+    /**
+     * Extension of the output file.
+     */
+    public extension: string = "";
+    public ffmpegArguments: string = "";
+    private encoders: GenericVideoEncoder[] = [];
+    private isEncoding: boolean = false;
+
+    private constructor(ffprobePath: string, ffmpegPath: string) {
+        this._ffprobePath = ffprobePath;
+        this._ffmpegPath = ffmpegPath;
+    }
+
     private _concurrency: number = 1;
+
     public get concurrency(): number {
         return this._concurrency;
     }
+
     public set concurrency(value: number) {
         this._concurrency = value;
         // TODO: If this becomes an issue, block until processActions() finishes.
         this.processActions().then(_r => {});
     }
 
-    /**
-     * Output directory relative to the input file. Do not use absolute paths!
-     */
-    public outputSubdirectory: string = "";
-
-    /**
-     * Extension of the output file.
-     */
-    public extension: string = "";
-
     private _ffmpegPath: string;
+
     public get ffmpegPath(): string {
         return this._ffmpegPath;
     }
+
     private set ffmpegPath(value: string) {
         this._ffmpegPath = value;
     }
 
     private _ffprobePath: string;
+
     public get ffprobePath(): string {
         return this._ffprobePath;
     }
+
     private set ffprobePath(value: string) {
         this._ffprobePath = value;
-    }
-
-    public ffmpegArguments: string = "";
-    private encoders: GenericVideoEncoder[] = [];
-
-    private isEncoding: boolean = false;
-
-    private constructor(ffprobePath: string, ffmpegPath: string) {
-        this._ffprobePath = ffprobePath;
-        this._ffmpegPath = ffmpegPath;
     }
 
     public static async createNew(ffprobePath: string, ffmpegPath: string): Promise<GenericVideoEncoderController> {

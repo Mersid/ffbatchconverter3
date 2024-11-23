@@ -1,6 +1,6 @@
 import { Stats } from "fs";
 import { spawnSync } from "node:child_process";
-import { stat, readdir } from "node:fs/promises";
+import { readdir, stat } from "node:fs/promises";
 
 export function getFFmpegPath(): string | undefined {
     return findCommand("ffmpeg");

@@ -1,16 +1,12 @@
 import { spawn } from "node:child_process";
 import { EncodingState } from "../misc/EncodingState";
 import { probe } from "../misc/Helpers";
-import { stat } from "node:fs/promises";
 import { ChildProcessWithoutNullStreams } from "child_process";
 import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
 import { Emitter } from "strict-event-emitter";
-import { randomUUID } from "node:crypto";
 import { v4 as uuid4 } from "uuid";
 import * as Events from "node:events";
 import { stat } from "fs/promises";
-import { resolve } from "path";
-import { data } from "autoprefixer";
 
 type Events = {
     log: [data: string, internal: boolean];
@@ -22,20 +18,8 @@ type Events = {
 };
 
 export class GenericVideoEncoder extends Emitter<Events> {
-
-    private _encoderId: string;
-    public get encoderId(): string {
-        return this._encoderId;
-    }
-
     private ffprobePath: string;
     private ffmpegPath: string;
-
-    private _inputFilePath: string;
-    public get inputFilePath(): string {
-        return this._inputFilePath;
-    }
-
     private outputFilePath: string = "";
     private log: string = "";
     /**
@@ -54,6 +38,18 @@ export class GenericVideoEncoder extends Emitter<Events> {
         this.ffprobePath = ffprobePath;
         this.ffmpegPath = ffmpegPath;
         this._inputFilePath = inputFilePath;
+    }
+
+    private _encoderId: string;
+
+    public get encoderId(): string {
+        return this._encoderId;
+    }
+
+    private _inputFilePath: string;
+
+    public get inputFilePath(): string {
+        return this._inputFilePath;
     }
 
     private _currentDuration: number = 0;
