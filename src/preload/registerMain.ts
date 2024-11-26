@@ -1,4 +1,5 @@
 import {
+    EventChannel, EventChannelArgumentsType,
     FetchChannel,
     FetchChannelRequestArgumentsType,
     FetchChannelResponseArgumentsType,
@@ -6,6 +7,17 @@ import {
     SendChannelArgumentsType
 } from "./channels";
 import { ipcMain, IpcMainEvent, IpcMainInvokeEvent } from "electron";
+import { webContents } from "../main";
+
+/**
+ * Helper function to send a message from the main process to the renderer.
+ * @param webContents
+ * @param channel
+ * @param args
+ */
+export function sendToRenderer<T extends EventChannel>(channel: T, args: EventChannelArgumentsType<T>) {
+    webContents.send(channel, args);
+}
 
 /**
  * Helper function to register a listener for one-way calls from the renderer to the main process.

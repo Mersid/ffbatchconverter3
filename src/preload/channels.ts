@@ -1,4 +1,5 @@
 import { ExternalLibraryPathsInfo } from "../shared/types/ExternalLibraryPathsInfo";
+import { GenericVideoEncoderReport } from "../shared/types/GenericVideoEncoderReport";
 
 /**
  * Declares the names of channels that can be used to send messages from the renderer to the main process.
@@ -18,10 +19,10 @@ export type SendChannelArgumentsType<T extends SendChannel> = SendChannelTypes[T
 /**
  * Declares the names of channels that can be used to listen for messages sent from the main process to the renderer.
  */
-export type EventChannel = "";
+export type EventChannel = "genericVideoEncoderUpdate";
 
 type EventChannelTypes = {
-    "": unknown;
+    genericVideoEncoderUpdate: GenericVideoEncoderReport;
 };
 
 export type EventChannelArgumentsType<T extends EventChannel> = EventChannelTypes[T];
@@ -37,10 +38,3 @@ type FetchChannelTypes = {
 
 export type FetchChannelRequestArgumentsType<T extends FetchChannel> = FetchChannelTypes[T][0];
 export type FetchChannelResponseArgumentsType<T extends FetchChannel> = FetchChannelTypes[T][1];
-
-// type SendChannelDataMap = {
-//     ping: string;
-//     log: unknown;
-// }
-//
-// export type SendChannelArgumentsType<T extends SendChannel> = SendChannelDataMap[T];

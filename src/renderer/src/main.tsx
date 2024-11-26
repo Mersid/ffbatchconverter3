@@ -7,6 +7,7 @@ import { createHashRouter, RouterProvider } from "react-router-dom";
 import Layout from "@renderer/components/Layout";
 import { Provider } from "react-redux";
 import { store } from "@renderer/redux/Store";
+import EncoderUpdateListener from "@renderer/misc/EncoderUpdateListener";
 
 const router = createHashRouter([
     {
@@ -28,6 +29,7 @@ const router = createHashRouter([
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
         <Provider store={store}>
+            <EncoderUpdateListener />
             <RouterProvider router={router} />
         </Provider>
     </React.StrictMode>

@@ -5,7 +5,6 @@ import { ChildProcessWithoutNullStreams } from "child_process";
 import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
 import { Emitter } from "strict-event-emitter";
 import { v4 as uuid4 } from "uuid";
-import * as Events from "node:events";
 import { stat } from "fs/promises";
 
 type Events = {

@@ -2,8 +2,14 @@ import { GenericVideoEncoder } from "../encoders/GenericVideoEncoder";
 import { getFilesRecursive } from "../misc/Helpers";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
+import { v4 as uuid4 } from "uuid";
 
 export class GenericVideoEncoderController {
+    private _controllerId: string;
+    public get controllerId(): string {
+        return this._controllerId;
+    }
+
     /**
      * Output directory relative to the input file. Do not use absolute paths!
      */
@@ -17,6 +23,7 @@ export class GenericVideoEncoderController {
     private isEncoding: boolean = false;
 
     private constructor(ffprobePath: string, ffmpegPath: string) {
+        this._controllerId = uuid4();
         this._ffprobePath = ffprobePath;
         this._ffmpegPath = ffmpegPath;
     }

@@ -1,5 +1,5 @@
 import { contextBridge } from "electron";
-import { registerFetch, registerSend } from "./registerRenderer2";
+import { registerEvent, registerFetch, registerSend } from "./registerRenderer2";
 
 /**
  * Register one-way calls from the renderer to the main process here.
@@ -9,7 +9,9 @@ const send = {
     log: registerSend("log")
 };
 
-const events = {};
+const events = {
+    genericVideoEncoderUpdate: registerEvent("genericVideoEncoderUpdate")
+};
 
 const fetch = {
     getExternalLibraryPaths: registerFetch("getExternalLibraryPaths")
