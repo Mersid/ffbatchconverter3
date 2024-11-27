@@ -1,5 +1,6 @@
 import {
-    EventChannel, EventChannelArgumentsType,
+    EventChannel,
+    EventChannelArgumentsType,
     FetchChannel,
     FetchChannelRequestArgumentsType,
     FetchChannelResponseArgumentsType,
@@ -11,7 +12,6 @@ import { webContents } from "../main";
 
 /**
  * Helper function to send a message from the main process to the renderer.
- * @param webContents
  * @param channel
  * @param args
  */

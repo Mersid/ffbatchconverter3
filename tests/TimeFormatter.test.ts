@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test } from "vitest";
 import { formatFFmpegTimeToSeconds } from "../src/main/encoders/misc/TimeFormatter";
 
 describe("Test ffmpeg -> seconds time formatter", () => {

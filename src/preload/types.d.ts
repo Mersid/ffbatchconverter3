@@ -1,4 +1,4 @@
-import {api} from "./index";
+import { api } from "./index";
 import { ElectronAPI } from "@electron-toolkit/preload";
 
 // Note: Naming this after another file will break it! So don't name this index.d.ts... took me way too long to figure this one out.
@@ -13,9 +13,6 @@ declare global {
 
     // https://github.com/microsoft/TypeScript/issues/49453
     interface Array<T> {
-        findLast(
-            predicate: (value: T, index: number, obj: T[]) => unknown,
-            thisArg?: unknown
-        ): T | undefined;
+        findLast(predicate: (value: T, index: number, obj: T[]) => unknown, thisArg?: unknown): T | undefined;
     }
 }

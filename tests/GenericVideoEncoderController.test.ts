@@ -1,8 +1,7 @@
 import { afterEach, describe, test } from "vitest";
 import { GenericVideoEncoderController } from "../src/main/encoders/controllers/GenericVideoEncoderController";
-import sleep from "../src/shared/functions/sleep";
-import {cwd} from "node:process";
-import { rm, rmdir } from "node:fs/promises";
+import { cwd } from "node:process";
+import { rm } from "node:fs/promises";
 
 describe("Test generic video encoder controller", { timeout: 0 }, async () => {
     afterEach(async () => {

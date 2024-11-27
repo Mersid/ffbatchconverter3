@@ -14,9 +14,9 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
      * Callback that is called whenever the encoder receives new information. This is a good time for listeners to check the state.
      */
     public readonly updateCallback: () => void;
-    private ffprobePath: string;
-    private ffmpegPath: string;
-    private inputFilePath: string;
+    private readonly ffprobePath: string;
+    private readonly ffmpegPath: string;
+    private readonly inputFilePath: string;
     private outputFilePath: string = "";
     private log: string = "";
     /**

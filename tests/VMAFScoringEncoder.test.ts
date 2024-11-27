@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test } from "vitest";
 import { tmpdir } from "os";
 import { VMAFScoringEncoder } from "../src/main/encoders/encoders/VMAFScoringEncoder";
 

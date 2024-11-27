@@ -1,5 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
-import { GenericVideoEncoder } from "../src/main/encoders/encoders/GenericVideoEncoder";
+import { describe, expect, test } from "vitest";
 import { tmpdir } from "os";
 import { EncodeAndScoreEncoder } from "../src/main/encoders/encoders/EncodeAndScoreEncoder";
 

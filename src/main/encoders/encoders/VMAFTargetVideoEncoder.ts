@@ -25,14 +25,14 @@ type Events = {
 type Stage = "ValidateUpperBound" | "ValidateLowerBound" | "NarrowDown" | "IterateSubset" | "LinearWalk";
 
 export class VMAFTargetVideoEncoder extends Emitter<Events> {
-    private ffprobePath: string;
-    private ffmpegPath: string;
+    private readonly ffprobePath: string;
+    private readonly ffmpegPath: string;
 
-    private inputFilePath: string;
+    private readonly inputFilePath: string;
     private outputFilePath: string = "";
     private h265: boolean = false;
 
-    private tempDirectory: string;
+    private readonly tempDirectory: string;
 
     private log: string = "";
     /**
@@ -194,8 +194,9 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
                     continue;
                 }
 
-                const midCRF = Math.floor((highCRF + lowCRF) / 2);
-                thisCrf = midCRF;
+                // Also previously called midCrf.
+                thisCrf = Math.floor((highCRF + lowCRF) / 2);
+
                 const tempFile = await this.encodeVideoWithCRF(ffmpegArguments, thisCrf);
                 // TODO: Test this.
                 if (this.encoder.vmafScore > targetVMAF) {
@@ -296,8 +297,7 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
      * @private
      */
     private generateAugmentedFFmpegArguments(ffmpegArguments: string, h265: boolean, crf: number): string {
-        const args = `${ffmpegArguments} -c:v ${h265 ? "libx265" : "libx264"} -crf ${crf}`;
-        return args;
+        return `${ffmpegArguments} -c:v ${h265 ? "libx265" : "libx264"} -crf ${crf}`;
     }
 
     /**

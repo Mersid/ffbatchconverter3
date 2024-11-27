@@ -17,11 +17,7 @@ export default function EncoderBase(): ReactElement {
         }
 
         // Otherwise, if we already have the key, but it's not marked as completed, user likely switched out and back. Show it again with existing data.
-        if (creationData.encoderCreated == false) {
-            return true;
-        }
-
-        return false;
+        return creationData.encoderCreated == false;
     };
 
     const showEncoderPage = () => {

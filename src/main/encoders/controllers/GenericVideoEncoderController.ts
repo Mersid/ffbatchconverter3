@@ -15,7 +15,7 @@ type Events = {
 };
 
 export class GenericVideoEncoderController extends Emitter<Events> {
-    private _controllerId: string;
+    private readonly _controllerId: string;
     public get controllerId(): string {
         return this._controllerId;
     }
@@ -72,8 +72,7 @@ export class GenericVideoEncoderController extends Emitter<Events> {
     }
 
     public static async createNew(ffprobePath: string, ffmpegPath: string): Promise<GenericVideoEncoderController> {
-        const controller = new GenericVideoEncoderController(ffprobePath, ffmpegPath);
-        return controller;
+        return new GenericVideoEncoderController(ffprobePath, ffmpegPath);
     }
 
     /**

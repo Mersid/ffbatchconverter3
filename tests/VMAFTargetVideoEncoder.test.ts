@@ -1,8 +1,6 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
-import { GenericVideoEncoder } from "../src/main/encoders/encoders/GenericVideoEncoder";
+import { describe, expect, test } from "vitest";
 import { tmpdir } from "os";
 import { VMAFTargetVideoEncoder } from "../src/main/encoders/encoders/VMAFTargetVideoEncoder";
-import { VMAFScoringEncoder } from "../src/main/encoders/encoders/VMAFScoringEncoder";
 
 describe("Test encode and score encoder", async () => {
     const tempDir = `${tmpdir()}/ffbatchconverter3_test`;

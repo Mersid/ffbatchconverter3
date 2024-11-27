@@ -19,7 +19,7 @@ type Events = {
 
 export class GenericVideoEncoder extends Emitter<Events> {
     private ffprobePath: string;
-    private ffmpegPath: string;
+    private readonly ffmpegPath: string;
     private outputFilePath: string = "";
     private log: string = "";
     /**
@@ -40,13 +40,13 @@ export class GenericVideoEncoder extends Emitter<Events> {
         this._inputFilePath = inputFilePath;
     }
 
-    private _encoderId: string;
+    private readonly _encoderId: string;
 
     public get encoderId(): string {
         return this._encoderId;
     }
 
-    private _inputFilePath: string;
+    private readonly _inputFilePath: string;
 
     public get inputFilePath(): string {
         return this._inputFilePath;

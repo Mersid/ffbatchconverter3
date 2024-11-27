@@ -20,8 +20,8 @@ export class VMAFScoringEncoder extends Emitter<Events> {
      */
     public readonly updateCallback: () => void;
     private ffprobePath: string;
-    private ffmpegPath: string;
-    private referenceFilePath: string;
+    private readonly ffmpegPath: string;
+    private readonly referenceFilePath: string;
     private distortedFilePath: string = "";
     private log: string = "";
     /**
@@ -183,8 +183,7 @@ export class VMAFScoringEncoder extends Emitter<Events> {
     private getVMAFScore(): number {
         const regex = /(?<=VMAF score: )[0-9.]+/;
         const vmafScoreString = this.log.match(regex)?.[0];
-        const vmafScore = parseFloat(vmafScoreString ?? "0");
-        return vmafScore;
+        return parseFloat(vmafScoreString ?? "0");
     }
 
     /**
