@@ -38,12 +38,12 @@ export default function GenericVideoEncoderPage() {
 
     return (
         <div className={"pl-1 flex flex-col h-screen"}>
-            <div className={"flex-1"} onDragOver={event => handleDragOver(event)} onDrop={event => handleDrop(event)}>
+            <div className={"flex-1 overflow-y-auto"} onDragOver={event => handleDragOver(event)} onDrop={event => handleDrop(event)}>
                 <p>Generic video encoder page! ID: {id}</p>
                 <p>Controller ID: {controllerId}</p>
                 <GenericVideoEncoderTable />
             </div>
-            <div className={"bg-gray-50"}>
+            <div className={"bg-gray-50 sticky bottom-0"}>
                 <div className={"min-h-0.5 bg-gray-300"} />
                 <div className={"flex flex-row"}>
                     <div className={""}>

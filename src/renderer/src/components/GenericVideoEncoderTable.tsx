@@ -1,5 +1,7 @@
+import { RootState } from "@renderer/redux/Store";
 import { createColumnHelper, flexRender, getCoreRowModel, getSortedRowModel, SortingState, useReactTable } from "@tanstack/react-table";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 
 const columnHelper = createColumnHelper<GenericVideoEncoderRow>();
 const columns = [
@@ -25,8 +27,18 @@ const columns = [
 export default function GenericVideoEncoderTable() {
     const [sorting, setSorting] = useState<SortingState>([]);
 
+    const data0 = useSelector((state: RootState) => state.genericVideoEncoderReports);
+    const data = useMemo(() => data0.map(r => {
+        return {
+            fileName: r.inputFilePath,
+            size: r.fileSize.toString(),
+            duration: r.duration.toString(),
+            status: r.encodingState.toString()
+        } as GenericVideoEncoderRow;
+    }), [data0]);
+
     const table = useReactTable({
-        data: sampleData,
+        data: data,
         columns: columns,
         getCoreRowModel: getCoreRowModel<GenericVideoEncoderRow>(),
         getSortedRowModel: getSortedRowModel<GenericVideoEncoderRow>(),
