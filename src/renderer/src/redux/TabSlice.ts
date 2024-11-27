@@ -1,6 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Tab } from "@renderer/misc/Tab";
 
+/**
+ * Tracks all the tabs in the sidebar.
+ */
 export const tabSlice = createSlice({
     name: "tabs",
     initialState: [] as Tab[],

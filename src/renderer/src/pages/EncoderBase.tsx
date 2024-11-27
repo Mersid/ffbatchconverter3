@@ -37,8 +37,6 @@ export default function EncoderBase(): ReactElement {
     return (
         // If we don't have the key, switching between consecutive creation pages will retain data in the form!
         <div className={"pl-1"} key={params.id}>
-            <p>Hello world!</p>
-            <p className={"text-blue-300"}>{params.id}</p>
             {shouldShowCreationPage() ? <EncoderCreationPage /> : showEncoderPage()}
         </div>
     );

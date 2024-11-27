@@ -14,7 +14,8 @@ const events = {
 };
 
 const fetch = {
-    getExternalLibraryPaths: registerFetch("getExternalLibraryPaths")
+    getExternalLibraryPaths: registerFetch("getExternalLibraryPaths"),
+    createGenericVideoEncoder: registerFetch("createGenericVideoEncoder")
 };
 
 export const api = {

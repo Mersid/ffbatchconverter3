@@ -30,10 +30,11 @@ export type EventChannelArgumentsType<T extends EventChannel> = EventChannelType
 /**
  * Declares the names of channels that can be used to fetch data from the main process.
  */
-export type FetchChannel = "getExternalLibraryPaths";
+export type FetchChannel = "getExternalLibraryPaths" | "createGenericVideoEncoder";
 
 type FetchChannelTypes = {
     getExternalLibraryPaths: [void, ExternalLibraryPathsInfo];
+    createGenericVideoEncoder: [ExternalLibraryPathsInfo, string];
 };
 
 export type FetchChannelRequestArgumentsType<T extends FetchChannel> = FetchChannelTypes[T][0];

@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { tabSlice } from "./TabSlice";
 import { encoderCreationDataSlice } from "./EncoderCreationDataSlice";
+import { encoderMapDataSlice } from "@renderer/redux/EncoderMapDataSlice";
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
@@ -8,6 +9,7 @@ export type AppDispatch = typeof store.dispatch;
 export const store = configureStore({
     reducer: {
         tabs: tabSlice.reducer,
-        encoderCreationData: encoderCreationDataSlice.reducer
+        encoderCreationData: encoderCreationDataSlice.reducer,
+        encoderMapData: encoderMapDataSlice.reducer,
     }
 });

@@ -6,6 +6,7 @@ import { RootState } from "@renderer/redux/Store";
 import { addEncoderCreationData } from "@renderer/redux/EncoderCreationDataSlice";
 import { updateTitle } from "@renderer/redux/TabSlice";
 import { Tab } from "@renderer/misc/Tab";
+import { addEncoderMap } from "@renderer/redux/EncoderMapDataSlice";
 
 export default function EncoderCreationPage() {
     const params = useParams();
@@ -30,8 +31,8 @@ export default function EncoderCreationPage() {
             setFFprobePath(() => creationData.ffprobePath);
         } else {
             window.api.fetch.getExternalLibraryPaths().then(data => {
-                setFFmpegPath(() => data.ffmpeg);
-                setFFprobePath(() => data.ffprobe);
+                setFFmpegPath(() => data.ffmpegPath);
+                setFFprobePath(() => data.ffprobePath);
             });
         }
     }, []);
@@ -124,8 +125,24 @@ export default function EncoderCreationPage() {
             <div className={"absolute right-0 bottom-0 mb-4 mr-4"}>
                 <button
                     className={"bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded"}
-                    onClick={() => {
+                    onClick={async () => {
                         setEncoderCreated(() => true);
+
+                        if (taskType == 1) {
+                            // Generic encoder
+                            const controllerId = await window.api.fetch.createGenericVideoEncoder({
+                                ffmpegPath,
+                                ffprobePath
+                            });
+
+                            // The above call to the main process will return the controller ID. Track this in Redux.
+                            dispatch(
+                                addEncoderMap({
+                                    pageId: params.id as string,
+                                    encoderId: controllerId
+                                })
+                            );
+                        }
                     }}
                 >
                     Submit {params.id}

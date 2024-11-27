@@ -1,11 +1,41 @@
 import GenericVideoEncoderTable from "@renderer/components/GenericVideoEncoderTable";
+import { DragEvent } from "react";
+import { useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "@renderer/redux/Store";
 
 export default function GenericVideoEncoderPage() {
+    const params = useParams();
+    const id = params.id;
+    const controllerId = useSelector((state: RootState) => state.encoderMapData).find(data => data.pageId === id)?.encoderId;
+
+    const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        const files = event.dataTransfer.files;
+        console.log(files);
+        window.api.send.log(`Dropped ${files.length} files!\n${JSON.stringify(files)}`);
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files.item(i);
+            if (file) {
+                window.api.send.log(`File ${i}: ${file.path}`);
+            }
+        }
+    };
+
+    const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+    };
+
     return (
-        <div className={"pl-1"}>
-            <p>Generic video encoder page!</p>
-            <GenericVideoEncoderTable />
-            <div className={"absolute bottom-0 left-64 right-0 bg-gray-50"}>
+        <div className={"pl-1 flex flex-col h-screen"}>
+            <div className={"flex-1"} onDragOver={event => handleDragOver(event)} onDrop={event => handleDrop(event)}>
+                <p>Generic video encoder page! ID: {id}</p>
+                <p>Controller ID: {controllerId}</p>
+                <GenericVideoEncoderTable />
+            </div>
+            <div className={"bg-gray-50"}>
                 <div className={"min-h-0.5 bg-gray-300"} />
                 <div className={"flex flex-row"}>
                     <div className={""}>

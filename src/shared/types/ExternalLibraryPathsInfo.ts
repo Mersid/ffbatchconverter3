@@ -1,4 +1,4 @@
 export type ExternalLibraryPathsInfo = {
-    ffmpeg: string;
-    ffprobe: string;
+    ffmpegPath: string;
+    ffprobePath: string;
 };
