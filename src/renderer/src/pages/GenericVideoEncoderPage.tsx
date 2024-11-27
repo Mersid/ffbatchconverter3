@@ -7,20 +7,28 @@ import { RootState } from "@renderer/redux/Store";
 export default function GenericVideoEncoderPage() {
     const params = useParams();
     const id = params.id;
-    const controllerId = useSelector((state: RootState) => state.encoderMapData).find(data => data.pageId === id)?.encoderId;
+    const controllerId = useSelector((state: RootState) => state.encoderMapData).find(data => data.pageId === id)?.encoderId as string;
 
     const handleDrop = (event: DragEvent<HTMLDivElement>) => {
         event.preventDefault();
         const files = event.dataTransfer.files;
-        console.log(files);
         window.api.send.log(`Dropped ${files.length} files!\n${JSON.stringify(files)}`);
+
+        const filePaths: string[] = [];
 
         for (let i = 0; i < files.length; i++) {
             const file = files.item(i);
             if (file) {
-                window.api.send.log(`File ${i}: ${file.path}`);
+                filePaths.push(file.path);
+            } else {
+                throw new Error(`File ${i} is null!`);
             }
         }
+
+        window.api.send.addPathsToGenericVideoEncoder({
+            controllerId,
+            paths: filePaths
+        });
     };
 
     const handleDragOver = (event: DragEvent<HTMLDivElement>) => {

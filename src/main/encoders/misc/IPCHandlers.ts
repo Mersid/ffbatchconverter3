@@ -21,4 +21,8 @@ export function registerIPCHandlers(): void {
     registerFetch("createGenericVideoEncoder", async (_event, args) => {
         return await lord.createNewGenericVideoEncoderController(args);
     });
+
+    registerReceive("addPathsToGenericVideoEncoder", async (_event, args) => {
+        return await lord.addPathsToGenericVideoEncoder(args);
+    });
 }

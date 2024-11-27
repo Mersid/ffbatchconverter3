@@ -28,7 +28,7 @@ export function probe(ffprobe: string, inputFilePath: string): string {
  */
 export function findCommand(command: string): string | undefined {
     const p = spawnSync(process.platform === "win32" ? "where" : "which", [command]);
-    const result = p.stdout.toString();
+    const result = p.stdout.toString().trim(); // Trim removes the \r\n at the end.
 
     if (result === "") {
         return undefined;

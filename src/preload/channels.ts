@@ -1,10 +1,11 @@
 import { ExternalLibraryPathsInfo } from "../shared/types/ExternalLibraryPathsInfo";
 import { GenericVideoEncoderReport } from "../shared/types/GenericVideoEncoderReport";
+import { GenericVideoEncoderPathUpdateInfo } from "../shared/types/GenericVideoEncoderPathUpdateInfo";
 
 /**
  * Declares the names of channels that can be used to send messages from the renderer to the main process.
  */
-export type SendChannel = "ping" | "log";
+export type SendChannel = "ping" | "log" | "addPathsToGenericVideoEncoder";
 
 /**
  * Declares the types of data that can be sent through the channels declared in SendChannel.
@@ -12,6 +13,7 @@ export type SendChannel = "ping" | "log";
 type SendChannelTypes = {
     ping: void;
     log: unknown;
+    addPathsToGenericVideoEncoder: GenericVideoEncoderPathUpdateInfo;
 };
 
 export type SendChannelArgumentsType<T extends SendChannel> = SendChannelTypes[T];

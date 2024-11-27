@@ -3,8 +3,18 @@ import { getFilesRecursive } from "../misc/Helpers";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { v4 as uuid4 } from "uuid";
+import { Emitter } from "strict-event-emitter";
+import { GenericVideoEncoderReport } from "../../../shared/types/GenericVideoEncoderReport";
 
-export class GenericVideoEncoderController {
+type Events = {
+    /**
+     * Event that is emitted whenever the encoder receives new information. This is a good time for listeners to check the state.
+     * The ID of the encoder is given as an argument.
+     */
+    update: [encoderId: string];
+};
+
+export class GenericVideoEncoderController extends Emitter<Events> {
     private _controllerId: string;
     public get controllerId(): string {
         return this._controllerId;
@@ -23,6 +33,7 @@ export class GenericVideoEncoderController {
     private isEncoding: boolean = false;
 
     private constructor(ffprobePath: string, ffmpegPath: string) {
+        super();
         this._controllerId = uuid4();
         this._ffprobePath = ffprobePath;
         this._ffmpegPath = ffmpegPath;
@@ -78,7 +89,26 @@ export class GenericVideoEncoderController {
         await this.processActions();
     }
 
-    public async addEntries(entries: string[]) {
+    /**
+     * Produces a report for the encoder with the given ID. An error is thrown if no encoder with the given ID is found.
+     * @param encoderId
+     */
+    public getReportFor(encoderId: string) {
+        const encoder = this.encoders.find(e => e.encoderId == encoderId);
+        if (encoder == undefined) {
+            throw new Error(`No encoder with ID ${encoderId} found.`);
+        }
+
+        return encoder.report;
+    }
+
+    /**
+     * Creates encoders for the file paths entered.
+     * Directories will be recursively traversed and all files will be added.
+     * Each file will generate an initial report that is returned.
+     * @param entries
+     */
+    public async addEntries(entries: string[]): Promise<GenericVideoEncoderReport[]> {
         const files: string[] = [];
         for (const entry of entries) {
             files.push(...(await getFilesRecursive(entry)));
@@ -94,10 +124,12 @@ export class GenericVideoEncoderController {
         for (const encoder of encoders) {
             encoder.on("update", () => {
                 this.processActions();
-                // TODO: Raise event
+                this.emit("update", encoder.encoderId);
             });
             this.encoders.push(encoder);
         }
+
+        return encoders.map(t => t.report);
     }
 
     /**

@@ -6,6 +6,7 @@ import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
 import { Emitter } from "strict-event-emitter";
 import { v4 as uuid4 } from "uuid";
 import { stat } from "fs/promises";
+import { GenericVideoEncoderReport } from "../../../shared/types/GenericVideoEncoderReport";
 
 type Events = {
     log: [data: string, internal: boolean];
@@ -79,6 +80,17 @@ export class GenericVideoEncoder extends Emitter<Events> {
 
     private set state(value: EncodingState) {
         this._state = value;
+    }
+
+    public get report(): GenericVideoEncoderReport {
+        return {
+            encoderId: this.encoderId,
+            inputFilePath: this.inputFilePath,
+            fileSize: this.fileSize,
+            currentDuration: this.currentDuration,
+            duration: this.duration,
+            encodingState: this.state
+        };
     }
 
     public static async createNew(ffprobePath: string, ffmpegPath: string, inputFilePath: string): Promise<GenericVideoEncoder> {
