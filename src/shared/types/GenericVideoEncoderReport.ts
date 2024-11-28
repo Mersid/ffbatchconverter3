@@ -1,6 +1,7 @@
 import { EncodingState } from "../../main/encoders/misc/EncodingState";
 
 export type GenericVideoEncoderReport = {
+    controllerId: string;
     encoderId: string;
     encodingState: EncodingState;
     inputFilePath: string;

@@ -84,6 +84,7 @@ export class GenericVideoEncoder extends Emitter<Events> {
 
     public get report(): GenericVideoEncoderReport {
         return {
+            controllerId: "Added at controller level!",
             encoderId: this.encoderId,
             inputFilePath: this.inputFilePath,
             fileSize: this.fileSize,

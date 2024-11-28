@@ -7,7 +7,7 @@ import { RootState } from "@renderer/redux/Store";
 export default function GenericVideoEncoderPage() {
     const params = useParams();
     const id = params.id;
-    const controllerId = useSelector((state: RootState) => state.encoderMapData).find(data => data.pageId === id)?.encoderId as string;
+    const controllerId = useSelector((state: RootState) => state.encoderMapData).find(data => data.pageId === id)?.controllerId as string;
 
     const handleDrop = (event: DragEvent<HTMLDivElement>) => {
         event.preventDefault();

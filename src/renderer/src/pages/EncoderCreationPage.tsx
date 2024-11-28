@@ -139,7 +139,7 @@ export default function EncoderCreationPage() {
                             dispatch(
                                 addEncoderMap({
                                     pageId: params.id as string,
-                                    encoderId: controllerId
+                                    controllerId: controllerId
                                 })
                             );
                         }

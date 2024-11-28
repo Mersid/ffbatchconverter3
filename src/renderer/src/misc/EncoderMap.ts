@@ -5,7 +5,7 @@ export type EncoderMap = {
     pageId: string;
 
     /**
-     * The ID of the encoder, used to track the encoder in the main process.
+     * The ID of the encoder controller that this page's UI corresponds to.
      */
-    encoderId: string;
+    controllerId: string;
 };

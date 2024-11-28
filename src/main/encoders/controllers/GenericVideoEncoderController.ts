@@ -98,7 +98,10 @@ export class GenericVideoEncoderController extends Emitter<Events> {
             throw new Error(`No encoder with ID ${encoderId} found.`);
         }
 
-        return encoder.report;
+        return <GenericVideoEncoderReport>{
+            ...encoder.report,
+            controllerId: this.controllerId
+        };
     }
 
     /**
@@ -128,7 +131,12 @@ export class GenericVideoEncoderController extends Emitter<Events> {
             this.encoders.push(encoder);
         }
 
-        return encoders.map(t => t.report);
+        return encoders.map(t => {
+            return <GenericVideoEncoderReport>{
+                ...t.report,
+                controllerId: this.controllerId
+            };
+        });
     }
 
     /**

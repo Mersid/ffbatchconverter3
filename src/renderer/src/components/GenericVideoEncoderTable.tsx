@@ -2,6 +2,7 @@ import { RootState } from "@renderer/redux/Store";
 import { createColumnHelper, flexRender, getCoreRowModel, getSortedRowModel, SortingState, useReactTable } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
+import { useParams } from "react-router-dom";
 
 const columnHelper = createColumnHelper<GenericVideoEncoderRow>();
 const columns = [
@@ -26,16 +27,26 @@ const columns = [
 
 export default function GenericVideoEncoderTable() {
     const [sorting, setSorting] = useState<SortingState>([]);
+    const params = useParams();
+    const id = params.id;
+    const controllerId = useSelector((state: RootState) => state.encoderMapData).find(data => data.pageId === id)?.controllerId as string;
 
     const data0 = useSelector((state: RootState) => state.genericVideoEncoderReports);
-    const data = useMemo(() => data0.map(r => {
-        return {
-            fileName: r.inputFilePath,
-            size: r.fileSize.toString(),
-            duration: r.duration.toString(),
-            status: r.encodingState.toString()
-        } as GenericVideoEncoderRow;
-    }), [data0]);
+    const data = useMemo(
+        () =>
+            data0
+                // https://hiteshmishra.hashnode.dev/useselector-hook-in-react
+                .filter(data => data.controllerId === controllerId)
+                .map(r => {
+                    return {
+                        fileName: r.inputFilePath,
+                        size: r.fileSize.toString(),
+                        duration: r.duration.toString(),
+                        status: r.encodingState.toString()
+                    } as GenericVideoEncoderRow;
+                }),
+        [data0]
+    );
 
     const table = useReactTable({
         data: data,
@@ -84,30 +95,3 @@ type GenericVideoEncoderRow = {
     size: string;
     status: string;
 };
-
-const sampleData: GenericVideoEncoderRow[] = [
-    {
-        fileName: "a",
-        duration: "b",
-        size: "c",
-        status: "d"
-    },
-    {
-        fileName: "e",
-        duration: "f",
-        size: "g",
-        status: "h"
-    },
-    {
-        fileName: "i",
-        duration: "j",
-        size: "k",
-        status: "l"
-    },
-    {
-        fileName: "m",
-        duration: "n",
-        size: "o",
-        status: "p"
-    }
-];
