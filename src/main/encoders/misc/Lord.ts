@@ -8,13 +8,15 @@ import { GenericVideoEncoderController } from "../controllers/GenericVideoEncode
 import { GenericVideoEncoderPathUpdateInfo } from "../../../shared/types/GenericVideoEncoderPathUpdateInfo";
 import { sendToRenderer } from "../../../preload/registerMain";
 import { EncoderStatus } from "../../../renderer/src/misc/EncoderStatus";
+import { GenericVideoEncoderSettings } from "../../../renderer/src/misc/GenericVideoEncoderSettings";
 
 const genericVideoEncoders = new Map<string, GenericVideoEncoderController>();
 
 export const lord = {
     createNewGenericVideoEncoderController,
     addPathsToGenericVideoEncoder,
-    setEncoderActive
+    setEncoderActive,
+    setEncoderSettings
 };
 
 /**
@@ -60,4 +62,16 @@ async function setEncoderActive(status: EncoderStatus): Promise<EncoderStatus> {
         controllerId: controller.controllerId,
         encoderActive: controller.isEncoding
     };
+}
+
+async function setEncoderSettings(settings: GenericVideoEncoderSettings): Promise<void> {
+    const controller = genericVideoEncoders.get(settings.controllerId);
+    if (!controller) {
+        throw new Error(`No controller with ID ${settings.controllerId} found.`);
+    }
+
+    controller.concurrency = settings.concurrency;
+    controller.outputSubdirectory = settings.subdirectory;
+    controller.extension = settings.extension;
+    controller.ffmpegArguments = settings.ffmpegArguments;
 }

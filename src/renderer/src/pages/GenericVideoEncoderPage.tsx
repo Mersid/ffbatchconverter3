@@ -16,10 +16,10 @@ export default function GenericVideoEncoderPage() {
     const settings = useSelector((state: RootState) => state.genericVideoEncoderSettings).find(s => s.controllerId === controllerId);
     const dispatch = useDispatch();
 
-    const [concurrency, setConcurrency] = useState("1");
-    const [subdirectory, setSubdirectory] = useState("FFBatch");
-    const [extension, setExtension] = useState("mkv");
-    const [ffmpegArguments, setFFmpegArguments] = useState("-c:v libx265 -c:a aac");
+    const [concurrency, setConcurrency] = useState(settings ? settings.concurrency.toString() : "1");
+    const [subdirectory, setSubdirectory] = useState(settings ? settings.subdirectory : "FFBatch");
+    const [extension, setExtension] = useState(settings ? settings.extension : "mkv");
+    const [ffmpegArguments, setFFmpegArguments] = useState(settings ? settings.ffmpegArguments : "-c:v libx265 -c:a aac");
 
     const handleDrop = (event: DragEvent<HTMLDivElement>) => {
         event.preventDefault();
@@ -48,6 +48,7 @@ export default function GenericVideoEncoderPage() {
         event.dataTransfer.dropEffect = "copy";
     };
 
+    console.log(controllerId);
     /**
      * Push settings to Redux store and send to main process.
      */
@@ -61,24 +62,13 @@ export default function GenericVideoEncoderPage() {
             subdirectory
         };
 
-        console.log(controllerId);
-
         dispatch(setGenericVideoEncoderSettings(settings));
         window.api.send.setSettingsForGenericVideoEncoder(settings);
     };
 
-    /**
-     * Load settings from Redux store if it exists, otherwise create a new one.
-     */
+    // On change, replicate changes to backing store and send to main process.
     useEffect(() => {
-        if (settings) {
-            setConcurrency(() => settings.concurrency.toString());
-            setSubdirectory(() => settings.subdirectory);
-            setExtension(() => settings.extension);
-            setFFmpegArguments(() => settings.ffmpegArguments);
-        } else {
-            updateSettings();
-        }
+        updateSettings();
     }, [concurrency, subdirectory, extension, ffmpegArguments]);
 
     return (
@@ -98,10 +88,7 @@ export default function GenericVideoEncoderPage() {
                                 <input
                                     type={"text"}
                                     value={concurrency}
-                                    onChange={e => {
-                                        setConcurrency(e.target.value);
-                                        updateSettings();
-                                    }}
+                                    onChange={e => setConcurrency(() => e.target.value)}
                                     className={`px-2 py-1 text-gray-700 placeholder-gray-400 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-blue-500 inline-block w-24`}
                                 />
                             </div>
@@ -110,10 +97,7 @@ export default function GenericVideoEncoderPage() {
                                 <input
                                     type={"text"}
                                     value={subdirectory}
-                                    onChange={e => {
-                                        setSubdirectory(e.target.value);
-                                        updateSettings();
-                                    }}
+                                    onChange={e => setSubdirectory(() => e.target.value)}
                                     className={`px-2 py-1 text-gray-700 placeholder-gray-400 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-blue-500 inline-block w-64`}
                                 />
                             </div>
@@ -122,10 +106,7 @@ export default function GenericVideoEncoderPage() {
                                 <input
                                     type={"text"}
                                     value={extension}
-                                    onChange={e => {
-                                        setExtension(e.target.value);
-                                        updateSettings();
-                                    }}
+                                    onChange={e => setExtension(() => e.target.value)}
                                     className={`px-2 py-1 text-gray-700 placeholder-gray-400 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-blue-500 inline-block w-24`}
                                 />
                             </div>
@@ -136,10 +117,7 @@ export default function GenericVideoEncoderPage() {
                                 <input
                                     type={"text"}
                                     value={ffmpegArguments}
-                                    onChange={e => {
-                                        setFFmpegArguments(e.target.value);
-                                        updateSettings();
-                                    }}
+                                    onChange={e => setFFmpegArguments(() => e.target.value)}
                                     className={`px-2 py-1 text-gray-700 placeholder-gray-400 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-blue-500 inline-block w-[654px]`}
                                 />
                             </div>

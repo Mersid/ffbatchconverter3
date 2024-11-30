@@ -8,6 +8,7 @@ import { updateTitle } from "@renderer/redux/TabSlice";
 import { Tab } from "@renderer/misc/Tab";
 import { addEncoderMap } from "@renderer/redux/EncoderMapDataSlice";
 import { setEncoderStatus } from "@renderer/redux/EncoderStatusSlice";
+import { setGenericVideoEncoderSettings } from "@renderer/redux/GenericVideoEncoderSettingsSlice";
 
 export default function EncoderCreationPage() {
     const params = useParams();
@@ -25,12 +26,7 @@ export default function EncoderCreationPage() {
 
     // Load existing data if it exists
     useEffect(() => {
-        if (creationData) {
-            setTaskName(() => creationData.taskName);
-            setTaskType(() => creationData.taskType);
-            setFFmpegPath(() => creationData.ffmpegPath);
-            setFFprobePath(() => creationData.ffprobePath);
-        } else {
+        if (!creationData) {
             window.api.fetch.getExternalLibraryPaths().then(data => {
                 setFFmpegPath(() => data.ffmpegPath);
                 setFFprobePath(() => data.ffprobePath);
@@ -127,8 +123,6 @@ export default function EncoderCreationPage() {
                 <button
                     className={"bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded"}
                     onClick={async () => {
-                        setEncoderCreated(() => true);
-
                         if (taskType == 1) {
                             // Generic encoder
                             const controllerId = await window.api.fetch.createGenericVideoEncoder({
@@ -145,7 +139,15 @@ export default function EncoderCreationPage() {
                             );
 
                             // Set the initial encoder parameters according to the defaults.
-                            // TODO: Implement
+                            dispatch(
+                                setGenericVideoEncoderSettings({
+                                    controllerId,
+                                    extension: "mkv",
+                                    ffmpegArguments: "-c:v libx265 -c:a aac",
+                                    concurrency: 1,
+                                    subdirectory: "FFBatch"
+                                })
+                            );
 
                             // Add an entry to mark the encoder as not active.
                             dispatch(
@@ -155,6 +157,8 @@ export default function EncoderCreationPage() {
                                 })
                             );
                         }
+
+                        setEncoderCreated(() => true);
                     }}
                 >
                     Submit {params.id}
