@@ -7,12 +7,14 @@ import { ExternalLibraryPathsInfo } from "../../../shared/types/ExternalLibraryP
 import { GenericVideoEncoderController } from "../controllers/GenericVideoEncoderController";
 import { GenericVideoEncoderPathUpdateInfo } from "../../../shared/types/GenericVideoEncoderPathUpdateInfo";
 import { sendToRenderer } from "../../../preload/registerMain";
+import { EncoderStatus } from "../../../renderer/src/misc/EncoderStatus";
 
 const genericVideoEncoders = new Map<string, GenericVideoEncoderController>();
 
 export const lord = {
     createNewGenericVideoEncoderController,
-    addPathsToGenericVideoEncoder
+    addPathsToGenericVideoEncoder,
+    setEncoderActive
 };
 
 /**
@@ -40,4 +42,22 @@ async function addPathsToGenericVideoEncoder(info: GenericVideoEncoderPathUpdate
     reports.forEach(report => {
         sendToRenderer("genericVideoEncoderUpdate", report);
     });
+}
+
+async function setEncoderActive(status: EncoderStatus): Promise<EncoderStatus> {
+    const controller = genericVideoEncoders.get(status.controllerId);
+    if (!controller) {
+        throw new Error(`No controller with ID ${status.controllerId} found.`);
+    }
+
+    if (status.encoderActive) {
+        await controller.startEncoding();
+    } else {
+        await controller.stopEncoding();
+    }
+
+    return {
+        controllerId: controller.controllerId,
+        encoderActive: controller.isEncoding
+    };
 }

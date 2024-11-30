@@ -7,7 +7,8 @@ import { registerEvent, registerFetch, registerSend } from "./registerRenderer2"
 const send = {
     ping: registerSend("ping"),
     log: registerSend("log"),
-    addPathsToGenericVideoEncoder: registerSend("addPathsToGenericVideoEncoder")
+    addPathsToGenericVideoEncoder: registerSend("addPathsToGenericVideoEncoder"),
+    setSettingsForGenericVideoEncoder: registerSend("setSettingsForGenericVideoEncoder")
 };
 
 const events = {
@@ -16,7 +17,8 @@ const events = {
 
 const fetch = {
     getExternalLibraryPaths: registerFetch("getExternalLibraryPaths"),
-    createGenericVideoEncoder: registerFetch("createGenericVideoEncoder")
+    createGenericVideoEncoder: registerFetch("createGenericVideoEncoder"),
+    setEncoderActive: registerFetch("setEncoderActive")
 };
 
 export const api = {

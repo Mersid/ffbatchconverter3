@@ -25,4 +25,8 @@ export function registerIPCHandlers(): void {
     registerReceive("addPathsToGenericVideoEncoder", async (_event, args) => {
         return await lord.addPathsToGenericVideoEncoder(args);
     });
+
+    registerFetch("setEncoderActive", async (_event, args) => {
+        return await lord.setEncoderActive(args);
+    });
 }

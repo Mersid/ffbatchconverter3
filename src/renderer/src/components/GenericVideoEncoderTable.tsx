@@ -31,10 +31,10 @@ export default function GenericVideoEncoderTable() {
     const id = params.id;
     const controllerId = useSelector((state: RootState) => state.encoderMapData).find(data => data.pageId === id)?.controllerId as string;
 
-    const data0 = useSelector((state: RootState) => state.genericVideoEncoderReports);
+    const storeData = useSelector((state: RootState) => state.genericVideoEncoderReports);
     const data = useMemo(
         () =>
-            data0
+            storeData
                 // https://hiteshmishra.hashnode.dev/useselector-hook-in-react
                 .filter(data => data.controllerId === controllerId)
                 .map(r => {
@@ -45,7 +45,7 @@ export default function GenericVideoEncoderTable() {
                         status: r.encodingState.toString()
                     } as GenericVideoEncoderRow;
                 }),
-        [data0]
+        [storeData]
     );
 
     const table = useReactTable({

@@ -7,6 +7,7 @@ import { addEncoderCreationData } from "@renderer/redux/EncoderCreationDataSlice
 import { updateTitle } from "@renderer/redux/TabSlice";
 import { Tab } from "@renderer/misc/Tab";
 import { addEncoderMap } from "@renderer/redux/EncoderMapDataSlice";
+import { setEncoderStatus } from "@renderer/redux/EncoderStatusSlice";
 
 export default function EncoderCreationPage() {
     const params = useParams();
@@ -140,6 +141,17 @@ export default function EncoderCreationPage() {
                                 addEncoderMap({
                                     pageId: params.id as string,
                                     controllerId: controllerId
+                                })
+                            );
+
+                            // Set the initial encoder parameters according to the defaults.
+                            // TODO: Implement
+
+                            // Add an entry to mark the encoder as not active.
+                            dispatch(
+                                setEncoderStatus({
+                                    controllerId,
+                                    encoderActive: false
                                 })
                             );
                         }

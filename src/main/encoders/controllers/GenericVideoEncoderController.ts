@@ -30,7 +30,10 @@ export class GenericVideoEncoderController extends Emitter<Events> {
     public extension: string = "";
     public ffmpegArguments: string = "";
     private encoders: GenericVideoEncoder[] = [];
-    private isEncoding: boolean = false;
+    private _isEncoding: boolean = false;
+    public get isEncoding(): boolean {
+        return this._isEncoding;
+    }
 
     private constructor(ffprobePath: string, ffmpegPath: string) {
         super();
@@ -79,12 +82,12 @@ export class GenericVideoEncoderController extends Emitter<Events> {
      * Starts encoding. This does not wait until all encoders are finished.
      */
     public async startEncoding() {
-        this.isEncoding = true;
+        this._isEncoding = true;
         await this.processActions();
     }
 
     public async stopEncoding() {
-        this.isEncoding = false;
+        this._isEncoding = false;
         await this.processActions();
     }
 
@@ -144,7 +147,7 @@ export class GenericVideoEncoderController extends Emitter<Events> {
      * @private
      */
     private async processActions() {
-        if (!this.isEncoding) {
+        if (!this._isEncoding) {
             return;
         }
 
