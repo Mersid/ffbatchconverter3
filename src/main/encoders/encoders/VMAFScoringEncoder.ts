@@ -1,10 +1,10 @@
-import { EncodingState } from "../misc/EncodingState";
 import { ChildProcessWithoutNullStreams } from "child_process";
 import { probe } from "../misc/Helpers";
 import { stat } from "fs/promises";
 import { spawn } from "node:child_process";
 import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
 import { Emitter } from "strict-event-emitter";
+import { EncodingState } from "@shared/types/EncodingState";
 
 type Events = {
     log: [data: string, internal: boolean];

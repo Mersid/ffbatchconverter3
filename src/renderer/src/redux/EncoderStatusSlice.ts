@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { EncoderStatus } from "@renderer/misc/EncoderStatus";
+import { EncoderStatus } from "@shared/types/EncoderStatus";
 
 export const encoderStatusSlice = createSlice({
     name: "encoderStatus",

@@ -1,8 +1,9 @@
 import { ExternalLibraryPathsInfo } from "../shared/types/ExternalLibraryPathsInfo";
 import { GenericVideoEncoderReport } from "../shared/types/GenericVideoEncoderReport";
 import { GenericVideoEncoderPathUpdateInfo } from "../shared/types/GenericVideoEncoderPathUpdateInfo";
-import { EncoderStatus } from "../renderer/src/misc/EncoderStatus";
-import { GenericVideoEncoderSettings } from "../renderer/src/misc/GenericVideoEncoderSettings";
+import { GenericVideoEncoderSettings } from "../shared/types/GenericVideoEncoderSettings";
+import { EncoderStatus } from "../shared/types/EncoderStatus";
+
 
 /**
  * Declares the names of channels that can be used to send messages from the renderer to the main process.

@@ -1,11 +1,11 @@
 import { Emitter } from "strict-event-emitter";
-import { EncodingState } from "../misc/EncodingState";
 import { EncodeAndScoreEncoder } from "./EncodeAndScoreEncoder";
 import { probe } from "../misc/Helpers";
 import fs, { stat } from "node:fs/promises";
 import path from "node:path";
 import { v4 as uuidv4 } from "uuid";
 import { CRFToVMAFMapping } from "../misc/CRFToVMAFMapping";
+import { EncodingState } from "@shared/types/EncodingState";
 
 type Events = {
     log: [data: string, internal: boolean];

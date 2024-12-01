@@ -1,9 +1,9 @@
-import { EncodingState } from "../misc/EncodingState";
 import { probe } from "../misc/Helpers";
 import { stat } from "node:fs/promises";
 import { GenericVideoEncoder } from "./GenericVideoEncoder";
 import { VMAFScoringEncoder } from "./VMAFScoringEncoder";
 import { Emitter } from "strict-event-emitter";
+import { EncodingState } from "@shared/types/EncodingState";
 
 type Events = {
     log: [data: string, internal: boolean];

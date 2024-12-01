@@ -1,5 +1,4 @@
 import { spawn } from "node:child_process";
-import { EncodingState } from "../misc/EncodingState";
 import { probe } from "../misc/Helpers";
 import { ChildProcessWithoutNullStreams } from "child_process";
 import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
@@ -7,6 +6,7 @@ import { Emitter } from "strict-event-emitter";
 import { v4 as uuid4 } from "uuid";
 import { stat } from "fs/promises";
 import { GenericVideoEncoderReport } from "../../../shared/types/GenericVideoEncoderReport";
+import { EncodingState } from "@shared/types/EncodingState";
 
 type Events = {
     log: [data: string, internal: boolean];

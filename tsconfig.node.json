@@ -11,6 +11,12 @@
         "noUnusedLocals": false,
         "types": [
             "electron-vite/node"
-        ]
+        ],
+        "baseUrl": ".",
+        "paths": {
+            "@shared/*": [
+                "src/shared/*"
+            ]
+        }
     }
 }

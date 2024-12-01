@@ -7,8 +7,8 @@ import { ExternalLibraryPathsInfo } from "../../../shared/types/ExternalLibraryP
 import { GenericVideoEncoderController } from "../controllers/GenericVideoEncoderController";
 import { GenericVideoEncoderPathUpdateInfo } from "../../../shared/types/GenericVideoEncoderPathUpdateInfo";
 import { sendToRenderer } from "../../../preload/registerMain";
-import { EncoderStatus } from "../../../renderer/src/misc/EncoderStatus";
-import { GenericVideoEncoderSettings } from "../../../renderer/src/misc/GenericVideoEncoderSettings";
+import { EncoderStatus } from "@shared/types/EncoderStatus";
+import { GenericVideoEncoderSettings } from "@shared/types/GenericVideoEncoderSettings";
 
 const genericVideoEncoders = new Map<string, GenericVideoEncoderController>();
 

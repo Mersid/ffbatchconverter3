@@ -3,10 +3,10 @@ import { DragEvent, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@renderer/redux/Store";
-import { EncoderStatus } from "@renderer/misc/EncoderStatus";
 import { setEncoderStatus } from "@renderer/redux/EncoderStatusSlice";
-import { GenericVideoEncoderSettings } from "@renderer/misc/GenericVideoEncoderSettings";
 import { setGenericVideoEncoderSettings } from "@renderer/redux/GenericVideoEncoderSettingsSlice";
+import { GenericVideoEncoderSettings } from "@shared/types/GenericVideoEncoderSettings";
+import { EncoderStatus } from "@shared/types/EncoderStatus";
 
 export default function GenericVideoEncoderPage() {
     const params = useParams();
