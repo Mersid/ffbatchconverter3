@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { GenericVideoEncoderReport } from "../../../shared/types/GenericVideoEncoderReport";
+import { GenericVideoEncoderReport } from "@shared/types/GenericVideoEncoderReport";
 
 export const genericVideoEncoderReportsSlice = createSlice({
     name: "genericVideoEncoderReports",

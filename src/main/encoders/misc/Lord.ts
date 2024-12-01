@@ -3,9 +3,9 @@
  * interfacing those with the IPC.
  */
 
-import { ExternalLibraryPathsInfo } from "../../../shared/types/ExternalLibraryPathsInfo";
+import { ExternalLibraryPathsInfo } from "@shared/types/ExternalLibraryPathsInfo";
 import { GenericVideoEncoderController } from "../controllers/GenericVideoEncoderController";
-import { GenericVideoEncoderPathUpdateInfo } from "../../../shared/types/GenericVideoEncoderPathUpdateInfo";
+import { GenericVideoEncoderPathUpdateInfo } from "@shared/types/GenericVideoEncoderPathUpdateInfo";
 import { sendToRenderer } from "../../../preload/registerMain";
 import { EncoderStatus } from "@shared/types/EncoderStatus";
 import { GenericVideoEncoderSettings } from "@shared/types/GenericVideoEncoderSettings";

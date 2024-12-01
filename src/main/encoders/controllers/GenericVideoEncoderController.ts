@@ -4,7 +4,7 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { v4 as uuid4 } from "uuid";
 import { Emitter } from "strict-event-emitter";
-import { GenericVideoEncoderReport } from "../../../shared/types/GenericVideoEncoderReport";
+import { GenericVideoEncoderReport } from "@shared/types/GenericVideoEncoderReport";
 
 type Events = {
     /**
@@ -15,11 +15,6 @@ type Events = {
 };
 
 export class GenericVideoEncoderController extends Emitter<Events> {
-    private readonly _controllerId: string;
-    public get controllerId(): string {
-        return this._controllerId;
-    }
-
     /**
      * Output directory relative to the input file. Do not use absolute paths!
      */
@@ -29,17 +24,24 @@ export class GenericVideoEncoderController extends Emitter<Events> {
      */
     public extension: string = "";
     public ffmpegArguments: string = "";
+    private readonly _controllerId: string;
     private encoders: GenericVideoEncoder[] = [];
-    private _isEncoding: boolean = false;
-    public get isEncoding(): boolean {
-        return this._isEncoding;
-    }
 
     private constructor(ffprobePath: string, ffmpegPath: string) {
         super();
         this._controllerId = uuid4();
         this._ffprobePath = ffprobePath;
         this._ffmpegPath = ffmpegPath;
+    }
+
+    public get controllerId(): string {
+        return this._controllerId;
+    }
+
+    private _isEncoding: boolean = false;
+
+    public get isEncoding(): boolean {
+        return this._isEncoding;
     }
 
     private _concurrency: number = 1;

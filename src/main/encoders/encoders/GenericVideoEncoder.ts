@@ -5,7 +5,7 @@ import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
 import { Emitter } from "strict-event-emitter";
 import { v4 as uuid4 } from "uuid";
 import { stat } from "fs/promises";
-import { GenericVideoEncoderReport } from "../../../shared/types/GenericVideoEncoderReport";
+import { GenericVideoEncoderReport } from "@shared/types/GenericVideoEncoderReport";
 import { EncodingState } from "@shared/types/EncodingState";
 
 type Events = {
@@ -31,6 +31,8 @@ export class GenericVideoEncoder extends Emitter<Events> {
      */
     private resolve: ((value: void | PromiseLike<void>) => void) | undefined = undefined;
     private process: ChildProcessWithoutNullStreams | undefined = undefined;
+    private readonly _encoderId: string;
+    private readonly _inputFilePath: string;
 
     private constructor(ffprobePath: string, ffmpegPath: string, inputFilePath: string) {
         super();
@@ -40,13 +42,9 @@ export class GenericVideoEncoder extends Emitter<Events> {
         this._inputFilePath = inputFilePath;
     }
 
-    private readonly _encoderId: string;
-
     public get encoderId(): string {
         return this._encoderId;
     }
-
-    private readonly _inputFilePath: string;
 
     public get inputFilePath(): string {
         return this._inputFilePath;

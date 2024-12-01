@@ -42,7 +42,7 @@ export default function GenericVideoEncoderTable() {
                         fileName: r.inputFilePath,
                         size: r.fileSize.toString(),
                         duration: r.duration.toString(),
-                        status: r.encodingState == "Encoding" ? r.currentDuration / r.duration * 100 + "%" : r.encodingState
+                        status: r.encodingState == "Encoding" ? (r.currentDuration / r.duration) * 100 + "%" : r.encodingState
                     } as GenericVideoEncoderRow;
                 }),
         [storeData]
