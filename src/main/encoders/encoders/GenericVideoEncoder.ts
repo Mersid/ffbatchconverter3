@@ -163,10 +163,14 @@ export class GenericVideoEncoder extends Emitter<Events> {
         if (data.includes("time=")) {
             const time = data.split("time=")[1].split(" ")[0];
 
-            this.currentDuration = formatFFmpegTimeToSeconds(time);
+            const currentDuration = formatFFmpegTimeToSeconds(time);
 
-            if (isNaN(this.currentDuration)) {
-                this.logLine("Could not parse the current duration of the video.");
+            if (isNaN(currentDuration)) {
+                this.logLine(
+                    "Could not parse the current duration of the video. Perhaps we've just started encoding, and the time is N/A, or the video is invalid."
+                );
+            } else {
+                this.currentDuration = currentDuration;
             }
         }
 
