@@ -1,5 +1,5 @@
 import { RootState } from "@renderer/redux/Store";
-import { createColumnHelper, flexRender, getCoreRowModel, getSortedRowModel, RowSelectionState, SortingState, useReactTable } from "@tanstack/react-table";
+import { createColumnHelper, flexRender, getCoreRowModel, getSortedRowModel, Row, RowSelectionState, SortingState, useReactTable } from "@tanstack/react-table";
 import React, { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
@@ -31,6 +31,8 @@ export default function GenericVideoEncoderTable() {
     const id = params.id;
     const controllerId = useSelector((state: RootState) => state.encoderMapData).find(data => data.pageId === id)?.controllerId as string;
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
+    // Contains the row ID of the last selected row.
     const [lastSelected, setLastSelected] = useState<string | undefined>(undefined);
 
     const storeData = useSelector((state: RootState) => state.genericVideoEncoderReports);
@@ -65,6 +67,12 @@ export default function GenericVideoEncoderTable() {
     });
 
     console.log(table.getState().rowSelection);
+
+    const getRowRange = <T,>(rows: Row<T>[], currentID: number, selectedID: number): Row<T>[] => {
+        const rangeStart = selectedID > currentID ? currentID : selectedID;
+        const rangeEnd = rangeStart === currentID ? selectedID : currentID;
+        return rows.slice(rangeStart, rangeEnd + 1);
+    };
 
     return (
         // The overflow doesn't seem necessary.
@@ -114,14 +122,47 @@ export default function GenericVideoEncoderTable() {
                             className={"group"}
                             onClick={event => {
                                 // https://github.com/TanStack/table/discussions/2224#discussioncomment-3893549
-                                setLastSelected(() => table.getSortedRowModel().rows.indexOf(row)?.toString());
-                                row.getToggleSelectedHandler()(event);
+                                // setLastSelected(() => table.getSortedRowModel().rows.indexOf(row)?.toString());
+
+                                const batchSelectMode = event.shiftKey;
+                                const appendMode = event.ctrlKey;
+
+                                if (batchSelectMode && lastSelected) {
+                                    const rows = getRowRange(table.getSortedRowModel().rows, parseInt(lastSelected), parseInt(row.id));
+                                    const newSelection = rows.reduce((acc, row) => {
+                                        acc[row.id] = true;
+                                        return acc;
+                                    }, {});
+                                    table.setRowSelection((_) => newSelection);
+                                    setLastSelected(row.id);
+                                    return;
+                                }
+
+                                if (appendMode) {
+                                    table.setRowSelection((selection) => {
+                                        return {
+                                            ...selection,
+                                            [row.id]: !selection[row.id]
+                                        }
+                                    });
+                                    setLastSelected(row.id);
+                                    return;
+                                }
+
+                                table.setRowSelection((_) => {
+                                    return {
+                                        [row.id]: true
+                                    }
+                                });
+
+                                setLastSelected(row.id);
+                                // row.getToggleSelectedHandler()(event);
                             }}
                         >
                             {row.getVisibleCells().map(cell => (
                                 <td
                                     key={cell.id}
-                                    className={`border border-gray-200 select-none group-hover:bg-blue-200 cursor-pointer ${cell.row.getIsSelected()? "bg-blue-300" : ""} whitespace-nowrap overflow-hidden overflow-ellipsis`}
+                                    className={`border border-gray-200 select-none group-hover:bg-blue-200 cursor-pointer whitespace-nowrap overflow-hidden overflow-ellipsis ${cell.row.getIsSelected()? "bg-blue-300" : ""}`}
                                 >
                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                 </td>
