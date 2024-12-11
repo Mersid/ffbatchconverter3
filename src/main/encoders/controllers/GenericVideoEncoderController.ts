@@ -52,7 +52,6 @@ export class GenericVideoEncoderController extends Emitter<Events> {
 
     public set concurrency(value: number) {
         this._concurrency = value;
-        // TODO: If this becomes an issue, block until processActions() finishes.
         this.processActions().then(_r => {});
     }
 
@@ -169,6 +168,8 @@ export class GenericVideoEncoderController extends Emitter<Events> {
         // Create output directory if it doesn't exist
         await mkdir(outputSubdirectory, { recursive: true });
 
-        await encoder.start(this.ffmpegArguments, newFilePath);
+        // We don't need to wait for this to finish before finishing this function.
+        // If we do it breaks the start/stop encoding calls, as it hangs until an encoder is done.
+        encoder.start(this.ffmpegArguments, newFilePath).then(_ => {});
     }
 }

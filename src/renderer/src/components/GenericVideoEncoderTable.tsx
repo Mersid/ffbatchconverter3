@@ -1,19 +1,24 @@
 import { RootState } from "@renderer/redux/Store";
 import { createColumnHelper, flexRender, getCoreRowModel, getSortedRowModel, Row, RowSelectionState, SortingState, useReactTable } from "@tanstack/react-table";
-import React, { useMemo, useState } from "react";
+import React, { MouseEvent, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
+import { formatTime } from "@renderer/misc/TimeFormatter";
+
+import { Menu, Item, Separator, Submenu, useContextMenu, ItemParams } from "react-contexify";
+import 'react-contexify/ReactContexify.css';
 
 const columnHelper = createColumnHelper<GenericVideoEncoderRow>();
 const columns = [
     columnHelper.accessor(row => row.fileName, {
         id: "fileName",
         header: "File Name",
-        cell: props => <p>{props.getValue()}</p>
+        cell: props => <p>{props.getValue()}</p>,
+        size: 650
     }),
     columnHelper.accessor(row => row.duration, {
         header: "Duration",
-        cell: props => <p>{props.getValue()}</p>
+        cell: props => <p>{formatTime(props.getValue())}</p>
     }),
     columnHelper.accessor(row => row.size, {
         header: "Size",
@@ -66,13 +71,53 @@ export default function GenericVideoEncoderTable() {
         columnResizeMode: "onChange"
     });
 
-    console.log(table.getState().rowSelection);
+    // https://github.com/TanStack/table/discussions/3068#discussioncomment-5052258, but I heavily modified it.
+    const getRowRange = <T,>(rows: Row<T>[], fromId: string, toId: string): Row<T>[] => {
+        let rangeStart = rows.findIndex(row => row.id === fromId);
+        let rangeEnd = rows.findIndex(row => row.id === toId);
 
-    const getRowRange = <T,>(rows: Row<T>[], currentID: number, selectedID: number): Row<T>[] => {
-        const rangeStart = selectedID > currentID ? currentID : selectedID;
-        const rangeEnd = rangeStart === currentID ? selectedID : currentID;
+        if (rangeStart == -1 || rangeEnd == -1) {
+            console.error("Range start or end is not found!");
+            return [];
+        }
+
+        // Swap the values if the range is backwards.
+        if (rangeStart > rangeEnd) {
+            [rangeStart, rangeEnd] = [rangeEnd, rangeStart];
+        }
+
         return rows.slice(rangeStart, rangeEnd + 1);
     };
+
+    const menuId = "menuId";
+
+    const { show } = useContextMenu({
+        id: menuId,
+    });
+
+    function handleContextMenu(event: MouseEvent) {
+        show({
+            event,
+            props: {
+                key: "value"
+            }
+        });
+    }
+
+    // I'm using a single event handler for all items,
+    // but you don't have too :)
+    const handleItemClick = ({ id, event, props }: ItemParams) => {
+        switch (id) {
+            case "copy":
+                console.log(event, props)
+                console.log("Ayo!")
+                break;
+            case "cut":
+                console.log(event, props);
+                break;
+            //etc...
+        }
+    }
 
     return (
         // The overflow doesn't seem necessary.
@@ -83,7 +128,7 @@ export default function GenericVideoEncoderTable() {
                 Last over: {lastSelected}
             </p>
             {/* If we exclude the width style, the table will refuse to extend beyond the size of the screen. Took me way too long to discover! */}
-            <table style={{ width: table.getCenterTotalSize() }} className={"table-fixed"}>
+            <table style={{ width: table.getCenterTotalSize() }} className={"table-fixed"} onContextMenu={handleContextMenu}>
                 <thead>
                     <tr>
                         {table.getHeaderGroups().map(headerGroup =>
@@ -128,31 +173,45 @@ export default function GenericVideoEncoderTable() {
                                 const appendMode = event.ctrlKey;
 
                                 if (batchSelectMode && lastSelected) {
-                                    const rows = getRowRange(table.getSortedRowModel().rows, parseInt(lastSelected), parseInt(row.id));
-                                    const newSelection = rows.reduce((acc, row) => {
-                                        acc[row.id] = true;
-                                        return acc;
-                                    }, {});
-                                    table.setRowSelection((_) => newSelection);
-                                    setLastSelected(row.id);
+                                    // Get the range of rows between our selection.
+                                    const rows = getRowRange(table.getSortedRowModel().rows, lastSelected, row.id);
+
+                                    // If we're in append mode, tack the new rows onto the existing selection. Otherwise, replace it.
+                                    table.setRowSelection(selection => {
+                                        const newSelection = rows.reduce((acc, row) => {
+                                            acc[row.id] = true;
+                                            return acc;
+                                        }, {} as RowSelectionState);
+
+                                        if (appendMode) {
+                                            return {
+                                                ...selection,
+                                                ...newSelection
+                                            };
+                                        } else {
+                                            return {
+                                                ...newSelection
+                                            };
+                                        }
+                                    });
                                     return;
                                 }
 
                                 if (appendMode) {
-                                    table.setRowSelection((selection) => {
+                                    table.setRowSelection(selection => {
                                         return {
                                             ...selection,
                                             [row.id]: !selection[row.id]
-                                        }
+                                        };
                                     });
                                     setLastSelected(row.id);
                                     return;
                                 }
 
-                                table.setRowSelection((_) => {
+                                table.setRowSelection(_ => {
                                     return {
                                         [row.id]: true
-                                    }
+                                    };
                                 });
 
                                 setLastSelected(row.id);
@@ -162,7 +221,7 @@ export default function GenericVideoEncoderTable() {
                             {row.getVisibleCells().map(cell => (
                                 <td
                                     key={cell.id}
-                                    className={`border border-gray-200 select-none group-hover:bg-blue-200 cursor-pointer whitespace-nowrap overflow-hidden overflow-ellipsis ${cell.row.getIsSelected()? "bg-blue-300" : ""}`}
+                                    className={`border border-gray-200 select-none group-hover:bg-blue-200 cursor-pointer whitespace-nowrap overflow-hidden overflow-ellipsis ${cell.row.getIsSelected() ? "bg-blue-300" : ""}`}
                                 >
                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                 </td>
@@ -171,6 +230,17 @@ export default function GenericVideoEncoderTable() {
                     ))}
                 </tbody>
             </table>
+            <Menu id={menuId}>
+                <Item id="copy" onClick={handleItemClick}>Copy</Item>
+                <Item id="cut" onClick={handleItemClick}>Cut</Item>
+                <Separator />
+                <Item disabled>Disabled</Item>
+                <Separator />
+                <Submenu label="Foobar">
+                    <Item id="reload" onClick={handleItemClick}>Reload</Item>
+                    <Item id="something" onClick={handleItemClick}>Do something else</Item>
+                </Submenu>
+            </Menu>
         </div>
     );
 }

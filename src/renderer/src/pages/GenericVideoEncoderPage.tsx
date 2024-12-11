@@ -134,6 +134,7 @@ export default function GenericVideoEncoderPage() {
                                     encoderActive: !encoderStatus?.encoderActive
                                 });
 
+                                console.log(result)
                                 dispatch(setEncoderStatus(result));
                             }}
                         >
