@@ -48,6 +48,7 @@ export default function GenericVideoEncoderTable() {
                 .filter(data => data.controllerId === controllerId)
                 .map(r => {
                     return {
+                        encoderId: r.encoderId,
                         fileName: r.inputFilePath,
                         size: r.fileSize,
                         duration: r.duration,
@@ -231,21 +232,18 @@ export default function GenericVideoEncoderTable() {
                 </tbody>
             </table>
             <Menu id={menuId}>
-                <Item id="copy" onClick={handleItemClick}>Copy</Item>
-                <Item id="cut" onClick={handleItemClick}>Cut</Item>
+                <Item id={"copyLog"} onClick={() => {}}>Copy log</Item>
+                <Item id={"openLog"} onClick={() => {}}>Open log in text editor</Item>
                 <Separator />
-                <Item disabled>Disabled</Item>
-                <Separator />
-                <Submenu label="Foobar">
-                    <Item id="reload" onClick={handleItemClick}>Reload</Item>
-                    <Item id="something" onClick={handleItemClick}>Do something else</Item>
-                </Submenu>
+                <Item id={"remove"} onClick={() => {}}>Remove</Item>
+                <Item id={"reset"} onClick={() => {}}>Reset to pending</Item>
             </Menu>
         </div>
     );
 }
 
 type GenericVideoEncoderRow = {
+    encoderId: string;
     fileName: string;
     duration: number;
     size: number;
