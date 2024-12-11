@@ -9,6 +9,10 @@ import { GenericVideoEncoderPathUpdateInfo } from "@shared/types/GenericVideoEnc
 import { sendToRenderer } from "../../../preload/registerMain";
 import { EncoderStatus } from "@shared/types/EncoderStatus";
 import { GenericVideoEncoderSettings } from "@shared/types/GenericVideoEncoderSettings";
+import { GenericVideoEncoderCopyLogsToClipboardInfo } from "@shared/types/GenericVideoEncoderCopyLogsToClipboardInfo";
+import { GenericVideoEncoderOpenLogs } from "@shared/types/GenericVideoEncoderOpenLogs";
+import {clipboard} from "electron"
+import { openLog } from "./LogHelper";
 
 const genericVideoEncoders = new Map<string, GenericVideoEncoderController>();
 
@@ -16,7 +20,9 @@ export const lord = {
     createNewGenericVideoEncoderController,
     addPathsToGenericVideoEncoder,
     setEncoderActive,
-    setEncoderSettings
+    setEncoderSettings,
+    copyLogsToClipboard,
+    openLogs
 };
 
 /**
@@ -74,4 +80,26 @@ async function setEncoderSettings(settings: GenericVideoEncoderSettings): Promis
     controller.outputSubdirectory = settings.subdirectory;
     controller.extension = settings.extension;
     controller.ffmpegArguments = settings.ffmpegArguments;
+}
+
+async function copyLogsToClipboard(info: GenericVideoEncoderCopyLogsToClipboardInfo) {
+    const controller = genericVideoEncoders.get(info.controllerId);
+    if (!controller) {
+        throw new Error(`No controller with ID ${info.controllerId} found.`);
+    }
+
+    const logs = controller.getLogsFor(info.encoderId);
+    clipboard.write({ text: logs });
+}
+
+async function openLogs(info: GenericVideoEncoderOpenLogs) {
+    const controller = genericVideoEncoders.get(info.controllerId);
+    if (!controller) {
+        throw new Error(`No controller with ID ${info.controllerId} found.`);
+    }
+
+    for (const encoderId of info.encoderIds) {
+        const logs = controller.getLogsFor(encoderId);
+        openLog(logs).then(() => {});
+    }
 }

@@ -33,4 +33,12 @@ export function registerIPCHandlers(): void {
     registerReceive("setSettingsForGenericVideoEncoder", async (_event, args) => {
         return await lord.setEncoderSettings(args);
     });
+
+    registerReceive("copyLogsToClipboard", async (_event, args) => {
+        await lord.copyLogsToClipboard(args);
+    });
+
+    registerReceive("openLogs", async (_event, args) => {
+        await lord.openLogs(args);
+    });
 }

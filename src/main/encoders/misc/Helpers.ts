@@ -1,6 +1,7 @@
 import { Stats } from "fs";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { readdir, stat } from "node:fs/promises";
+import { promisify } from "node:util";
 
 export function getFFmpegPath(): string | undefined {
     return findCommand("ffmpeg");
@@ -20,6 +21,31 @@ export function probe(ffprobe: string, inputFilePath: string): string {
     const probe = spawnSync(ffprobe, ["-v", "quiet", "-print_format", "json", "-show_format", inputFilePath]);
 
     return probe.stdout.toString();
+}
+
+/**
+ * Like probe, but async.
+ * @param ffprobe
+ * @param inputFilePath
+ */
+export async function probeAsync(ffprobe: string, inputFilePath: string): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+        const probe = spawn(ffprobe, ["-v", "quiet", "-print_format", "json", "-show_format", inputFilePath]);
+
+        let data = "";
+
+        probe.stdout.on("data", (chunk) => {
+            data += chunk;
+        });
+
+        probe.on("close", () => {
+            resolve(data);
+        });
+
+        probe.on("error", (err) => {
+            reject(err);
+        });
+    });
 }
 
 /**

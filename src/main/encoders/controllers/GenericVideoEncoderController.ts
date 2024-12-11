@@ -96,7 +96,7 @@ export class GenericVideoEncoderController extends Emitter<Events> {
      * Produces a report for the encoder with the given ID. An error is thrown if no encoder with the given ID is found.
      * @param encoderId
      */
-    public getReportFor(encoderId: string) {
+    public getReportFor(encoderId: string): GenericVideoEncoderReport {
         const encoder = this.encoders.find(e => e.encoderId == encoderId);
         if (encoder == undefined) {
             throw new Error(`No encoder with ID ${encoderId} found.`);
@@ -106,6 +106,15 @@ export class GenericVideoEncoderController extends Emitter<Events> {
             ...encoder.report,
             controllerId: this.controllerId
         };
+    }
+
+    public getLogsFor(encoderId: string): string {
+        const encoder = this.encoders.find(e => e.encoderId == encoderId);
+        if (encoder == undefined) {
+            throw new Error(`No encoder with ID ${encoderId} found.`);
+        }
+
+        return encoder.log;
     }
 
     /**

@@ -3,11 +3,13 @@ import { GenericVideoEncoderReport } from "@shared/types/GenericVideoEncoderRepo
 import { GenericVideoEncoderPathUpdateInfo } from "@shared/types/GenericVideoEncoderPathUpdateInfo";
 import { GenericVideoEncoderSettings } from "@shared/types/GenericVideoEncoderSettings";
 import { EncoderStatus } from "@shared/types/EncoderStatus";
+import { GenericVideoEncoderCopyLogsToClipboardInfo } from "@shared/types/GenericVideoEncoderCopyLogsToClipboardInfo";
+import { GenericVideoEncoderOpenLogs } from "@shared/types/GenericVideoEncoderOpenLogs";
 
 /**
  * Declares the names of channels that can be used to send messages from the renderer to the main process.
  */
-export type SendChannel = "ping" | "log" | "addPathsToGenericVideoEncoder" | "setSettingsForGenericVideoEncoder";
+export type SendChannel = "ping" | "log" | "addPathsToGenericVideoEncoder" | "setSettingsForGenericVideoEncoder" | "copyLogsToClipboard" | "openLogs";
 
 /**
  * Declares the types of data that can be sent through the channels declared in SendChannel.
@@ -17,6 +19,8 @@ type SendChannelTypes = {
     log: unknown;
     addPathsToGenericVideoEncoder: GenericVideoEncoderPathUpdateInfo;
     setSettingsForGenericVideoEncoder: GenericVideoEncoderSettings;
+    copyLogsToClipboard: GenericVideoEncoderCopyLogsToClipboardInfo;
+    openLogs: GenericVideoEncoderOpenLogs;
 };
 
 export type SendChannelArgumentsType<T extends SendChannel> = SendChannelTypes[T];

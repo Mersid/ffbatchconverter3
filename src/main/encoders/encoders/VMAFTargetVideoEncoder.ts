@@ -257,7 +257,7 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
                     // Found the boundary. Should also note that there's an inverse relationship between CRF and VMAF.
                     const target = this.crfToVMAF[i - 1];
 
-                    // This call should ovewrite any existing file.
+                    // This call should overwrite any existing file.
                     await fs.copyFile(target.filePath, outputFilePath);
                     this.state = "Success";
                     lastVMAF = target.vmaf;

@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { probe } from "../misc/Helpers";
+import { probeAsync } from "../misc/Helpers";
 import { ChildProcessWithoutNullStreams } from "child_process";
 import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
 import { Emitter } from "strict-event-emitter";
@@ -21,7 +21,15 @@ export class GenericVideoEncoder extends Emitter<Events> {
     private ffprobePath: string;
     private readonly ffmpegPath: string;
     private outputFilePath: string = "";
-    private log: string = "";
+    private _log: string = "";
+    public get log(): string {
+        return this._log;
+    }
+
+    private set log(value: string) {
+        this._log = value;
+    }
+
     /**
      * Size of the input file in bytes.
      */
@@ -94,7 +102,7 @@ export class GenericVideoEncoder extends Emitter<Events> {
 
     public static async createNew(ffprobePath: string, ffmpegPath: string, inputFilePath: string): Promise<GenericVideoEncoder> {
         const encoder = new GenericVideoEncoder(ffprobePath, ffmpegPath, inputFilePath);
-        const probeData = probe(ffprobePath, inputFilePath);
+        const probeData = await probeAsync(ffprobePath, inputFilePath);
 
         try {
             encoder.fileSize = (await stat(inputFilePath)).size;
@@ -185,7 +193,7 @@ export class GenericVideoEncoder extends Emitter<Events> {
      * @private
      */
     private logLine(data: string): void {
-        this.log += `>> ${data}\n`;
+        this.log += `[Generic Encoder/Log] ${data}\n`;
         this.emit("log", data, false);
     }
 
@@ -195,7 +203,7 @@ export class GenericVideoEncoder extends Emitter<Events> {
      * @private
      */
     private logInternal(data: string): void {
-        this.log += data;
+        this.log += `[Generic Encoder/FFmpeg] ${data}\n`;
         this.emit("log", data, true);
     }
 }

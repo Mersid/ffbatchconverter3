@@ -8,7 +8,9 @@ const send = {
     ping: registerSend("ping"),
     log: registerSend("log"),
     addPathsToGenericVideoEncoder: registerSend("addPathsToGenericVideoEncoder"),
-    setSettingsForGenericVideoEncoder: registerSend("setSettingsForGenericVideoEncoder")
+    setSettingsForGenericVideoEncoder: registerSend("setSettingsForGenericVideoEncoder"),
+    copyLogsToClipboard: registerSend("copyLogsToClipboard"),
+    openLogs: registerSend("openLogs")
 };
 
 const events = {

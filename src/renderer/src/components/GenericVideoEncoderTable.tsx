@@ -232,8 +232,24 @@ export default function GenericVideoEncoderTable() {
                 </tbody>
             </table>
             <Menu id={menuId}>
-                <Item id={"copyLog"} onClick={() => {}}>Copy log</Item>
-                <Item id={"openLog"} onClick={() => {}}>Open log in text editor</Item>
+                <Item id={"copyLog"} onClick={() => {
+                    if (lastSelected == undefined) {
+                        return;
+                    }
+
+                    const lastSelectedEncoderId = table.getSelectedRowModel().rowsById[lastSelected].original.encoderId;
+                    window.api.send.copyLogsToClipboard({
+                        controllerId: controllerId,
+                        encoderId: lastSelectedEncoderId,
+                    });
+                }}>Copy log</Item>
+                <Item id={"openLog"} onClick={() => {
+                    const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
+                    window.api.send.openLogs({
+                        controllerId: controllerId,
+                        encoderIds: selectedEncoderIds,
+                    });
+                }}>Open log in text editor</Item>
                 <Separator />
                 <Item id={"remove"} onClick={() => {}}>Remove</Item>
                 <Item id={"reset"} onClick={() => {}}>Reset to pending</Item>
