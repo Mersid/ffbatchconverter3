@@ -162,6 +162,20 @@ export class GenericVideoEncoder extends Emitter<Events> {
         return promise;
     }
 
+    /**
+     * Resets the encoder into the initial state. This command is silently ignored if the encoder is currently encoding.
+     */
+    public reset() {
+        if (this.state == "Encoding") {
+            return;
+        }
+
+        this.currentDuration = 0;
+        this.state = "Pending";
+
+        this.emit("update");
+    }
+
     private onProcessReceivedData(data: string) {
         if (this.state != "Encoding") {
             return;

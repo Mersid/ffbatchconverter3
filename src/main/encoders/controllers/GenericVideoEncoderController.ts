@@ -92,6 +92,43 @@ export class GenericVideoEncoderController extends Emitter<Events> {
         await this.processActions();
     }
 
+    public resetEncoders(encoderIds: string[]) {
+        for (const encoderId of encoderIds) {
+            const encoder = this.encoders.find(e => e.encoderId == encoderId);
+            if (encoder == undefined) {
+                throw new Error(`No encoder with ID ${encoderId} found.`);
+            }
+
+            encoder.reset();
+        }
+    }
+
+    /**
+     * Removes encoders from the controller. If the encoder is currently encoding, it will not be removed.
+     * A list of encoder IDs that were successfully removed is returned.
+     * @param encoderIds
+     */
+    public deleteEncoders(encoderIds: string[]): string[] {
+        const removedIds: string[] = [];
+        for (const encoderId of encoderIds) {
+            const encoder = this.encoders.find(e => e.encoderId == encoderId);
+            if (encoder == undefined) {
+                throw new Error(`No encoder with ID ${encoderId} found.`);
+            }
+
+            if (encoder.state == "Encoding") {
+                continue;
+            }
+
+            removedIds.push(encoderId);
+
+            encoder.removeAllListeners();
+            this.encoders = this.encoders.filter(e => e.encoderId != encoderId);
+        }
+
+        return removedIds;
+    }
+
     /**
      * Produces a report for the encoder with the given ID. An error is thrown if no encoder with the given ID is found.
      * @param encoderId

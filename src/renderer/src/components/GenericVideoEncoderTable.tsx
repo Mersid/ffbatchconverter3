@@ -251,8 +251,22 @@ export default function GenericVideoEncoderTable() {
                     });
                 }}>Open log in text editor</Item>
                 <Separator />
-                <Item id={"remove"} onClick={() => {}}>Remove</Item>
-                <Item id={"reset"} onClick={() => {}}>Reset to pending</Item>
+                <Item id={"remove"} onClick={() => {
+                    const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
+                    window.api.send.deleteEncoders({
+                        controllerId: controllerId,
+                        encoderIds: selectedEncoderIds,
+                    });
+
+                    table.resetRowSelection();
+                }}>Remove</Item>
+                <Item id={"reset"} onClick={() => {
+                    const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
+                    window.api.send.resetEncoders({
+                        controllerId: controllerId,
+                        encoderIds: selectedEncoderIds,
+                    });
+                }}>Reset to pending</Item>
             </Menu>
         </div>
     );

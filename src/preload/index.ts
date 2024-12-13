@@ -10,11 +10,14 @@ const send = {
     addPathsToGenericVideoEncoder: registerSend("addPathsToGenericVideoEncoder"),
     setSettingsForGenericVideoEncoder: registerSend("setSettingsForGenericVideoEncoder"),
     copyLogsToClipboard: registerSend("copyLogsToClipboard"),
-    openLogs: registerSend("openLogs")
+    openLogs: registerSend("openLogs"),
+    resetEncoders: registerSend("resetEncoders"),
+    deleteEncoders: registerSend("deleteEncoders")
 };
 
 const events = {
-    genericVideoEncoderUpdate: registerEvent("genericVideoEncoderUpdate")
+    genericVideoEncoderUpdate: registerEvent("genericVideoEncoderUpdate"),
+    genericVideoEncoderDelete: registerEvent("genericVideoEncoderDelete")
 };
 
 const fetch = {

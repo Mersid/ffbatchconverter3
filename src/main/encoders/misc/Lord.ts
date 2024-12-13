@@ -13,6 +13,7 @@ import { GenericVideoEncoderCopyLogsToClipboardInfo } from "@shared/types/Generi
 import { GenericVideoEncoderOpenLogs } from "@shared/types/GenericVideoEncoderOpenLogs";
 import {clipboard} from "electron"
 import { openLog } from "./LogHelper";
+import { GenericVideoEncoderResetEncodersInfo } from "@shared/types/GenericVideoEncoderResetEncodersInfo";
 
 const genericVideoEncoders = new Map<string, GenericVideoEncoderController>();
 
@@ -22,7 +23,9 @@ export const lord = {
     setEncoderActive,
     setEncoderSettings,
     copyLogsToClipboard,
-    openLogs
+    openLogs,
+    resetEncoders,
+    deleteEncoders
 };
 
 /**
@@ -102,4 +105,29 @@ async function openLogs(info: GenericVideoEncoderOpenLogs) {
         const logs = controller.getLogsFor(encoderId);
         openLog(logs).then(() => {});
     }
+}
+
+async function resetEncoders(info: GenericVideoEncoderResetEncodersInfo) {
+    const controller = genericVideoEncoders.get(info.controllerId);
+    if (!controller) {
+        throw new Error(`No controller with ID ${info.controllerId} found.`);
+    }
+
+    controller.resetEncoders(info.encoderIds);
+}
+
+async function deleteEncoders(info: GenericVideoEncoderResetEncodersInfo) {
+    const controller = genericVideoEncoders.get(info.controllerId);
+    if (!controller) {
+        throw new Error(`No controller with ID ${info.controllerId} found.`);
+    }
+
+    const removedIds = controller.deleteEncoders(info.encoderIds);
+
+    const deleteInfo: GenericVideoEncoderResetEncodersInfo = {
+        controllerId: info.controllerId,
+        encoderIds: removedIds
+    };
+
+    sendToRenderer("genericVideoEncoderDelete", deleteInfo);
 }

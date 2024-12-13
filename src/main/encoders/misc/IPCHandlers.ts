@@ -41,4 +41,12 @@ export function registerIPCHandlers(): void {
     registerReceive("openLogs", async (_event, args) => {
         await lord.openLogs(args);
     });
+
+    registerReceive("resetEncoders", async (_event, args) => {
+        await lord.resetEncoders(args);
+    });
+
+    registerReceive("deleteEncoders", async (_event, args) => {
+        await lord.deleteEncoders(args);
+    });
 }
