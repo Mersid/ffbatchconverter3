@@ -4,22 +4,14 @@ import { GenericVideoEncoderPathUpdateInfo } from "@shared/types/GenericVideoEnc
 import { GenericVideoEncoderSettings } from "@shared/types/GenericVideoEncoderSettings";
 import { EncoderStatus } from "@shared/types/EncoderStatus";
 import { GenericVideoEncoderCopyLogsToClipboardInfo } from "@shared/types/GenericVideoEncoderCopyLogsToClipboardInfo";
-import { GenericVideoEncoderOpenLogs } from "@shared/types/GenericVideoEncoderOpenLogs";
+import { GenericVideoEncoderOpenLogsInfo } from "@shared/types/GenericVideoEncoderOpenLogsInfo";
 import { GenericVideoEncoderResetEncodersInfo } from "@shared/types/GenericVideoEncoderResetEncodersInfo";
 import { GenericVideoEncoderDeleteEncodersInfo } from "@shared/types/GenericVideoEncoderDeleteEncodersInfo";
 
 /**
  * Declares the names of channels that can be used to send messages from the renderer to the main process.
  */
-export type SendChannel =
-    | "ping"
-    | "log"
-    | "addPathsToGenericVideoEncoder"
-    | "setSettingsForGenericVideoEncoder"
-    | "copyLogsToClipboard"
-    | "openLogs"
-    | "resetEncoders"
-    | "deleteEncoders";
+export type SendChannel = keyof SendChannelTypes;
 
 /**
  * Declares the types of data that can be sent through the channels declared in SendChannel.
@@ -30,7 +22,7 @@ type SendChannelTypes = {
     addPathsToGenericVideoEncoder: GenericVideoEncoderPathUpdateInfo;
     setSettingsForGenericVideoEncoder: GenericVideoEncoderSettings;
     copyLogsToClipboard: GenericVideoEncoderCopyLogsToClipboardInfo;
-    openLogs: GenericVideoEncoderOpenLogs;
+    openLogs: GenericVideoEncoderOpenLogsInfo;
     resetEncoders: GenericVideoEncoderResetEncodersInfo;
     deleteEncoders: GenericVideoEncoderDeleteEncodersInfo;
 };
@@ -40,7 +32,7 @@ export type SendChannelArgumentsType<T extends SendChannel> = SendChannelTypes[T
 /**
  * Declares the names of channels that can be used to listen for messages sent from the main process to the renderer.
  */
-export type EventChannel = "genericVideoEncoderUpdate" | "genericVideoEncoderDelete";
+export type EventChannel = keyof EventChannelTypes;
 
 type EventChannelTypes = {
     genericVideoEncoderUpdate: GenericVideoEncoderReport;
@@ -52,7 +44,7 @@ export type EventChannelArgumentsType<T extends EventChannel> = EventChannelType
 /**
  * Declares the names of channels that can be used to fetch data from the main process.
  */
-export type FetchChannel = "getExternalLibraryPaths" | "createGenericVideoEncoder" | "setEncoderActive";
+export type FetchChannel = keyof FetchChannelTypes;
 
 type FetchChannelTypes = {
     getExternalLibraryPaths: [void, ExternalLibraryPathsInfo];
