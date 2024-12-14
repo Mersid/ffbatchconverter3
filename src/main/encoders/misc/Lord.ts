@@ -10,7 +10,7 @@ import { sendToRenderer } from "../../../preload/registerMain";
 import { EncoderStatus } from "@shared/types/EncoderStatus";
 import { GenericVideoEncoderSettings } from "@shared/types/GenericVideoEncoderSettings";
 import { GenericVideoEncoderCopyLogsToClipboardInfo } from "@shared/types/GenericVideoEncoderCopyLogsToClipboardInfo";
-import { GenericVideoEncoderOpenLogs } from "@shared/types/GenericVideoEncoderOpenLogs";
+import { GenericVideoEncoderOpenLogsInfo } from "@shared/types/GenericVideoEncoderOpenLogsInfo";
 import {clipboard} from "electron"
 import { openLog } from "./LogHelper";
 import { GenericVideoEncoderResetEncodersInfo } from "@shared/types/GenericVideoEncoderResetEncodersInfo";
@@ -95,7 +95,7 @@ async function copyLogsToClipboard(info: GenericVideoEncoderCopyLogsToClipboardI
     clipboard.write({ text: logs });
 }
 
-async function openLogs(info: GenericVideoEncoderOpenLogs) {
+async function openLogs(info: GenericVideoEncoderOpenLogsInfo) {
     const controller = genericVideoEncoders.get(info.controllerId);
     if (!controller) {
         throw new Error(`No controller with ID ${info.controllerId} found.`);

@@ -1,4 +1,4 @@
-export type GenericVideoEncoderOpenLogs = {
+export type GenericVideoEncoderOpenLogsInfo = {
     controllerId: string;
     encoderIds: string[];
 }
