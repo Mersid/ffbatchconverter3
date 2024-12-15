@@ -2,6 +2,9 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { GenericVideoEncoderReport } from "@shared/types/GenericVideoEncoderReport";
 import { GenericVideoEncoderDeleteReport } from "@shared/types/GenericVideoEncoderDeleteReport";
 
+/**
+ * Holds the latest copy of the report for each encoder, as identified by the encoder ID.
+ */
 export const genericVideoEncoderReportsSlice = createSlice({
     name: "genericVideoEncoderReports",
     initialState: [] as GenericVideoEncoderReport[],

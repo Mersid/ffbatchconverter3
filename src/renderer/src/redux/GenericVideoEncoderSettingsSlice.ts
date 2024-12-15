@@ -1,6 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { GenericVideoEncoderSettings } from "@shared/types/GenericVideoEncoderSettings";
 
+/**
+ * Tracks the settings for each generic video encoder.
+ */
 export const genericVideoEncoderSettingsSlice = createSlice({
     name: "genericVideoEncoderSettings",
     initialState: [] as GenericVideoEncoderSettings[],

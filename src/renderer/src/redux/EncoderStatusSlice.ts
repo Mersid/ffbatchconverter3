@@ -1,6 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { EncoderStatus } from "@shared/types/EncoderStatus";
 
+/**
+ * Tracks whether the encoder is active (encoding) or not.
+ */
 export const encoderStatusSlice = createSlice({
     name: "encoderStatus",
     initialState: [] as EncoderStatus[],
