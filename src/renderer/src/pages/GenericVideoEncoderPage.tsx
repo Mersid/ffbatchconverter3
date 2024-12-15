@@ -1,5 +1,4 @@
-import GenericVideoEncoderTable from "@renderer/components/GenericVideoEncoderTable";
-import { DragEvent, useEffect, useState } from "react";
+import React, { DragEvent, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@renderer/redux/Store";
@@ -7,6 +6,44 @@ import { setEncoderStatus } from "@renderer/redux/EncoderStatusSlice";
 import { setGenericVideoEncoderSettings } from "@renderer/redux/GenericVideoEncoderSettingsSlice";
 import { GenericVideoEncoderSettings } from "@shared/types/GenericVideoEncoderSettings";
 import { EncoderStatus } from "@shared/types/EncoderStatus";
+import EncoderDisplayTable from "@renderer/components/EncoderDisplayTable";
+import { createColumnHelper } from "@tanstack/react-table";
+import { formatTime } from "@renderer/misc/TimeFormatter";
+import { Item, Separator } from "react-contexify";
+
+const columnHelper = createColumnHelper<GenericVideoEncoderRow>();
+const columns = [
+    columnHelper.accessor(row => row.fileName, {
+        id: "fileName",
+        header: "File Name",
+        cell: props => <p>{props.getValue()}</p>,
+        size: 650
+    }),
+    columnHelper.accessor(row => row.duration, {
+        header: "Duration",
+        cell: props => <p>{formatTime(props.getValue())}</p>
+    }),
+    columnHelper.accessor(row => row.size, {
+        header: "Size",
+        cell: props => <p>{(props.getValue() / (1024 * 1024)).toFixed(2)} MiB</p>
+    }),
+    columnHelper.accessor(row => row.status, {
+        header: "Status",
+        cell: props => <p>{props.getValue()}</p>
+    })
+];
+
+type GenericVideoEncoderRow = {
+    encoderId: string;
+    fileName: string;
+    duration: number;
+    size: number;
+
+    /**
+     * This is a string because we can put different data here depending on context.
+     */
+    status: string;
+};
 
 export default function GenericVideoEncoderPage() {
     const params = useParams();
@@ -20,6 +57,24 @@ export default function GenericVideoEncoderPage() {
     const [subdirectory, setSubdirectory] = useState(settings ? settings.subdirectory : "FFBatch");
     const [extension, setExtension] = useState(settings ? settings.extension : "mkv");
     const [ffmpegArguments, setFFmpegArguments] = useState(settings ? settings.ffmpegArguments : "-c:v libx265 -c:a aac");
+
+    const storeData = useSelector((state: RootState) => state.genericVideoEncoderReports);
+    const data = useMemo(
+        () =>
+            storeData
+                // https://hiteshmishra.hashnode.dev/useselector-hook-in-react
+                .filter(data => data.controllerId === controllerId)
+                .map(r => {
+                    return {
+                        encoderId: r.encoderId,
+                        fileName: r.inputFilePath,
+                        size: r.fileSize,
+                        duration: r.duration,
+                        status: r.encodingState == "Encoding" ? ((r.currentDuration / r.duration) * 100).toFixed(2) + "%" : r.encodingState
+                    } as GenericVideoEncoderRow;
+                }),
+        [storeData]
+    );
 
     const handleDrop = (event: DragEvent<HTMLDivElement>) => {
         event.preventDefault();
@@ -76,7 +131,68 @@ export default function GenericVideoEncoderPage() {
             <div className={"flex-1 overflow-y-auto"} onDragOver={event => handleDragOver(event)} onDrop={event => handleDrop(event)}>
                 <p>Generic video encoder page! ID: {id}</p>
                 <p>Controller ID: {controllerId}</p>
-                <GenericVideoEncoderTable />
+                {/*<GenericVideoEncoderTable />*/}
+                <EncoderDisplayTable<GenericVideoEncoderRow> data={data} columns={columns} contextMenuItems={(table, lastSelectedID) => {
+                    return (
+                        <>
+                            <Item
+                                id={"copyLog"}
+                                onClick={() => {
+                                    if (lastSelectedID == undefined) {
+                                        return;
+                                    }
+
+                                    const lastSelectedEncoderId = table.getSelectedRowModel().rowsById[lastSelectedID].original.encoderId;
+                                    window.api.send.copyLogsToClipboard({
+                                        controllerId: controllerId,
+                                        encoderId: lastSelectedEncoderId
+                                    });
+                                }}
+                            >
+                                Copy log
+                            </Item>
+                            <Item
+                                id={"openLog"}
+                                onClick={() => {
+                                    const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
+                                    window.api.send.openLogs({
+                                        controllerId: controllerId,
+                                        encoderIds: selectedEncoderIds
+                                    });
+                                }}
+                            >
+                                Open log in text editor
+                            </Item>
+                            <Separator />
+                            <Item
+                                id={"remove"}
+                                onClick={() => {
+                                    const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
+                                    window.api.send.deleteEncoders({
+                                        controllerId: controllerId,
+                                        encoderIds: selectedEncoderIds
+                                    });
+
+                                    table.resetRowSelection();
+                                }}
+                            >
+                                Remove
+                            </Item>
+                            <Item
+                                id={"reset"}
+                                onClick={() => {
+                                    const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
+                                    window.api.send.resetEncoders({
+                                        controllerId: controllerId,
+                                        encoderIds: selectedEncoderIds
+                                    });
+                                }}
+                            >
+                                Reset to pending
+                            </Item>
+                        </>
+                    );
+                }} />
             </div>
             <div className={"bg-gray-50 sticky bottom-0"}>
                 <div className={"min-h-0.5 bg-gray-300"} />

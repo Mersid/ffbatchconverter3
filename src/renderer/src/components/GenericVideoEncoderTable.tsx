@@ -1,3 +1,5 @@
+// OBSOLETE: Replaced with more generic implementation in EncoderDisplayTable.tsx.
+
 import { RootState } from "@renderer/redux/Store";
 import { createColumnHelper, flexRender, getCoreRowModel, getSortedRowModel, Row, RowSelectionState, SortingState, useReactTable } from "@tanstack/react-table";
 import React, { MouseEvent, useMemo, useState } from "react";
@@ -5,8 +7,8 @@ import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { formatTime } from "@renderer/misc/TimeFormatter";
 
-import { Menu, Item, Separator, Submenu, useContextMenu, ItemParams } from "react-contexify";
-import 'react-contexify/ReactContexify.css';
+import { Item, ItemParams, Menu, Separator, useContextMenu } from "react-contexify";
+import "react-contexify/ReactContexify.css";
 
 const columnHelper = createColumnHelper<GenericVideoEncoderRow>();
 const columns = [
@@ -93,7 +95,7 @@ export default function GenericVideoEncoderTable() {
     const menuId = "menuId";
 
     const { show } = useContextMenu({
-        id: menuId,
+        id: menuId
     });
 
     function handleContextMenu(event: MouseEvent) {
@@ -103,21 +105,6 @@ export default function GenericVideoEncoderTable() {
                 key: "value"
             }
         });
-    }
-
-    // I'm using a single event handler for all items,
-    // but you don't have too :)
-    const handleItemClick = ({ id, event, props }: ItemParams) => {
-        switch (id) {
-            case "copy":
-                console.log(event, props)
-                console.log("Ayo!")
-                break;
-            case "cut":
-                console.log(event, props);
-                break;
-            //etc...
-        }
     }
 
     return (
@@ -232,41 +219,61 @@ export default function GenericVideoEncoderTable() {
                 </tbody>
             </table>
             <Menu id={menuId}>
-                <Item id={"copyLog"} onClick={() => {
-                    if (lastSelected == undefined) {
-                        return;
-                    }
+                <Item
+                    id={"copyLog"}
+                    onClick={() => {
+                        if (lastSelected == undefined) {
+                            return;
+                        }
 
-                    const lastSelectedEncoderId = table.getSelectedRowModel().rowsById[lastSelected].original.encoderId;
-                    window.api.send.copyLogsToClipboard({
-                        controllerId: controllerId,
-                        encoderId: lastSelectedEncoderId,
-                    });
-                }}>Copy log</Item>
-                <Item id={"openLog"} onClick={() => {
-                    const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
-                    window.api.send.openLogs({
-                        controllerId: controllerId,
-                        encoderIds: selectedEncoderIds,
-                    });
-                }}>Open log in text editor</Item>
+                        const lastSelectedEncoderId = table.getSelectedRowModel().rowsById[lastSelected].original.encoderId;
+                        window.api.send.copyLogsToClipboard({
+                            controllerId: controllerId,
+                            encoderId: lastSelectedEncoderId
+                        });
+                    }}
+                >
+                    Copy log
+                </Item>
+                <Item
+                    id={"openLog"}
+                    onClick={() => {
+                        const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
+                        window.api.send.openLogs({
+                            controllerId: controllerId,
+                            encoderIds: selectedEncoderIds
+                        });
+                    }}
+                >
+                    Open log in text editor
+                </Item>
                 <Separator />
-                <Item id={"remove"} onClick={() => {
-                    const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
-                    window.api.send.deleteEncoders({
-                        controllerId: controllerId,
-                        encoderIds: selectedEncoderIds,
-                    });
+                <Item
+                    id={"remove"}
+                    onClick={() => {
+                        const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
+                        window.api.send.deleteEncoders({
+                            controllerId: controllerId,
+                            encoderIds: selectedEncoderIds
+                        });
 
-                    table.resetRowSelection();
-                }}>Remove</Item>
-                <Item id={"reset"} onClick={() => {
-                    const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
-                    window.api.send.resetEncoders({
-                        controllerId: controllerId,
-                        encoderIds: selectedEncoderIds,
-                    });
-                }}>Reset to pending</Item>
+                        table.resetRowSelection();
+                    }}
+                >
+                    Remove
+                </Item>
+                <Item
+                    id={"reset"}
+                    onClick={() => {
+                        const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
+                        window.api.send.resetEncoders({
+                            controllerId: controllerId,
+                            encoderIds: selectedEncoderIds
+                        });
+                    }}
+                >
+                    Reset to pending
+                </Item>
             </Menu>
         </div>
     );
