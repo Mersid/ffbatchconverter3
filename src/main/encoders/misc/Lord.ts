@@ -11,7 +11,7 @@ import { EncoderStatus } from "@shared/types/EncoderStatus";
 import { GenericVideoEncoderSettings } from "@shared/types/GenericVideoEncoderSettings";
 import { GenericVideoEncoderCopyLogsToClipboardInfo } from "@shared/types/GenericVideoEncoderCopyLogsToClipboardInfo";
 import { GenericVideoEncoderOpenLogsInfo } from "@shared/types/GenericVideoEncoderOpenLogsInfo";
-import {clipboard} from "electron"
+import { clipboard } from "electron";
 import { openLog } from "./LogHelper";
 import { GenericVideoEncoderResetEncodersInfo } from "@shared/types/GenericVideoEncoderResetEncodersInfo";
 

@@ -10,7 +10,7 @@ import {
     useReactTable
 } from "@tanstack/react-table";
 import React, { MouseEvent, ReactNode, useState } from "react";
-import { Item, Menu, Separator, useContextMenu } from "react-contexify";
+import { Menu, useContextMenu } from "react-contexify";
 import "react-contexify/ReactContexify.css";
 
 export type EncoderDisplayTableProps<TRowType> = {
@@ -84,109 +84,107 @@ export default function EncoderDisplayTable<TRowType>(props: EncoderDisplayTable
             {/* If we exclude the width style, the table will refuse to extend beyond the size of the screen. Took me way too long to discover! */}
             <table style={{ width: table.getCenterTotalSize() }} className={"table-fixed"} onContextMenu={handleContextMenu}>
                 <thead>
-                <tr>
-                    {table.getHeaderGroups().map(headerGroup =>
-                        headerGroup.headers.map(header => (
-                            // Relative here doesn't do anything for itself, but is important because the absolute in the resizer div
-                            // requires this to set its own absolute position relative to. This acts as an anchor for that.
-                            // The group is to enable the resizer's group-hover to set the opacity when the th element is moused over
-                            <th
-                                style={{ width: header.getSize() }}
-                                key={header.id}
-                                className={"hover:cursor-pointer border-gray-400 relative border group select-none"}
-                            >
-                                <div onClick={header.column.getToggleSortingHandler()}>
-                                    {flexRender(header.column.columnDef.header, header.getContext())}
-                                </div>
+                    <tr>
+                        {table.getHeaderGroups().map(headerGroup =>
+                            headerGroup.headers.map(header => (
+                                // Relative here doesn't do anything for itself, but is important because the absolute in the resizer div
+                                // requires this to set its own absolute position relative to. This acts as an anchor for that.
+                                // The group is to enable the resizer's group-hover to set the opacity when the th element is moused over
+                                <th
+                                    style={{ width: header.getSize() }}
+                                    key={header.id}
+                                    className={"hover:cursor-pointer border-gray-400 relative border group select-none"}
+                                >
+                                    <div onClick={header.column.getToggleSortingHandler()}>
+                                        {flexRender(header.column.columnDef.header, header.getContext())}
+                                    </div>
 
-                                {/* The absolute, right, and top fixes the resizer div to the right and top of the <th> element containing the div. */}
-                                <div
-                                    id={"resizer"}
-                                    onDoubleClick={() => header.column.resetSize()}
-                                    onMouseDown={header.getResizeHandler()}
-                                    onTouchStart={header.getResizeHandler()}
-                                    className={
-                                        "absolute right-0 top-0 h-full w-0.5 bg-blue-300 cursor-col-resize select-none touch-none opacity-0 group-hover:opacity-100"
-                                    }
-                                />
-                            </th>
-                        ))
-                    )}
-                </tr>
+                                    {/* The absolute, right, and top fixes the resizer div to the right and top of the <th> element containing the div. */}
+                                    <div
+                                        id={"resizer"}
+                                        onDoubleClick={() => header.column.resetSize()}
+                                        onMouseDown={header.getResizeHandler()}
+                                        onTouchStart={header.getResizeHandler()}
+                                        className={
+                                            "absolute right-0 top-0 h-full w-0.5 bg-blue-300 cursor-col-resize select-none touch-none opacity-0 group-hover:opacity-100"
+                                        }
+                                    />
+                                </th>
+                            ))
+                        )}
+                    </tr>
                 </thead>
                 <tbody>
-                {table.getRowModel().rows.map(row => (
-                    <tr
-                        key={row.id}
-                        className={"group"}
-                        onClick={event => {
-                            // https://github.com/TanStack/table/discussions/2224#discussioncomment-3893549
-                            // setLastSelected(() => table.getSortedRowModel().rows.indexOf(row)?.toString());
+                    {table.getRowModel().rows.map(row => (
+                        <tr
+                            key={row.id}
+                            className={"group"}
+                            onClick={event => {
+                                // https://github.com/TanStack/table/discussions/2224#discussioncomment-3893549
+                                // setLastSelected(() => table.getSortedRowModel().rows.indexOf(row)?.toString());
 
-                            const batchSelectMode = event.shiftKey;
-                            const appendMode = event.ctrlKey;
+                                const batchSelectMode = event.shiftKey;
+                                const appendMode = event.ctrlKey;
 
-                            if (batchSelectMode && lastSelected) {
-                                // Get the range of rows between our selection.
-                                const rows = getRowRange(table.getSortedRowModel().rows, lastSelected, row.id);
+                                if (batchSelectMode && lastSelected) {
+                                    // Get the range of rows between our selection.
+                                    const rows = getRowRange(table.getSortedRowModel().rows, lastSelected, row.id);
 
-                                // If we're in append mode, tack the new rows onto the existing selection. Otherwise, replace it.
-                                table.setRowSelection(selection => {
-                                    const newSelection = rows.reduce((acc, row) => {
-                                        acc[row.id] = true;
-                                        return acc;
-                                    }, {} as RowSelectionState);
+                                    // If we're in append mode, tack the new rows onto the existing selection. Otherwise, replace it.
+                                    table.setRowSelection(selection => {
+                                        const newSelection = rows.reduce((acc, row) => {
+                                            acc[row.id] = true;
+                                            return acc;
+                                        }, {} as RowSelectionState);
 
-                                    if (appendMode) {
+                                        if (appendMode) {
+                                            return {
+                                                ...selection,
+                                                ...newSelection
+                                            };
+                                        } else {
+                                            return {
+                                                ...newSelection
+                                            };
+                                        }
+                                    });
+                                    return;
+                                }
+
+                                if (appendMode) {
+                                    table.setRowSelection(selection => {
                                         return {
                                             ...selection,
-                                            ...newSelection
+                                            [row.id]: !selection[row.id]
                                         };
-                                    } else {
-                                        return {
-                                            ...newSelection
-                                        };
-                                    }
-                                });
-                                return;
-                            }
+                                    });
+                                    setLastSelected(row.id);
+                                    return;
+                                }
 
-                            if (appendMode) {
-                                table.setRowSelection(selection => {
+                                table.setRowSelection(_ => {
                                     return {
-                                        ...selection,
-                                        [row.id]: !selection[row.id]
+                                        [row.id]: true
                                     };
                                 });
+
                                 setLastSelected(row.id);
-                                return;
-                            }
-
-                            table.setRowSelection(_ => {
-                                return {
-                                    [row.id]: true
-                                };
-                            });
-
-                            setLastSelected(row.id);
-                            // row.getToggleSelectedHandler()(event);
-                        }}
-                    >
-                        {row.getVisibleCells().map(cell => (
-                            <td
-                                key={cell.id}
-                                className={`border border-gray-200 select-none group-hover:bg-blue-200 cursor-pointer whitespace-nowrap overflow-hidden overflow-ellipsis ${cell.row.getIsSelected() ? "bg-blue-300" : ""}`}
-                            >
-                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </td>
-                        ))}
-                    </tr>
-                ))}
+                                // row.getToggleSelectedHandler()(event);
+                            }}
+                        >
+                            {row.getVisibleCells().map(cell => (
+                                <td
+                                    key={cell.id}
+                                    className={`border border-gray-200 select-none group-hover:bg-blue-200 cursor-pointer whitespace-nowrap overflow-hidden overflow-ellipsis ${cell.row.getIsSelected() ? "bg-blue-300" : ""}`}
+                                >
+                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                </td>
+                            ))}
+                        </tr>
+                    ))}
                 </tbody>
             </table>
-            <Menu id={menuId}>
-                {props.contextMenuItems && props.contextMenuItems(table, lastSelected)}
-            </Menu>
+            <Menu id={menuId}>{props.contextMenuItems && props.contextMenuItems(table, lastSelected)}</Menu>
         </div>
     );
 }

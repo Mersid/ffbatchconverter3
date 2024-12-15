@@ -1,7 +1,6 @@
 import { Stats } from "fs";
 import { spawn, spawnSync } from "node:child_process";
 import { readdir, stat } from "node:fs/promises";
-import { promisify } from "node:util";
 
 export function getFFmpegPath(): string | undefined {
     return findCommand("ffmpeg");
@@ -34,7 +33,7 @@ export async function probeAsync(ffprobe: string, inputFilePath: string): Promis
 
         let data = "";
 
-        probe.stdout.on("data", (chunk) => {
+        probe.stdout.on("data", chunk => {
             data += chunk;
         });
 
@@ -42,7 +41,7 @@ export async function probeAsync(ffprobe: string, inputFilePath: string): Promis
             resolve(data);
         });
 
-        probe.on("error", (err) => {
+        probe.on("error", err => {
             reject(err);
         });
     });

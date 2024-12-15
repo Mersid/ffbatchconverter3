@@ -21,15 +21,6 @@ export class GenericVideoEncoder extends Emitter<Events> {
     private ffprobePath: string;
     private readonly ffmpegPath: string;
     private outputFilePath: string = "";
-    private _log: string = "";
-    public get log(): string {
-        return this._log;
-    }
-
-    private set log(value: string) {
-        this._log = value;
-    }
-
     /**
      * Size of the input file in bytes.
      */
@@ -48,6 +39,16 @@ export class GenericVideoEncoder extends Emitter<Events> {
         this.ffprobePath = ffprobePath;
         this.ffmpegPath = ffmpegPath;
         this._inputFilePath = inputFilePath;
+    }
+
+    private _log: string = "";
+
+    public get log(): string {
+        return this._log;
+    }
+
+    private set log(value: string) {
+        this._log = value;
     }
 
     public get encoderId(): string {

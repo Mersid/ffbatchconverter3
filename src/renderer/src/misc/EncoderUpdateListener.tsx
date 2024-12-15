@@ -15,10 +15,12 @@ export default function EncoderUpdateListener() {
             window.api.send.log(`Received encoder delete: ${JSON.stringify(args)}`);
 
             for (const encoderId of args.encoderIds) {
-                dispatch(removeGenericVideoEncoderReport({
-                    controllerId: args.controllerId,
-                    encoderId
-                }));
+                dispatch(
+                    removeGenericVideoEncoderReport({
+                        controllerId: args.controllerId,
+                        encoderId
+                    })
+                );
             }
         });
     }, []);

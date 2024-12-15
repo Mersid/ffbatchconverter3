@@ -7,7 +7,7 @@ import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { formatTime } from "@renderer/misc/TimeFormatter";
 
-import { Item, ItemParams, Menu, Separator, useContextMenu } from "react-contexify";
+import { Item, Menu, Separator, useContextMenu } from "react-contexify";
 import "react-contexify/ReactContexify.css";
 
 const columnHelper = createColumnHelper<GenericVideoEncoderRow>();

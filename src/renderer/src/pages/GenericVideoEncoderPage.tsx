@@ -132,67 +132,71 @@ export default function GenericVideoEncoderPage() {
                 <p>Generic video encoder page! ID: {id}</p>
                 <p>Controller ID: {controllerId}</p>
                 {/*<GenericVideoEncoderTable />*/}
-                <EncoderDisplayTable<GenericVideoEncoderRow> data={data} columns={columns} contextMenuItems={(table, lastSelectedID) => {
-                    return (
-                        <>
-                            <Item
-                                id={"copyLog"}
-                                onClick={() => {
-                                    if (lastSelectedID == undefined) {
-                                        return;
-                                    }
+                <EncoderDisplayTable<GenericVideoEncoderRow>
+                    data={data}
+                    columns={columns}
+                    contextMenuItems={(table, lastSelectedID) => {
+                        return (
+                            <>
+                                <Item
+                                    id={"copyLog"}
+                                    onClick={() => {
+                                        if (lastSelectedID == undefined) {
+                                            return;
+                                        }
 
-                                    const lastSelectedEncoderId = table.getSelectedRowModel().rowsById[lastSelectedID].original.encoderId;
-                                    window.api.send.copyLogsToClipboard({
-                                        controllerId: controllerId,
-                                        encoderId: lastSelectedEncoderId
-                                    });
-                                }}
-                            >
-                                Copy log
-                            </Item>
-                            <Item
-                                id={"openLog"}
-                                onClick={() => {
-                                    const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
-                                    window.api.send.openLogs({
-                                        controllerId: controllerId,
-                                        encoderIds: selectedEncoderIds
-                                    });
-                                }}
-                            >
-                                Open log in text editor
-                            </Item>
-                            <Separator />
-                            <Item
-                                id={"remove"}
-                                onClick={() => {
-                                    const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
-                                    window.api.send.deleteEncoders({
-                                        controllerId: controllerId,
-                                        encoderIds: selectedEncoderIds
-                                    });
+                                        const lastSelectedEncoderId = table.getSelectedRowModel().rowsById[lastSelectedID].original.encoderId;
+                                        window.api.send.copyLogsToClipboard({
+                                            controllerId: controllerId,
+                                            encoderId: lastSelectedEncoderId
+                                        });
+                                    }}
+                                >
+                                    Copy log
+                                </Item>
+                                <Item
+                                    id={"openLog"}
+                                    onClick={() => {
+                                        const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
+                                        window.api.send.openLogs({
+                                            controllerId: controllerId,
+                                            encoderIds: selectedEncoderIds
+                                        });
+                                    }}
+                                >
+                                    Open log in text editor
+                                </Item>
+                                <Separator />
+                                <Item
+                                    id={"remove"}
+                                    onClick={() => {
+                                        const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
+                                        window.api.send.deleteEncoders({
+                                            controllerId: controllerId,
+                                            encoderIds: selectedEncoderIds
+                                        });
 
-                                    table.resetRowSelection();
-                                }}
-                            >
-                                Remove
-                            </Item>
-                            <Item
-                                id={"reset"}
-                                onClick={() => {
-                                    const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
-                                    window.api.send.resetEncoders({
-                                        controllerId: controllerId,
-                                        encoderIds: selectedEncoderIds
-                                    });
-                                }}
-                            >
-                                Reset to pending
-                            </Item>
-                        </>
-                    );
-                }} />
+                                        table.resetRowSelection();
+                                    }}
+                                >
+                                    Remove
+                                </Item>
+                                <Item
+                                    id={"reset"}
+                                    onClick={() => {
+                                        const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
+                                        window.api.send.resetEncoders({
+                                            controllerId: controllerId,
+                                            encoderIds: selectedEncoderIds
+                                        });
+                                    }}
+                                >
+                                    Reset to pending
+                                </Item>
+                            </>
+                        );
+                    }}
+                />
             </div>
             <div className={"bg-gray-50 sticky bottom-0"}>
                 <div className={"min-h-0.5 bg-gray-300"} />
@@ -250,7 +254,7 @@ export default function GenericVideoEncoderPage() {
                                     encoderActive: !encoderStatus?.encoderActive
                                 });
 
-                                console.log(result)
+                                console.log(result);
                                 dispatch(setEncoderStatus(result));
                             }}
                         >
