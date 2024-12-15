@@ -22,7 +22,7 @@ export function registerIPCHandlers(): void {
         return await lord.createNewGenericVideoEncoderController(args);
     });
 
-    registerReceive("addPathsToGenericVideoEncoder", async (_event, args) => {
+    registerReceive("genericVideoEncoderAddPaths", async (_event, args) => {
         return await lord.addPathsToGenericVideoEncoder(args);
     });
 
@@ -30,23 +30,23 @@ export function registerIPCHandlers(): void {
         return await lord.setEncoderActive(args);
     });
 
-    registerReceive("setSettingsForGenericVideoEncoder", async (_event, args) => {
+    registerReceive("genericVideoEncoderUpdateSettings", async (_event, args) => {
         return await lord.setEncoderSettings(args);
     });
 
-    registerReceive("copyLogsToClipboard", async (_event, args) => {
+    registerReceive("genericVideoEncoderCopyLogsToClipboard", async (_event, args) => {
         await lord.copyLogsToClipboard(args);
     });
 
-    registerReceive("openLogs", async (_event, args) => {
+    registerReceive("genericVideoEncoderOpenLogs", async (_event, args) => {
         await lord.openLogs(args);
     });
 
-    registerReceive("resetEncoders", async (_event, args) => {
+    registerReceive("genericVideoEncoderResetEncoders", async (_event, args) => {
         await lord.resetEncoders(args);
     });
 
-    registerReceive("deleteEncoders", async (_event, args) => {
+    registerReceive("genericVideoEncoderDeleteEncoders", async (_event, args) => {
         await lord.deleteEncoders(args);
     });
 }

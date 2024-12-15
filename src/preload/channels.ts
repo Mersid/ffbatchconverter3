@@ -19,12 +19,12 @@ export type SendChannel = keyof SendChannelTypes;
 type SendChannelTypes = {
     ping: void;
     log: unknown;
-    addPathsToGenericVideoEncoder: GenericVideoEncoderPathUpdateInfo;
-    setSettingsForGenericVideoEncoder: GenericVideoEncoderSettings;
-    copyLogsToClipboard: GenericVideoEncoderCopyLogsToClipboardInfo;
-    openLogs: GenericVideoEncoderOpenLogsInfo;
-    resetEncoders: GenericVideoEncoderResetEncodersInfo;
-    deleteEncoders: GenericVideoEncoderDeleteEncodersInfo;
+    genericVideoEncoderAddPaths: GenericVideoEncoderPathUpdateInfo;
+    genericVideoEncoderUpdateSettings: GenericVideoEncoderSettings;
+    genericVideoEncoderCopyLogsToClipboard: GenericVideoEncoderCopyLogsToClipboardInfo;
+    genericVideoEncoderOpenLogs: GenericVideoEncoderOpenLogsInfo;
+    genericVideoEncoderResetEncoders: GenericVideoEncoderResetEncodersInfo;
+    genericVideoEncoderDeleteEncoders: GenericVideoEncoderDeleteEncodersInfo;
 };
 
 export type SendChannelArgumentsType<T extends SendChannel> = SendChannelTypes[T];

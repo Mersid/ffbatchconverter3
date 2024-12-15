@@ -7,12 +7,12 @@ import { registerEvent, registerFetch, registerSend } from "./registerRenderer2"
 const send = {
     ping: registerSend("ping"),
     log: registerSend("log"),
-    addPathsToGenericVideoEncoder: registerSend("addPathsToGenericVideoEncoder"),
-    setSettingsForGenericVideoEncoder: registerSend("setSettingsForGenericVideoEncoder"),
-    copyLogsToClipboard: registerSend("copyLogsToClipboard"),
-    openLogs: registerSend("openLogs"),
-    resetEncoders: registerSend("resetEncoders"),
-    deleteEncoders: registerSend("deleteEncoders")
+    addPathsToGenericVideoEncoder: registerSend("genericVideoEncoderAddPaths"),
+    setSettingsForGenericVideoEncoder: registerSend("genericVideoEncoderUpdateSettings"),
+    copyLogsToClipboard: registerSend("genericVideoEncoderCopyLogsToClipboard"),
+    openLogs: registerSend("genericVideoEncoderOpenLogs"),
+    resetEncoders: registerSend("genericVideoEncoderResetEncoders"),
+    deleteEncoders: registerSend("genericVideoEncoderDeleteEncoders")
 };
 
 const events = {
