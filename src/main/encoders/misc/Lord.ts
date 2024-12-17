@@ -48,7 +48,7 @@ async function addPathsToGenericVideoEncoder(info: GenericVideoEncoderPathUpdate
         throw new Error(`No controller with ID ${info.controllerId} found.`);
     }
 
-    const reports = await controller.addEntries(info.paths);
+    const reports = await controller.addEncoders(info.paths);
     // Send the initial reports to the renderer. This allows the UI to generate initial rows for the encoders.
     reports.forEach(report => {
         sendToRenderer("genericVideoEncoderUpdate", report);

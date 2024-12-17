@@ -1,3 +1,11 @@
+import { Emitter } from "strict-event-emitter";
+import { v4 as uuid4 } from "uuid";
+import { VMAFTargetVideoEncoder } from "../encoders/VMAFTargetVideoEncoder";
+import { getFilesRecursive } from "../misc/Helpers";
+import { VMAFTargetVideoEncoderReport } from "@shared/types/VMAFTargetVideoEncoderReport";
+import path from "node:path";
+import { mkdir } from "node:fs/promises";
+
 type Events = {
     /**
      * Event that is emitted whenever the encoder receives new information. This is a good time for listeners to check the state.
@@ -6,28 +14,46 @@ type Events = {
     update: [encoderId: string];
 };
 
-import { Emitter } from "strict-event-emitter";
-
 export class VMAFTargetVideoEncoderController extends Emitter<Events> {
+    private _controllerId: string;
     private _ffprobePath: string;
     private _ffmpegPath: string;
+    private _tempDirectory: string;
+    private _isEncoding: boolean = false;
+    private _encoders: VMAFTargetVideoEncoder[] = [];
+    private _concurrency: number = 1;
+    /**
+     * Output directory relative to the input file. Do not use absolute paths!
+     */
+    private _outputSubdirectory: string = "";
+    /**
+     * Extension of the output file.
+     */
+    private _extension: string = "";
+    private _ffmpegArguments: string = "";
+    private _h265: boolean = false;
+    private _targetVMAF: number = 86;
 
-    constructor(ffprobePath: string, ffmpegPath: string) {
+    constructor(ffprobePath: string, ffmpegPath: string, tempDirectory: string) {
         super();
+        this._controllerId = uuid4();
         this._ffprobePath = ffprobePath;
         this._ffmpegPath = ffmpegPath;
+        this._tempDirectory = tempDirectory;
     }
 
-    public static async createNew(ffprobePath: string, ffmpegPath: string): Promise<VMAFTargetVideoEncoderController> {
-        return new VMAFTargetVideoEncoderController(ffprobePath, ffmpegPath);
+    public static async createNew(ffprobePath: string, ffmpegPath: string, tempDirectory: string): Promise<VMAFTargetVideoEncoderController> {
+        return new VMAFTargetVideoEncoderController(ffprobePath, ffmpegPath, tempDirectory);
     }
 
     public async startEncoding() {
-        // TODO
+        this.isEncoding = true;
+        await this.processActions();
     }
 
     public async stopEncoding() {
-        // TODO
+        this.isEncoding = false;
+        await this.processActions();
     }
 
     /**
@@ -37,8 +63,33 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
      * An initial report is returned for each encoder created.
      * @param entries
      */
-    public async addEncoders(entries: string[]): string[] {
-        // TODO: and update type
+    public async addEncoders(entries: string[]): Promise<VMAFTargetVideoEncoderReport[]> {
+        const files: string[] = [];
+        for (const entry of entries) {
+            files.push(...(await getFilesRecursive(entry)));
+        }
+
+        const encoderPromises = files.map(async file => {
+            return VMAFTargetVideoEncoder.createNew(this.ffprobePath, this.ffmpegPath, file, this.tempDirectory);
+        });
+
+        const encoders = await Promise.all(encoderPromises);
+        encoders.sort(t => t.duration).reverse();
+
+        for (const encoder of encoders) {
+            encoder.on("update", () => {
+                this.processActions();
+                this.emit("update", encoder.encoderId);
+            });
+            this.encoders.push(encoder);
+        }
+
+        return encoders.map(t => {
+            return <VMAFTargetVideoEncoderReport>{
+                ...t.report,
+                controllerId: this.controllerId
+            };
+        });
     }
 
     /**
@@ -47,7 +98,19 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
      * @param encoderIds
      */
     public resetEncoders(encoderIds: string[]): string[] {
-        // TODO
+        const resetIds: string[] = [];
+        for (const encoderId of encoderIds) {
+            const encoder = this.encoders.find(e => e.encoderId == encoderId);
+            if (encoder == undefined) {
+                throw new Error(`No encoder with ID ${encoderId} found.`);
+            }
+
+            if (encoder.reset()) {
+                resetIds.push(encoderId);
+            }
+        }
+
+        return resetIds;
     }
 
     /**
@@ -56,15 +119,40 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
      * @param encoderIds
      */
     public deleteEncoders(encoderIds: string[]): string[] {
-        // TODO
+        const removedIds: string[] = [];
+        for (const encoderId of encoderIds) {
+            const encoder = this.encoders.find(e => e.encoderId == encoderId);
+            if (encoder == undefined) {
+                throw new Error(`No encoder with ID ${encoderId} found.`);
+            }
+
+            if (encoder.state == "Encoding") {
+                continue;
+            }
+
+            removedIds.push(encoderId);
+
+            encoder.removeAllListeners();
+            this.encoders = this.encoders.filter(e => e.encoderId != encoderId);
+        }
+
+        return removedIds;
     }
 
     /**
      * Produces a report for the encoder with the given ID. An error is thrown if no encoder with the given ID is found.
      * @param encoderId
      */
-    public getReportFor(encoderId: string): string {
-        // TODO: and update type
+    public getReportFor(encoderId: string): VMAFTargetVideoEncoderReport {
+        const encoder = this.encoders.find(e => e.encoderId == encoderId);
+        if (encoder == undefined) {
+            throw new Error(`No encoder with ID ${encoderId} found.`);
+        }
+
+        return <VMAFTargetVideoEncoderReport>{
+            ...encoder.report,
+            controllerId: this.controllerId
+        };
     }
 
     /**
@@ -72,7 +160,12 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
      * @param encoderId
      */
     public getLogsFor(encoderId: string): string {
-        // TODO: and update type
+        const encoder = this.encoders.find(e => e.encoderId == encoderId);
+        if (encoder == undefined) {
+            throw new Error(`No encoder with ID ${encoderId} found.`);
+        }
+
+        return encoder.log;
     }
 
     /**
@@ -80,6 +173,125 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
      * @private
      */
     private async processActions() {
-        // TODO
+        // TODO: Verify this
+        if (!this._isEncoding) {
+            return;
+        }
+
+        if (this._encoders.filter(e => e.state == "Encoding").length >= this.concurrency) {
+            return;
+        }
+
+        const encoder = this._encoders.find(e => e.state == "Pending");
+        if (encoder == undefined) {
+            return;
+        }
+        const directory = path.dirname(encoder.inputFilePath);
+        const outputSubdirectory = path.join(directory, this.outputSubdirectory);
+        const fileName = path.parse(encoder.inputFilePath).name;
+        const newFilePath = path.join(outputSubdirectory, `${fileName}.${this.extension}`);
+
+        // Create output directory if it doesn't exist
+        await mkdir(outputSubdirectory, { recursive: true });
+
+        // We don't need to wait for this to finish before finishing this function.
+        // If we do it breaks the start/stop encoding calls, as it hangs until an encoder is done.
+        encoder.start(this.ffmpegArguments, this.h265, this.targetVMAF, newFilePath).then(_ => {});
+    }
+
+    public get outputSubdirectory(): string {
+        return this._outputSubdirectory;
+    }
+
+    public set outputSubdirectory(value: string) {
+        this._outputSubdirectory = value;
+    }
+
+    public get extension(): string {
+        return this._extension;
+    }
+
+    public set extension(value: string) {
+        this._extension = value;
+    }
+
+    public get h265(): boolean {
+        return this._h265;
+    }
+
+    public set h265(value: boolean) {
+        this._h265 = value;
+    }
+
+    public get targetVMAF(): number {
+        return this._targetVMAF;
+    }
+
+    public set targetVMAF(value: number) {
+        this._targetVMAF = value;
+    }
+
+    public get ffmpegArguments(): string {
+        return this._ffmpegArguments;
+    }
+
+    public set ffmpegArguments(value: string) {
+        this._ffmpegArguments = value;
+    }
+
+    public get concurrency(): number {
+        return this._concurrency;
+    }
+
+    private set concurrency(value: number) {
+        this._concurrency = value;
+    }
+
+    public get tempDirectory(): string {
+        return this._tempDirectory;
+    }
+
+    public set tempDirectory(value: string) {
+        this._tempDirectory = value;
+    }
+
+    public get encoders(): VMAFTargetVideoEncoder[] {
+        return this._encoders;
+    }
+
+    public set encoders(value: VMAFTargetVideoEncoder[]) {
+        this._encoders = value;
+    }
+
+    public get controllerId(): string {
+        return this._controllerId;
+    }
+
+    public set controllerId(value: string) {
+        this._controllerId = value;
+    }
+
+    public get ffprobePath(): string {
+        return this._ffprobePath;
+    }
+
+    public set ffprobePath(value: string) {
+        this._ffprobePath = value;
+    }
+
+    public get ffmpegPath(): string {
+        return this._ffmpegPath;
+    }
+
+    public set ffmpegPath(value: string) {
+        this._ffmpegPath = value;
+    }
+
+    public get isEncoding(): boolean {
+        return this._isEncoding;
+    }
+
+    public set isEncoding(value: boolean) {
+        this._isEncoding = value;
     }
 }

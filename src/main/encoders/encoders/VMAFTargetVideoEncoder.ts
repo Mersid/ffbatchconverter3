@@ -1,13 +1,12 @@
 import { Emitter } from "strict-event-emitter";
 import { EncodeAndScoreEncoder } from "./EncodeAndScoreEncoder";
 import { probe } from "../misc/Helpers";
-import { stat } from "node:fs/promises";
+import { copyFile, mkdir, stat } from "node:fs/promises";
 import path from "node:path";
-import { v4 as uuidv4 } from "uuid";
 import { CRFToVMAFMapping } from "../misc/CRFToVMAFMapping";
 import { EncodingState } from "@shared/types/EncodingState";
-import * as Events from "node:events";
-import * as fs from "node:fs";
+import { v4 as uuidv4 } from "uuid";
+import { VMAFTargetVideoEncoderReport } from "@shared/types/VMAFTargetVideoEncoderReport";
 
 type Events = {
     log: [data: string, internal: boolean];
@@ -27,6 +26,7 @@ type Events = {
 type Stage = "ValidateUpperBound" | "ValidateLowerBound" | "NarrowDown" | "IterateSubset" | "LinearWalk";
 
 export class VMAFTargetVideoEncoder extends Emitter<Events> {
+    private _encoderId: string;
     private _ffprobePath: string;
     private _ffmpegPath: string;
     private _inputFilePath: string;
@@ -50,6 +50,7 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
 
     private constructor(ffprobePath: string, ffmpegPath: string, inputFilePath: string, tempDirectory: string) {
         super();
+        this._encoderId = uuidv4();
         this._ffprobePath = ffprobePath;
         this._ffmpegPath = ffmpegPath;
         this._inputFilePath = inputFilePath;
@@ -235,7 +236,7 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
                     const target = this._crfToVMAF[i - 1];
 
                     // This call should overwrite any existing file.
-                    await fs.copyFile(target.filePath, outputFilePath);
+                    await copyFile(target.filePath, outputFilePath);
                     this.state = "Success";
                     lastVMAF = target.vmaf;
                     thisCrf = target.crf;
@@ -244,6 +245,23 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
                 }
             }
         }
+    }
+
+    /**
+     * Resets the encoder into the initial state. This command is silently ignored if the encoder is currently encoding.
+     * @returns True if the encoder was reset; false if the encoder is currently encoding and will not be reset.
+     */
+    public reset(): boolean {
+        // TODO: Verify that the reset works!!!
+        if (this.state == "Encoding") {
+            return false;
+        }
+
+        this.currentDuration = 0;
+        this.state = "Pending";
+
+        this.emit("update");
+        return true;
     }
 
     /**
@@ -285,7 +303,7 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
      * @private
      */
     private async requestTempFilePath(tempDir: string, crf: number, outputFilePath: string): Promise<string> {
-        await fs.mkdir(tempDir, { recursive: true });
+        await mkdir(tempDir, { recursive: true });
         return path.join(tempDir, `${crf}-${uuidv4()}${path.extname(outputFilePath)}`);
     }
 
@@ -322,6 +340,14 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
         this.emit("log", data, true);
     }
 
+    public get encoderId(): string {
+        return this._encoderId;
+    }
+
+    public set encoderId(value: string) {
+        this._encoderId = value;
+    }
+
     public get currentDuration(): number {
         return this._currentDuration;
     }
@@ -346,6 +372,18 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
         this._state = value;
     }
 
+    public get report(): VMAFTargetVideoEncoderReport {
+        return {
+            controllerId: "Added at controller level!",
+            encoderId: this.encoderId,
+            inputFilePath: this._inputFilePath,
+            fileSize: this._fileSize,
+            currentDuration: this.currentDuration,
+            duration: this.duration,
+            encodingState: this.state
+        };
+    }
+
     private get ffprobePath(): string {
         return this._ffprobePath;
     }
@@ -362,7 +400,7 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
         this._ffmpegPath = value;
     }
 
-    private get inputFilePath(): string {
+    public get inputFilePath(): string {
         return this._inputFilePath;
     }
 
@@ -394,7 +432,7 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
         this._tempDirectory = value;
     }
 
-    private get log(): string {
+    public get log(): string {
         return this._log;
     }
 

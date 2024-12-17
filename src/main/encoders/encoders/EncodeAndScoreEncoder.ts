@@ -213,7 +213,7 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
         };
     }
 
-    private get log(): string {
+    public get log(): string {
         return this._log;
     }
 
@@ -277,7 +277,7 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
         this._ffmpegPath = value;
     }
 
-    private get inputFilePath(): string {
+    public get inputFilePath(): string {
         return this._inputFilePath;
     }
 

@@ -5,6 +5,7 @@ import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
 import { Emitter } from "strict-event-emitter";
 import { EncodingState } from "@shared/types/EncodingState";
 import { stat } from "node:fs/promises";
+import { v4 as uuid4 } from "uuid";
 
 type Events = {
     log: [data: string, internal: boolean];
@@ -20,6 +21,7 @@ type Events = {
  * given a reference video and a distorted (encoded) video.
  */
 export class VMAFScoringEncoder extends Emitter<Events> {
+    private _encoderId: string;
     private _ffprobePath: string;
     private _ffmpegPath: string;
     private _referenceFilePath: string;
@@ -44,6 +46,7 @@ export class VMAFScoringEncoder extends Emitter<Events> {
 
     private constructor(ffprobePath: string, ffmpegPath: string, referenceFilePath: string) {
         super();
+        this._encoderId = uuid4();
         this._ffprobePath = ffprobePath;
         this._ffmpegPath = ffmpegPath;
         this._referenceFilePath = referenceFilePath;

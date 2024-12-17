@@ -3,6 +3,8 @@ import { Emitter } from "strict-event-emitter";
 import { getFilesRecursive } from "../misc/Helpers";
 import { EncodeAndScoreEncoder } from "../encoders/EncodeAndScoreEncoder";
 import { EncodeAndScoreEncoderReport } from "@shared/types/EncodeAndScoreEncoderReport";
+import path from "node:path";
+import { mkdir } from "node:fs/promises";
 
 type Events = {
     /**
@@ -18,6 +20,16 @@ export class EncodeAndScoreEncoderController extends Emitter<Events> {
     private _ffmpegPath: string;
     private _isEncoding: boolean = false;
     private _encoders: EncodeAndScoreEncoder[] = [];
+    private _concurrency: number = 1;
+    /**
+     * Output directory relative to the input file. Do not use absolute paths!
+     */
+    private _outputSubdirectory: string = "";
+    /**
+     * Extension of the output file.
+     */
+    private _extension: string = "";
+    private _ffmpegArguments: string = "";
 
     constructor(ffprobePath: string, ffmpegPath: string) {
         super();
@@ -157,7 +169,62 @@ export class EncodeAndScoreEncoderController extends Emitter<Events> {
      * @private
      */
     private async processActions() {
-        // TODO
+        // TODO: Verify this
+        if (!this._isEncoding) {
+            return;
+        }
+
+        if (this._encoders.filter(e => e.state == "Encoding").length >= this.concurrency) {
+            return;
+        }
+
+        const encoder = this._encoders.find(e => e.state == "Pending");
+        if (encoder == undefined) {
+            return;
+        }
+        const directory = path.dirname(encoder.inputFilePath);
+        const outputSubdirectory = path.join(directory, this.outputSubdirectory);
+        const fileName = path.parse(encoder.inputFilePath).name;
+        const newFilePath = path.join(outputSubdirectory, `${fileName}.${this.extension}`);
+
+        // Create output directory if it doesn't exist
+        await mkdir(outputSubdirectory, { recursive: true });
+
+        // We don't need to wait for this to finish before finishing this function.
+        // If we do it breaks the start/stop encoding calls, as it hangs until an encoder is done.
+        encoder.start(this.ffmpegArguments, newFilePath).then(_ => {});
+    }
+
+    public get outputSubdirectory(): string {
+        return this._outputSubdirectory;
+    }
+
+    public set outputSubdirectory(value: string) {
+        this._outputSubdirectory = value;
+    }
+
+    public get extension(): string {
+        return this._extension;
+    }
+
+    public set extension(value: string) {
+        this._extension = value;
+    }
+
+    public get ffmpegArguments(): string {
+        return this._ffmpegArguments;
+    }
+
+    public set ffmpegArguments(value: string) {
+        this._ffmpegArguments = value;
+    }
+
+    public get concurrency(): number {
+        return this._concurrency;
+    }
+
+    private set concurrency(value: number) {
+        this._concurrency = value;
     }
 
     private get controllerId(): string {

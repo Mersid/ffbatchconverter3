@@ -55,6 +55,47 @@ export class GenericVideoEncoderController extends Emitter<Events> {
         await this.processActions();
     }
 
+    /**
+     * Takes an array of directory paths, and generates encoders.
+     * For each directory, it is recursively traversed and an encoder will be created for each file.
+     * Files themselves will have an encoder created according to the above rule.
+     * An initial report is returned for each encoder created.
+     * @param entries
+     */
+    public async addEncoders(entries: string[]): Promise<GenericVideoEncoderReport[]> {
+        const files: string[] = [];
+        for (const entry of entries) {
+            files.push(...(await getFilesRecursive(entry)));
+        }
+
+        const encoderPromises = files.map(async file => {
+            return GenericVideoEncoder.createNew(this.ffprobePath, this.ffmpegPath, file);
+        });
+
+        const encoders = await Promise.all(encoderPromises);
+        encoders.sort(t => t.duration).reverse();
+
+        for (const encoder of encoders) {
+            encoder.on("update", () => {
+                this.processActions();
+                this.emit("update", encoder.encoderId);
+            });
+            this._encoders.push(encoder);
+        }
+
+        return encoders.map(t => {
+            return <GenericVideoEncoderReport>{
+                ...t.report,
+                controllerId: this.controllerId
+            };
+        });
+    }
+
+    /**
+     * Takes an array of encoder IDs and resets them. If the encoder is currently encoding, it will not be reset.
+     * A list of encoder IDs that were reset is returned; the rest are silently ignored.
+     * @param encoderIds
+     */
     public resetEncoders(encoderIds: string[]) {
         for (const encoderId of encoderIds) {
             const encoder = this._encoders.find(e => e.encoderId == encoderId);
@@ -67,8 +108,8 @@ export class GenericVideoEncoderController extends Emitter<Events> {
     }
 
     /**
-     * Removes encoders from the controller. If the encoder is currently encoding, it will not be removed.
-     * A list of encoder IDs that were successfully removed is returned.
+     * Takes an array of encoder IDs and deletes them from the controller. If the encoder is currently encoding, it will not be removed.
+     * A list of encoder IDs that were removed is returned; the rest are silently ignored.
      * @param encoderIds
      */
     public deleteEncoders(encoderIds: string[]): string[] {
@@ -108,6 +149,10 @@ export class GenericVideoEncoderController extends Emitter<Events> {
         };
     }
 
+    /**
+     * Collects the logs for the encoder with the given ID. An error is thrown if no encoder with the given ID is found.
+     * @param encoderId
+     */
     public getLogsFor(encoderId: string): string {
         const encoder = this._encoders.find(e => e.encoderId == encoderId);
         if (encoder == undefined) {
@@ -115,41 +160,6 @@ export class GenericVideoEncoderController extends Emitter<Events> {
         }
 
         return encoder.log;
-    }
-
-    /**
-     * Creates encoders for the file paths entered.
-     * Directories will be recursively traversed and all files will be added.
-     * Each file will generate an initial report that is returned.
-     * @param entries
-     */
-    public async addEntries(entries: string[]): Promise<GenericVideoEncoderReport[]> {
-        const files: string[] = [];
-        for (const entry of entries) {
-            files.push(...(await getFilesRecursive(entry)));
-        }
-
-        const encoderPromises = files.map(async file => {
-            return GenericVideoEncoder.createNew(this.ffprobePath, this.ffmpegPath, file);
-        });
-
-        const encoders = await Promise.all(encoderPromises);
-        encoders.sort(t => t.duration).reverse();
-
-        for (const encoder of encoders) {
-            encoder.on("update", () => {
-                this.processActions();
-                this.emit("update", encoder.encoderId);
-            });
-            this._encoders.push(encoder);
-        }
-
-        return encoders.map(t => {
-            return <GenericVideoEncoderReport>{
-                ...t.report,
-                controllerId: this.controllerId
-            };
-        });
     }
 
     /**
@@ -215,27 +225,27 @@ export class GenericVideoEncoderController extends Emitter<Events> {
         this._ffprobePath = value;
     }
 
-    private get outputSubdirectory(): string {
+    public get outputSubdirectory(): string {
         return this._outputSubdirectory;
     }
 
-    private set outputSubdirectory(value: string) {
+    public set outputSubdirectory(value: string) {
         this._outputSubdirectory = value;
     }
 
-    private get extension(): string {
+    public get extension(): string {
         return this._extension;
     }
 
-    private set extension(value: string) {
+    public set extension(value: string) {
         this._extension = value;
     }
 
-    private get ffmpegArguments(): string {
+    public get ffmpegArguments(): string {
         return this._ffmpegArguments;
     }
 
-    private set ffmpegArguments(value: string) {
+    public set ffmpegArguments(value: string) {
         this._ffmpegArguments = value;
     }
 
