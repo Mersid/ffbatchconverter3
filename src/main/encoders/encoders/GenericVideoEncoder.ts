@@ -32,6 +32,10 @@ export class GenericVideoEncoder extends Emitter<Events> {
     private process: ChildProcessWithoutNullStreams | undefined = undefined;
     private readonly _encoderId: string;
     private readonly _inputFilePath: string;
+    private _log: string = "";
+    private _currentDuration: number = 0;
+    private _duration: number = 0;
+    private _state: EncodingState = "Pending";
 
     private constructor(ffprobePath: string, ffmpegPath: string, inputFilePath: string) {
         super();
@@ -39,66 +43,6 @@ export class GenericVideoEncoder extends Emitter<Events> {
         this.ffprobePath = ffprobePath;
         this.ffmpegPath = ffmpegPath;
         this._inputFilePath = inputFilePath;
-    }
-
-    private _log: string = "";
-
-    public get log(): string {
-        return this._log;
-    }
-
-    private set log(value: string) {
-        this._log = value;
-    }
-
-    public get encoderId(): string {
-        return this._encoderId;
-    }
-
-    public get inputFilePath(): string {
-        return this._inputFilePath;
-    }
-
-    private _currentDuration: number = 0;
-
-    public get currentDuration(): number {
-        return this._currentDuration;
-    }
-
-    private set currentDuration(value: number) {
-        this._currentDuration = value;
-    }
-
-    private _duration: number = 0;
-
-    public get duration(): number {
-        return this._duration;
-    }
-
-    private set duration(value: number) {
-        this._duration = value;
-    }
-
-    private _state: EncodingState = "Pending";
-
-    public get state(): EncodingState {
-        return this._state;
-    }
-
-    private set state(value: EncodingState) {
-        this._state = value;
-    }
-
-    public get report(): GenericVideoEncoderReport {
-        return {
-            controllerId: "Added at controller level!",
-            encoderId: this.encoderId,
-            inputFilePath: this.inputFilePath,
-            fileSize: this.fileSize,
-            currentDuration: this.currentDuration,
-            duration: this.duration,
-            encodingState: this.state
-        };
     }
 
     public static async createNew(ffprobePath: string, ffmpegPath: string, inputFilePath: string): Promise<GenericVideoEncoder> {
@@ -220,5 +164,57 @@ export class GenericVideoEncoder extends Emitter<Events> {
     private logInternal(data: string): void {
         this.log += `[Generic Encoder/FFmpeg] ${data}\n`;
         this.emit("log", data, true);
+    }
+
+    public get currentDuration(): number {
+        return this._currentDuration;
+    }
+
+    private set currentDuration(value: number) {
+        this._currentDuration = value;
+    }
+
+    public get duration(): number {
+        return this._duration;
+    }
+
+    private set duration(value: number) {
+        this._duration = value;
+    }
+
+    public get state(): EncodingState {
+        return this._state;
+    }
+
+    private set state(value: EncodingState) {
+        this._state = value;
+    }
+
+    public get report(): GenericVideoEncoderReport {
+        return {
+            controllerId: "Added at controller level!",
+            encoderId: this.encoderId,
+            inputFilePath: this.inputFilePath,
+            fileSize: this.fileSize,
+            currentDuration: this.currentDuration,
+            duration: this.duration,
+            encodingState: this.state
+        };
+    }
+
+    public get encoderId(): string {
+        return this._encoderId;
+    }
+
+    public get inputFilePath(): string {
+        return this._inputFilePath;
+    }
+
+    public get log(): string {
+        return this._log;
+    }
+
+    private set log(value: string) {
+        this._log = value;
     }
 }

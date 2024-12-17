@@ -133,8 +133,9 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
         while (true) {
             // If we have a previous encoder, remove all listeners to avoid memory leaks.
             this.encoder?.removeAllListeners();
-            this.encoder = await EncodeAndScoreEncoder.createNew(this.ffprobePath, this.ffmpegPath, this.inputFilePath, () => this.onChildUpdate());
+            this.encoder = await EncodeAndScoreEncoder.createNew(this.ffprobePath, this.ffmpegPath, this.inputFilePath);
             this.encoder.on("log", (data, internal) => this.onChildLog(data, internal));
+            this.encoder.on("update", () => this.onChildUpdate());
 
             if (this.encoder.state == "Error") {
                 this.logLine("Could not create the encoder. Exiting.");

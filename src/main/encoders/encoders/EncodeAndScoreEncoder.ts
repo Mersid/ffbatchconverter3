@@ -4,21 +4,26 @@ import { GenericVideoEncoder } from "./GenericVideoEncoder";
 import { VMAFScoringEncoder } from "./VMAFScoringEncoder";
 import { Emitter } from "strict-event-emitter";
 import { EncodingState } from "@shared/types/EncodingState";
+import { json } from "react-router-dom";
+import { data } from "autoprefixer";
+import { v4 as uuid4 } from "uuid";
+import { EncodeAndScoreEncoderReport } from "@shared/types/EncodeAndScoreEncoderReport";
 
 type Events = {
     log: [data: string, internal: boolean];
+
+    /**
+     * Event that is emitted whenever the encoder receives new information. This is a good time for listeners to check the state.
+     */
+    update: [];
 };
 
 export class EncodeAndScoreEncoder extends Emitter<Events> {
-    /**
-     * Callback that is called whenever the encoder receives new information. This is a good time for listeners to check the state.
-     */
-    public readonly updateCallback: () => void;
     private readonly ffprobePath: string;
     private readonly ffmpegPath: string;
     private readonly inputFilePath: string;
     private outputFilePath: string = "";
-    private log: string = "";
+    public log: string = "";
     /**
      * Size of the input file in bytes.
      */
@@ -33,12 +38,18 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
      */
     private scorer: VMAFScoringEncoder | undefined = undefined;
 
-    private constructor(ffprobePath: string, ffmpegPath: string, inputFilePath: string, updateCallback: () => void) {
+    private _encoderId: string;
+
+    get encoderId(): string {
+        return this._encoderId;
+    }
+
+    private constructor(ffprobePath: string, ffmpegPath: string, inputFilePath: string) {
         super();
+        this._encoderId = uuid4();
         this.ffprobePath = ffprobePath;
         this.ffmpegPath = ffmpegPath;
         this.inputFilePath = inputFilePath;
-        this.updateCallback = updateCallback;
     }
 
     private _currentDuration: number = 0;
@@ -85,8 +96,8 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
         this._vmafScore = value;
     }
 
-    public static async createNew(ffprobePath: string, ffmpegPath: string, inputFilePath: string, updateCallback: () => void): Promise<EncodeAndScoreEncoder> {
-        const encoder = new EncodeAndScoreEncoder(ffprobePath, ffmpegPath, inputFilePath, updateCallback);
+    public static async createNew(ffprobePath: string, ffmpegPath: string, inputFilePath: string): Promise<EncodeAndScoreEncoder> {
+        const encoder = new EncodeAndScoreEncoder(ffprobePath, ffmpegPath, inputFilePath);
         const probeData = probe(ffprobePath, inputFilePath);
 
         try {
@@ -127,8 +138,9 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
             return;
         }
 
-        this.scorer = await VMAFScoringEncoder.createNew(this.ffprobePath, this.ffmpegPath, outputFilePath, () => this.onChildUpdate());
+        this.scorer = await VMAFScoringEncoder.createNew(this.ffprobePath, this.ffmpegPath, outputFilePath);
         this.scorer.on("log", (data, internal) => this.onChildLog(data, internal));
+        this.scorer.on("update", () => this.onChildUpdate());
 
         await this.scorer.start(this.inputFilePath);
 
@@ -142,12 +154,12 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
         this.logLine(`Encoding and scoring complete. Score is ${this.scorer.vmafScore}.`);
 
         this.state = "Success";
-        this.updateCallback();
+        this.emit("update");
     }
 
     private onChildUpdate() {
         this.currentDuration = this.scorer?.currentDuration ?? this.encoder?.currentDuration ?? 0;
-        this.updateCallback();
+        this.emit("update");
     }
 
     private onChildLog(data: string, internal: boolean) {
@@ -177,4 +189,34 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
         this.log += data;
         this.emit("log", data, true);
     }
+
+    public get report(): EncodeAndScoreEncoderReport {
+        return {
+            controllerId: "Added at controller level!",
+            encoderId: this.encoderId,
+            inputFilePath: this.inputFilePath,
+            fileSize: this.fileSize,
+            currentDuration: this.currentDuration,
+            duration: this.duration,
+            encodingState: this.state
+        };
+    }
+
+    /**
+     * Resets the encoder into the initial state. This command is silently ignored if the encoder is currently encoding.
+     * @returns True if the encoder was reset; false if the encoder is currently encoding and will not be reset.
+     */
+    public reset(): boolean {
+        // TODO: Verify that the reset works!!!
+        if (this.state == "Encoding") {
+            return false;
+        }
+
+        this.currentDuration = 0;
+        this.state = "Pending";
+
+        this.emit("update");
+        return true;
+    }
+
 }

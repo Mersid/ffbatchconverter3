@@ -8,6 +8,11 @@ import { EncodingState } from "@shared/types/EncodingState";
 
 type Events = {
     log: [data: string, internal: boolean];
+
+    /**
+     * Event that is emitted whenever the encoder receives new information. This is a good time for listeners to check the state.
+     */
+    update: [];
 };
 
 /**
@@ -15,10 +20,6 @@ type Events = {
  * given a reference video and a distorted (encoded) video.
  */
 export class VMAFScoringEncoder extends Emitter<Events> {
-    /**
-     * Callback that is called whenever the encoder receives new information. This is a good time for listeners to check the state.
-     */
-    public readonly updateCallback: () => void;
     private ffprobePath: string;
     private readonly ffmpegPath: string;
     private readonly referenceFilePath: string;
@@ -34,12 +35,11 @@ export class VMAFScoringEncoder extends Emitter<Events> {
     private resolve: ((value: void | PromiseLike<void>) => void) | undefined = undefined;
     private process: ChildProcessWithoutNullStreams | undefined = undefined;
 
-    private constructor(ffprobePath: string, ffmpegPath: string, referenceFilePath: string, updateCallback: () => void) {
+    private constructor(ffprobePath: string, ffmpegPath: string, referenceFilePath: string) {
         super();
         this.ffprobePath = ffprobePath;
         this.ffmpegPath = ffmpegPath;
         this.referenceFilePath = referenceFilePath;
-        this.updateCallback = updateCallback;
     }
 
     private _currentDuration: number = 0;
@@ -85,8 +85,8 @@ export class VMAFScoringEncoder extends Emitter<Events> {
         this._vmafScore = value;
     }
 
-    public static async createNew(ffprobePath: string, ffmpegPath: string, referenceFilePath: string, updateCallback: () => void) {
-        const encoder = new VMAFScoringEncoder(ffprobePath, ffmpegPath, referenceFilePath, updateCallback);
+    public static async createNew(ffprobePath: string, ffmpegPath: string, referenceFilePath: string) {
+        const encoder = new VMAFScoringEncoder(ffprobePath, ffmpegPath, referenceFilePath);
 
         const probeData = probe(ffprobePath, referenceFilePath);
 
@@ -164,7 +164,7 @@ export class VMAFScoringEncoder extends Emitter<Events> {
 
         this.logInternal(data);
 
-        this.updateCallback();
+        this.emit("update");
     }
 
     private onProcessExit(code: number) {
@@ -180,7 +180,7 @@ export class VMAFScoringEncoder extends Emitter<Events> {
             this.vmafScore = vmafScore;
         }
 
-        this.updateCallback();
+        this.emit("update");
         this.resolve?.();
     }
 

@@ -14,6 +14,7 @@ type Events = {
     update: [encoderId: string];
 };
 
+// TODO: Reorganize the methods. This is a mess!
 export class GenericVideoEncoderController extends Emitter<Events> {
     /**
      * Output directory relative to the input file. Do not use absolute paths!
