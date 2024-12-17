@@ -2,7 +2,6 @@ import { v4 as uuid4 } from "uuid";
 import { Emitter } from "strict-event-emitter";
 import { getFilesRecursive } from "../misc/Helpers";
 import { EncodeAndScoreEncoder } from "../encoders/EncodeAndScoreEncoder";
-import * as Events from "node:events";
 import { EncodeAndScoreEncoderReport } from "@shared/types/EncodeAndScoreEncoderReport";
 
 type Events = {
@@ -56,7 +55,7 @@ export class EncodeAndScoreEncoderController extends Emitter<Events> {
 
         const encoderPromises = files.map(async file => {
             return EncodeAndScoreEncoder.createNew(this.ffprobePath, this.ffmpegPath, file);
-        })
+        });
 
         const encoders = await Promise.all(encoderPromises);
         encoders.sort(t => t.duration).reverse();

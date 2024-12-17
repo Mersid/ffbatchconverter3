@@ -4,9 +4,9 @@ import { ChildProcessWithoutNullStreams } from "child_process";
 import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
 import { Emitter } from "strict-event-emitter";
 import { v4 as uuid4 } from "uuid";
-import { stat } from "fs/promises";
 import { GenericVideoEncoderReport } from "@shared/types/GenericVideoEncoderReport";
 import { EncodingState } from "@shared/types/EncodingState";
+import { stat } from "node:fs/promises";
 
 type Events = {
     log: [data: string, internal: boolean];
@@ -18,20 +18,20 @@ type Events = {
 };
 
 export class GenericVideoEncoder extends Emitter<Events> {
-    private ffprobePath: string;
-    private readonly ffmpegPath: string;
-    private outputFilePath: string = "";
+    private _ffprobePath: string;
+    private _ffmpegPath: string;
+    private _outputFilePath: string = "";
     /**
      * Size of the input file in bytes.
      */
-    private fileSize: number = 0;
+    private _fileSize: number = 0;
     /**
      * Function that resolves the promise provided by the start method. This is undefined until the start method is called.
      */
-    private resolve: ((value: void | PromiseLike<void>) => void) | undefined = undefined;
-    private process: ChildProcessWithoutNullStreams | undefined = undefined;
-    private readonly _encoderId: string;
-    private readonly _inputFilePath: string;
+    private _resolve: ((value: void | PromiseLike<void>) => void) | undefined = undefined;
+    private _process: ChildProcessWithoutNullStreams | undefined = undefined;
+    private _encoderId: string;
+    private _inputFilePath: string;
     private _log: string = "";
     private _currentDuration: number = 0;
     private _duration: number = 0;
@@ -40,8 +40,8 @@ export class GenericVideoEncoder extends Emitter<Events> {
     private constructor(ffprobePath: string, ffmpegPath: string, inputFilePath: string) {
         super();
         this._encoderId = uuid4();
-        this.ffprobePath = ffprobePath;
-        this.ffmpegPath = ffmpegPath;
+        this._ffprobePath = ffprobePath;
+        this._ffmpegPath = ffmpegPath;
         this._inputFilePath = inputFilePath;
     }
 
@@ -50,7 +50,7 @@ export class GenericVideoEncoder extends Emitter<Events> {
         const probeData = await probeAsync(ffprobePath, inputFilePath);
 
         try {
-            encoder.fileSize = (await stat(inputFilePath)).size;
+            encoder._fileSize = (await stat(inputFilePath)).size;
         } catch (e) {
             encoder.logLine("Could not determine the size of the input file. It is likely that the file does not exist.");
             encoder.logLine((e as Error).stack ?? "No stack trace!");
@@ -79,29 +79,29 @@ export class GenericVideoEncoder extends Emitter<Events> {
      */
     public async start(ffmpegArguments: string, outputFilePath: string): Promise<void> {
         const promise = new Promise<void>((resolve, _) => {
-            this.resolve = resolve;
+            this._resolve = resolve;
         });
 
-        this.outputFilePath = outputFilePath;
+        this._outputFilePath = outputFilePath;
 
         if (this.state != "Pending") {
             this.logLine(`Cannot start encoding when the state is not pending. Current state: ${this.state}`);
             throw new Error(`Cannot start encoding when the state is not pending. Current state: ${this.state}`);
         }
 
-        this.process = spawn(`"${this.ffmpegPath}" -y -i "${this._inputFilePath}" ${ffmpegArguments} "${outputFilePath}"`, {
+        this._process = spawn(`"${this._ffmpegPath}" -y -i "${this._inputFilePath}" ${ffmpegArguments} "${outputFilePath}"`, {
             shell: true
         });
 
         this.state = "Encoding";
 
-        this.process.stdout.on("data", data => this.onProcessReceivedData(data.toString()));
-        this.process.stderr.on("data", data => this.onProcessReceivedData(data.toString()));
-        this.process.on("close", async code => {
+        this._process.stdout.on("data", data => this.onProcessReceivedData(data.toString()));
+        this._process.stderr.on("data", data => this.onProcessReceivedData(data.toString()));
+        this._process.on("close", async code => {
             this.state = code == 0 ? "Success" : "Error";
             this.logLine(`Process exited with code ${code}`);
             this.emit("update");
-            this.resolve?.();
+            this._resolve?.();
         });
 
         return promise;
@@ -195,7 +195,7 @@ export class GenericVideoEncoder extends Emitter<Events> {
             controllerId: "Added at controller level!",
             encoderId: this.encoderId,
             inputFilePath: this.inputFilePath,
-            fileSize: this.fileSize,
+            fileSize: this._fileSize,
             currentDuration: this.currentDuration,
             duration: this.duration,
             encodingState: this.state
@@ -216,5 +216,53 @@ export class GenericVideoEncoder extends Emitter<Events> {
 
     private set log(value: string) {
         this._log = value;
+    }
+
+    private get ffprobePath(): string {
+        return this._ffprobePath;
+    }
+
+    private set ffprobePath(value: string) {
+        this._ffprobePath = value;
+    }
+
+    private get ffmpegPath(): string {
+        return this._ffmpegPath;
+    }
+
+    private set ffmpegPath(value: string) {
+        this._ffmpegPath = value;
+    }
+
+    private get outputFilePath(): string {
+        return this._outputFilePath;
+    }
+
+    private set outputFilePath(value: string) {
+        this._outputFilePath = value;
+    }
+
+    private get fileSize(): number {
+        return this._fileSize;
+    }
+
+    private set fileSize(value: number) {
+        this._fileSize = value;
+    }
+
+    private get resolve(): ((value: void | PromiseLike<void>) => void) | undefined {
+        return this._resolve;
+    }
+
+    private set resolve(value: ((value: void | PromiseLike<void>) => void) | undefined) {
+        this._resolve = value;
+    }
+
+    private get process(): ChildProcessWithoutNullStreams | undefined {
+        return this._process;
+    }
+
+    private set process(value: ChildProcessWithoutNullStreams | undefined) {
+        this._process = value;
     }
 }

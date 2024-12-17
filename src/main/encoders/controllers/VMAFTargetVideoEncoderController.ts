@@ -6,7 +6,7 @@ type Events = {
     update: [encoderId: string];
 };
 
-import { Emitter } from 'strict-event-emitter';
+import { Emitter } from "strict-event-emitter";
 
 export class VMAFTargetVideoEncoderController extends Emitter<Events> {
     private _ffprobePath: string;

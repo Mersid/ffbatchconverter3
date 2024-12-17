@@ -14,66 +14,28 @@ type Events = {
     update: [encoderId: string];
 };
 
-// TODO: Reorganize the methods. This is a mess!
 export class GenericVideoEncoderController extends Emitter<Events> {
     /**
      * Output directory relative to the input file. Do not use absolute paths!
      */
-    public outputSubdirectory: string = "";
+    private _outputSubdirectory: string = "";
     /**
      * Extension of the output file.
      */
-    public extension: string = "";
-    public ffmpegArguments: string = "";
-    private readonly _controllerId: string;
-    private encoders: GenericVideoEncoder[] = [];
+    private _extension: string = "";
+    private _ffmpegArguments: string = "";
+    private _controllerId: string;
+    private _encoders: GenericVideoEncoder[] = [];
+    private _isEncoding: boolean = false;
+    private _concurrency: number = 1;
+    private _ffmpegPath: string;
+    private _ffprobePath: string;
 
     private constructor(ffprobePath: string, ffmpegPath: string) {
         super();
         this._controllerId = uuid4();
         this._ffprobePath = ffprobePath;
         this._ffmpegPath = ffmpegPath;
-    }
-
-    public get controllerId(): string {
-        return this._controllerId;
-    }
-
-    private _isEncoding: boolean = false;
-
-    public get isEncoding(): boolean {
-        return this._isEncoding;
-    }
-
-    private _concurrency: number = 1;
-
-    public get concurrency(): number {
-        return this._concurrency;
-    }
-
-    public set concurrency(value: number) {
-        this._concurrency = value;
-        this.processActions().then(_r => {});
-    }
-
-    private _ffmpegPath: string;
-
-    public get ffmpegPath(): string {
-        return this._ffmpegPath;
-    }
-
-    private set ffmpegPath(value: string) {
-        this._ffmpegPath = value;
-    }
-
-    private _ffprobePath: string;
-
-    public get ffprobePath(): string {
-        return this._ffprobePath;
-    }
-
-    private set ffprobePath(value: string) {
-        this._ffprobePath = value;
     }
 
     public static async createNew(ffprobePath: string, ffmpegPath: string): Promise<GenericVideoEncoderController> {
@@ -95,7 +57,7 @@ export class GenericVideoEncoderController extends Emitter<Events> {
 
     public resetEncoders(encoderIds: string[]) {
         for (const encoderId of encoderIds) {
-            const encoder = this.encoders.find(e => e.encoderId == encoderId);
+            const encoder = this._encoders.find(e => e.encoderId == encoderId);
             if (encoder == undefined) {
                 throw new Error(`No encoder with ID ${encoderId} found.`);
             }
@@ -112,7 +74,7 @@ export class GenericVideoEncoderController extends Emitter<Events> {
     public deleteEncoders(encoderIds: string[]): string[] {
         const removedIds: string[] = [];
         for (const encoderId of encoderIds) {
-            const encoder = this.encoders.find(e => e.encoderId == encoderId);
+            const encoder = this._encoders.find(e => e.encoderId == encoderId);
             if (encoder == undefined) {
                 throw new Error(`No encoder with ID ${encoderId} found.`);
             }
@@ -124,7 +86,7 @@ export class GenericVideoEncoderController extends Emitter<Events> {
             removedIds.push(encoderId);
 
             encoder.removeAllListeners();
-            this.encoders = this.encoders.filter(e => e.encoderId != encoderId);
+            this._encoders = this._encoders.filter(e => e.encoderId != encoderId);
         }
 
         return removedIds;
@@ -135,7 +97,7 @@ export class GenericVideoEncoderController extends Emitter<Events> {
      * @param encoderId
      */
     public getReportFor(encoderId: string): GenericVideoEncoderReport {
-        const encoder = this.encoders.find(e => e.encoderId == encoderId);
+        const encoder = this._encoders.find(e => e.encoderId == encoderId);
         if (encoder == undefined) {
             throw new Error(`No encoder with ID ${encoderId} found.`);
         }
@@ -147,7 +109,7 @@ export class GenericVideoEncoderController extends Emitter<Events> {
     }
 
     public getLogsFor(encoderId: string): string {
-        const encoder = this.encoders.find(e => e.encoderId == encoderId);
+        const encoder = this._encoders.find(e => e.encoderId == encoderId);
         if (encoder == undefined) {
             throw new Error(`No encoder with ID ${encoderId} found.`);
         }
@@ -179,7 +141,7 @@ export class GenericVideoEncoderController extends Emitter<Events> {
                 this.processActions();
                 this.emit("update", encoder.encoderId);
             });
-            this.encoders.push(encoder);
+            this._encoders.push(encoder);
         }
 
         return encoders.map(t => {
@@ -199,24 +161,89 @@ export class GenericVideoEncoderController extends Emitter<Events> {
             return;
         }
 
-        if (this.encoders.filter(e => e.state == "Encoding").length >= this.concurrency) {
+        if (this._encoders.filter(e => e.state == "Encoding").length >= this.concurrency) {
             return;
         }
 
-        const encoder = this.encoders.find(e => e.state == "Pending");
+        const encoder = this._encoders.find(e => e.state == "Pending");
         if (encoder == undefined) {
             return;
         }
         const directory = path.dirname(encoder.inputFilePath);
-        const outputSubdirectory = path.join(directory, this.outputSubdirectory);
+        const outputSubdirectory = path.join(directory, this._outputSubdirectory);
         const fileName = path.parse(encoder.inputFilePath).name;
-        const newFilePath = path.join(outputSubdirectory, `${fileName}.${this.extension}`);
+        const newFilePath = path.join(outputSubdirectory, `${fileName}.${this._extension}`);
 
         // Create output directory if it doesn't exist
         await mkdir(outputSubdirectory, { recursive: true });
 
         // We don't need to wait for this to finish before finishing this function.
         // If we do it breaks the start/stop encoding calls, as it hangs until an encoder is done.
-        encoder.start(this.ffmpegArguments, newFilePath).then(_ => {});
+        encoder.start(this._ffmpegArguments, newFilePath).then(_ => {});
+    }
+
+    public get controllerId(): string {
+        return this._controllerId;
+    }
+
+    public get isEncoding(): boolean {
+        return this._isEncoding;
+    }
+
+    public get concurrency(): number {
+        return this._concurrency;
+    }
+
+    public set concurrency(value: number) {
+        this._concurrency = value;
+        this.processActions().then(_r => {});
+    }
+
+    public get ffmpegPath(): string {
+        return this._ffmpegPath;
+    }
+
+    private set ffmpegPath(value: string) {
+        this._ffmpegPath = value;
+    }
+
+    public get ffprobePath(): string {
+        return this._ffprobePath;
+    }
+
+    private set ffprobePath(value: string) {
+        this._ffprobePath = value;
+    }
+
+    private get outputSubdirectory(): string {
+        return this._outputSubdirectory;
+    }
+
+    private set outputSubdirectory(value: string) {
+        this._outputSubdirectory = value;
+    }
+
+    private get extension(): string {
+        return this._extension;
+    }
+
+    private set extension(value: string) {
+        this._extension = value;
+    }
+
+    private get ffmpegArguments(): string {
+        return this._ffmpegArguments;
+    }
+
+    private set ffmpegArguments(value: string) {
+        this._ffmpegArguments = value;
+    }
+
+    private get encoders(): GenericVideoEncoder[] {
+        return this._encoders;
+    }
+
+    private set encoders(value: GenericVideoEncoder[]) {
+        this._encoders = value;
     }
 }

@@ -1,10 +1,10 @@
 import { ChildProcessWithoutNullStreams } from "child_process";
 import { probe } from "../misc/Helpers";
-import { stat } from "fs/promises";
 import { spawn } from "node:child_process";
 import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
 import { Emitter } from "strict-event-emitter";
 import { EncodingState } from "@shared/types/EncodingState";
+import { stat } from "node:fs/promises";
 
 type Events = {
     log: [data: string, internal: boolean];
@@ -20,69 +20,33 @@ type Events = {
  * given a reference video and a distorted (encoded) video.
  */
 export class VMAFScoringEncoder extends Emitter<Events> {
-    private ffprobePath: string;
-    private readonly ffmpegPath: string;
-    private readonly referenceFilePath: string;
-    private distortedFilePath: string = "";
-    private log: string = "";
+    private _ffprobePath: string;
+    private _ffmpegPath: string;
+    private _referenceFilePath: string;
+    private _distortedFilePath: string = "";
+    private _log: string = "";
     /**
      * Size of the input file in bytes.
      */
-    private fileSize: number = 0;
+    private _fileSize: number = 0;
     /**
      * Function that resolves the promise provided by the start method. This is undefined until the start method is called.
      */
-    private resolve: ((value: void | PromiseLike<void>) => void) | undefined = undefined;
-    private process: ChildProcessWithoutNullStreams | undefined = undefined;
-
-    private constructor(ffprobePath: string, ffmpegPath: string, referenceFilePath: string) {
-        super();
-        this.ffprobePath = ffprobePath;
-        this.ffmpegPath = ffmpegPath;
-        this.referenceFilePath = referenceFilePath;
-    }
-
+    private _resolve: ((value: void | PromiseLike<void>) => void) | undefined = undefined;
+    private _process: ChildProcessWithoutNullStreams | undefined = undefined;
     private _currentDuration: number = 0;
-
-    public get currentDuration(): number {
-        return this._currentDuration;
-    }
-
-    private set currentDuration(value: number) {
-        this._currentDuration = value;
-    }
-
     private _duration: number = 0;
-
-    public get duration(): number {
-        return this._duration;
-    }
-
-    private set duration(value: number) {
-        this._duration = value;
-    }
-
     private _state: EncodingState = "Pending";
-
-    public get state(): EncodingState {
-        return this._state;
-    }
-
-    private set state(value: EncodingState) {
-        this._state = value;
-    }
-
     /**
      * The VMAF score of the encoded video.
      */
     private _vmafScore: number = 0;
 
-    public get vmafScore(): number {
-        return this._vmafScore;
-    }
-
-    private set vmafScore(value: number) {
-        this._vmafScore = value;
+    private constructor(ffprobePath: string, ffmpegPath: string, referenceFilePath: string) {
+        super();
+        this._ffprobePath = ffprobePath;
+        this._ffmpegPath = ffmpegPath;
+        this._referenceFilePath = referenceFilePath;
     }
 
     public static async createNew(ffprobePath: string, ffmpegPath: string, referenceFilePath: string) {
@@ -91,7 +55,7 @@ export class VMAFScoringEncoder extends Emitter<Events> {
         const probeData = probe(ffprobePath, referenceFilePath);
 
         try {
-            encoder.fileSize = (await stat(referenceFilePath)).size;
+            encoder._fileSize = (await stat(referenceFilePath)).size;
         } catch (e) {
             encoder.logLine("Could not determine the size of the input file. It is likely that the file does not exist.");
             encoder.logLine((e as Error).stack ?? "No stack trace!");
@@ -116,18 +80,18 @@ export class VMAFScoringEncoder extends Emitter<Events> {
 
     public async start(distortedFilePath: string): Promise<void> {
         const promise = new Promise<void>((resolve, _) => {
-            this.resolve = resolve;
+            this._resolve = resolve;
         });
 
-        this.distortedFilePath = distortedFilePath;
+        this._distortedFilePath = distortedFilePath;
 
         if (this.state != "Pending") {
             this.logLine(`Cannot start encoding when the state is not pending. Current state: ${this.state}`);
             throw new Error(`Cannot start encoding when the state is not pending. Current state: ${this.state}`);
         }
 
-        this.process = spawn(
-            `"${this.ffmpegPath}" -y -i "${this.referenceFilePath}" -i "${this.distortedFilePath}" -filter_complex "[0:v]setpts=PTS-STARTPTS[reference]; [1:v]setpts=PTS-STARTPTS[distorted]; [distorted][reference]libvmaf=model=version=vmaf_v0.6.1:n_threads=30" -f null -"`,
+        this._process = spawn(
+            `"${this._ffmpegPath}" -y -i "${this._referenceFilePath}" -i "${this._distortedFilePath}" -filter_complex "[0:v]setpts=PTS-STARTPTS[reference]; [1:v]setpts=PTS-STARTPTS[distorted]; [distorted][reference]libvmaf=model=version=vmaf_v0.6.1:n_threads=30" -f null -"`,
             {
                 shell: true
             }
@@ -135,9 +99,9 @@ export class VMAFScoringEncoder extends Emitter<Events> {
 
         this.state = "Encoding";
 
-        this.process.stdout.on("data", data => this.onProcessReceivedData(data.toString()));
-        this.process.stderr.on("data", data => this.onProcessReceivedData(data.toString()));
-        this.process.on("close", code => this.onProcessExit(code as number));
+        this._process.stdout.on("data", data => this.onProcessReceivedData(data.toString()));
+        this._process.stderr.on("data", data => this.onProcessReceivedData(data.toString()));
+        this._process.on("close", code => this.onProcessExit(code as number));
 
         return promise;
     }
@@ -181,12 +145,12 @@ export class VMAFScoringEncoder extends Emitter<Events> {
         }
 
         this.emit("update");
-        this.resolve?.();
+        this._resolve?.();
     }
 
     private getVMAFScore(): number {
         const regex = /(?<=VMAF score: )[0-9.]+/;
-        const vmafScoreString = this.log.match(regex)?.[0];
+        const vmafScoreString = this._log.match(regex)?.[0];
         return parseFloat(vmafScoreString ?? "0");
     }
 
@@ -196,7 +160,7 @@ export class VMAFScoringEncoder extends Emitter<Events> {
      * @private
      */
     private logLine(data: string): void {
-        this.log += `>> ${data}\n`;
+        this._log += `>> ${data}\n`;
         this.emit("log", data, false);
     }
 
@@ -206,7 +170,103 @@ export class VMAFScoringEncoder extends Emitter<Events> {
      * @private
      */
     private logInternal(data: string): void {
-        this.log += data;
+        this._log += data;
         this.emit("log", data, true);
+    }
+
+    public get currentDuration(): number {
+        return this._currentDuration;
+    }
+
+    private set currentDuration(value: number) {
+        this._currentDuration = value;
+    }
+
+    public get duration(): number {
+        return this._duration;
+    }
+
+    private set duration(value: number) {
+        this._duration = value;
+    }
+
+    public get state(): EncodingState {
+        return this._state;
+    }
+
+    private set state(value: EncodingState) {
+        this._state = value;
+    }
+
+    public get vmafScore(): number {
+        return this._vmafScore;
+    }
+
+    private set vmafScore(value: number) {
+        this._vmafScore = value;
+    }
+
+    private get ffprobePath(): string {
+        return this._ffprobePath;
+    }
+
+    private set ffprobePath(value: string) {
+        this._ffprobePath = value;
+    }
+
+    private get ffmpegPath(): string {
+        return this._ffmpegPath;
+    }
+
+    private set ffmpegPath(value: string) {
+        this._ffmpegPath = value;
+    }
+
+    private get referenceFilePath(): string {
+        return this._referenceFilePath;
+    }
+
+    private set referenceFilePath(value: string) {
+        this._referenceFilePath = value;
+    }
+
+    private get distortedFilePath(): string {
+        return this._distortedFilePath;
+    }
+
+    private set distortedFilePath(value: string) {
+        this._distortedFilePath = value;
+    }
+
+    private get log(): string {
+        return this._log;
+    }
+
+    private set log(value: string) {
+        this._log = value;
+    }
+
+    private get fileSize(): number {
+        return this._fileSize;
+    }
+
+    private set fileSize(value: number) {
+        this._fileSize = value;
+    }
+
+    private get resolve(): ((value: void | PromiseLike<void>) => void) | undefined {
+        return this._resolve;
+    }
+
+    private set resolve(value: ((value: void | PromiseLike<void>) => void) | undefined) {
+        this._resolve = value;
+    }
+
+    private get process(): ChildProcessWithoutNullStreams | undefined {
+        return this._process;
+    }
+
+    private set process(value: ChildProcessWithoutNullStreams | undefined) {
+        this._process = value;
     }
 }

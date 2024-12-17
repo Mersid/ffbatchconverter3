@@ -1,11 +1,13 @@
 import { Emitter } from "strict-event-emitter";
 import { EncodeAndScoreEncoder } from "./EncodeAndScoreEncoder";
 import { probe } from "../misc/Helpers";
-import fs, { stat } from "node:fs/promises";
+import { stat } from "node:fs/promises";
 import path from "node:path";
 import { v4 as uuidv4 } from "uuid";
 import { CRFToVMAFMapping } from "../misc/CRFToVMAFMapping";
 import { EncodingState } from "@shared/types/EncodingState";
+import * as Events from "node:events";
+import * as fs from "node:fs";
 
 type Events = {
     log: [data: string, internal: boolean];
@@ -25,63 +27,33 @@ type Events = {
 type Stage = "ValidateUpperBound" | "ValidateLowerBound" | "NarrowDown" | "IterateSubset" | "LinearWalk";
 
 export class VMAFTargetVideoEncoder extends Emitter<Events> {
-    private readonly ffprobePath: string;
-    private readonly ffmpegPath: string;
-
-    private readonly inputFilePath: string;
-    private outputFilePath: string = "";
-    private h265: boolean = false;
-
-    private readonly tempDirectory: string;
-
-    private log: string = "";
+    private _ffprobePath: string;
+    private _ffmpegPath: string;
+    private _inputFilePath: string;
+    private _outputFilePath: string = "";
+    private _h265: boolean = false;
+    private _tempDirectory: string;
+    private _log: string = "";
     /**
      * Size of the input file in bytes.
      */
-    private fileSize: number = 0;
-    private crfToVMAF: CRFToVMAFMapping[] = [];
-    private encoder: EncodeAndScoreEncoder | undefined = undefined;
+    private _fileSize: number = 0;
+    private _crfToVMAF: CRFToVMAFMapping[] = [];
+    private _encoder: EncodeAndScoreEncoder | undefined = undefined;
     /**
      * Function that resolves the promise provided by the start method. This is undefined until the start method is called.
      */
-    private resolve: ((value: void | PromiseLike<void>) => void) | undefined = undefined;
+    private _resolve: ((value: void | PromiseLike<void>) => void) | undefined = undefined;
+    private _currentDuration: number = 0;
+    private _duration: number = 0;
+    private _state: EncodingState = "Pending";
 
     private constructor(ffprobePath: string, ffmpegPath: string, inputFilePath: string, tempDirectory: string) {
         super();
-        this.ffprobePath = ffprobePath;
-        this.ffmpegPath = ffmpegPath;
-        this.inputFilePath = inputFilePath;
-        this.tempDirectory = tempDirectory;
-    }
-
-    private _currentDuration: number = 0;
-
-    public get currentDuration(): number {
-        return this._currentDuration;
-    }
-
-    private set currentDuration(value: number) {
-        this._currentDuration = value;
-    }
-
-    private _duration: number = 0;
-
-    public get duration(): number {
-        return this._duration;
-    }
-
-    private set duration(value: number) {
-        this._duration = value;
-    }
-
-    private _state: EncodingState = "Pending";
-
-    public get state(): EncodingState {
-        return this._state;
-    }
-
-    private set state(value: EncodingState) {
-        this._state = value;
+        this._ffprobePath = ffprobePath;
+        this._ffmpegPath = ffmpegPath;
+        this._inputFilePath = inputFilePath;
+        this._tempDirectory = tempDirectory;
     }
 
     public static async createNew(ffprobePath: string, ffmpegPath: string, inputFilePath: string, tempDirectory: string): Promise<VMAFTargetVideoEncoder> {
@@ -89,7 +61,7 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
         const probeData = probe(ffprobePath, inputFilePath);
 
         try {
-            encoder.fileSize = (await stat(inputFilePath)).size;
+            encoder._fileSize = (await stat(inputFilePath)).size;
         } catch (e) {
             encoder.logLine("Could not determine the size of the input file. It is likely that the file does not exist.");
             encoder.logLine((e as Error).stack ?? "No stack trace!");
@@ -113,8 +85,8 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
     }
 
     public async start(ffmpegArguments: string, h265: boolean, targetVMAF: number, outputFilePath: string): Promise<void> {
-        this.outputFilePath = outputFilePath;
-        this.h265 = h265;
+        this._outputFilePath = outputFilePath;
+        this._h265 = h265;
 
         if (this.state != "Pending") {
             this.logLine(`Cannot start encoding when the state is not pending. Current state: ${this.state}`);
@@ -132,12 +104,12 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
         // eslint-disable-next-line no-constant-condition
         while (true) {
             // If we have a previous encoder, remove all listeners to avoid memory leaks.
-            this.encoder?.removeAllListeners();
-            this.encoder = await EncodeAndScoreEncoder.createNew(this.ffprobePath, this.ffmpegPath, this.inputFilePath);
-            this.encoder.on("log", (data, internal) => this.onChildLog(data, internal));
-            this.encoder.on("update", () => this.onChildUpdate());
+            this._encoder?.removeAllListeners();
+            this._encoder = await EncodeAndScoreEncoder.createNew(this._ffprobePath, this._ffmpegPath, this._inputFilePath);
+            this._encoder.on("log", (data, internal) => this.onChildLog(data, internal));
+            this._encoder.on("update", () => this.onChildUpdate());
 
-            if (this.encoder.state == "Error") {
+            if (this._encoder.state == "Error") {
                 this.logLine("Could not create the encoder. Exiting.");
                 this.state = "Error";
                 return;
@@ -148,39 +120,39 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
                 // Step 0. Run with CRF 0 to get upper range of VMAF score.
                 thisCrf = 0;
                 const tempFile = await this.encodeVideoWithCRF(ffmpegArguments, thisCrf);
-                if (this.encoder.vmafScore < targetVMAF) {
+                if (this._encoder.vmafScore < targetVMAF) {
                     // If the VMAF score is less than the target, we can't find a CRF that will work.
-                    this.logLine(`VMAF with CRF 0 is ${this.encoder.vmafScore}. It needs to be greater than ${targetVMAF}.`);
+                    this.logLine(`VMAF with CRF 0 is ${this._encoder.vmafScore}. It needs to be greater than ${targetVMAF}.`);
                     this.state = "Error";
                     return;
                 }
 
-                this.crfToVMAF.push({
+                this._crfToVMAF.push({
                     filePath: tempFile,
                     crf: thisCrf,
-                    vmaf: this.encoder.vmafScore
+                    vmaf: this._encoder.vmafScore
                 });
 
-                lastVMAF = this.encoder.vmafScore;
+                lastVMAF = this._encoder.vmafScore;
                 stage = "ValidateLowerBound";
             } else if (stage == "ValidateLowerBound") {
                 // Step 1. Run with max CRF to get lower range of VMAF score.
                 thisCrf = 51;
                 const tempFile = await this.encodeVideoWithCRF(ffmpegArguments, thisCrf);
-                if (targetVMAF < this.encoder.vmafScore) {
+                if (targetVMAF < this._encoder.vmafScore) {
                     // If the VMAF score is greater than the target, we can't find a CRF that will work.
-                    this.logLine(`VMAF with CRF 51 is ${this.encoder.vmafScore}. It needs to be less than ${targetVMAF}.`);
+                    this.logLine(`VMAF with CRF 51 is ${this._encoder.vmafScore}. It needs to be less than ${targetVMAF}.`);
                     this.state = "Error";
                     return;
                 }
 
-                this.crfToVMAF.push({
+                this._crfToVMAF.push({
                     filePath: tempFile,
                     crf: thisCrf,
-                    vmaf: this.encoder.vmafScore
+                    vmaf: this._encoder.vmafScore
                 });
 
-                lastVMAF = this.encoder.vmafScore;
+                lastVMAF = this._encoder.vmafScore;
                 stage = "NarrowDown";
             } else if (stage == "NarrowDown") {
                 // Step 2. Narrow down the range to about 4 CRF values.
@@ -200,7 +172,7 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
 
                 const tempFile = await this.encodeVideoWithCRF(ffmpegArguments, thisCrf);
                 // TODO: Test this.
-                if (this.encoder.vmafScore > targetVMAF) {
+                if (this._encoder.vmafScore > targetVMAF) {
                     // Too high. Decrease VMAF, increase CRF range.
                     lowCRF = thisCrf - 1;
                 } else {
@@ -208,12 +180,12 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
                     highCRF = thisCrf;
                 }
 
-                this.crfToVMAF.push({
+                this._crfToVMAF.push({
                     filePath: tempFile,
                     crf: thisCrf,
-                    vmaf: this.encoder.vmafScore
+                    vmaf: this._encoder.vmafScore
                 });
-                lastVMAF = this.encoder.vmafScore;
+                lastVMAF = this._encoder.vmafScore;
             } else if (stage == "IterateSubset") {
                 // Step 3. Iterate over the subset of CRF values found in step 2 to find the best one.
                 if (thisCrf > highCRF) {
@@ -224,13 +196,13 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
 
                 const tempFile = await this.encodeVideoWithCRF(ffmpegArguments, thisCrf);
 
-                this.crfToVMAF.push({
+                this._crfToVMAF.push({
                     filePath: tempFile,
                     crf: thisCrf,
-                    vmaf: this.encoder.vmafScore
+                    vmaf: this._encoder.vmafScore
                 });
 
-                lastVMAF = this.encoder.vmafScore;
+                lastVMAF = this._encoder.vmafScore;
                 thisCrf++;
             } else if (stage == "LinearWalk") {
                 // Step 4. Walk linearly over the CRF values to find the best one.
@@ -242,21 +214,25 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
 
                 const tempFile = await this.encodeVideoWithCRF(ffmpegArguments, thisCrf);
 
-                this.crfToVMAF.push({
+                this._crfToVMAF.push({
                     filePath: tempFile,
                     crf: thisCrf,
-                    vmaf: this.encoder.vmafScore
+                    vmaf: this._encoder.vmafScore
                 });
 
-                lastVMAF = this.encoder.vmafScore;
+                lastVMAF = this._encoder.vmafScore;
             }
 
             // We did an encoding. Check the table to see if we have a good match.
-            this.crfToVMAF.sort(t => t.crf);
-            for (let i = 1; i < this.crfToVMAF.length; i++) {
-                if (this.crfToVMAF[i].vmaf < targetVMAF && this.crfToVMAF[i - 1].vmaf >= targetVMAF && this.crfToVMAF[i].crf - this.crfToVMAF[i - 1].crf == 1) {
+            this._crfToVMAF.sort(t => t.crf);
+            for (let i = 1; i < this._crfToVMAF.length; i++) {
+                if (
+                    this._crfToVMAF[i].vmaf < targetVMAF &&
+                    this._crfToVMAF[i - 1].vmaf >= targetVMAF &&
+                    this._crfToVMAF[i].crf - this._crfToVMAF[i - 1].crf == 1
+                ) {
                     // Found the boundary. Should also note that there's an inverse relationship between CRF and VMAF.
-                    const target = this.crfToVMAF[i - 1];
+                    const target = this._crfToVMAF[i - 1];
 
                     // This call should overwrite any existing file.
                     await fs.copyFile(target.filePath, outputFilePath);
@@ -278,13 +254,13 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
      * @private
      */
     private async encodeVideoWithCRF(ffmpegArguments: string, crf: number): Promise<string> {
-        const tempFile = await this.requestTempFilePath(this.tempDirectory, crf, this.outputFilePath);
-        const args = this.generateAugmentedFFmpegArguments(ffmpegArguments, this.h265, crf);
-        if (this.encoder == undefined) {
+        const tempFile = await this.requestTempFilePath(this._tempDirectory, crf, this._outputFilePath);
+        const args = this.generateAugmentedFFmpegArguments(ffmpegArguments, this._h265, crf);
+        if (this._encoder == undefined) {
             throw new Error("Encoder is undefined.");
         }
 
-        await this.encoder.start(args, tempFile);
+        await this._encoder.start(args, tempFile);
         return tempFile;
     }
 
@@ -314,7 +290,7 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
     }
 
     private onChildUpdate() {
-        this.currentDuration = this.encoder?.currentDuration ?? 0;
+        this.currentDuration = this._encoder?.currentDuration ?? 0;
         this.emit("update");
     }
 
@@ -332,7 +308,7 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
      * @private
      */
     private logLine(data: string): void {
-        this.log += `>> ${data}\n`;
+        this._log += `>> ${data}\n`;
         this.emit("log", data, false);
     }
 
@@ -342,7 +318,119 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
      * @private
      */
     private logInternal(data: string): void {
-        this.log += data;
+        this._log += data;
         this.emit("log", data, true);
+    }
+
+    public get currentDuration(): number {
+        return this._currentDuration;
+    }
+
+    private set currentDuration(value: number) {
+        this._currentDuration = value;
+    }
+
+    public get duration(): number {
+        return this._duration;
+    }
+
+    private set duration(value: number) {
+        this._duration = value;
+    }
+
+    public get state(): EncodingState {
+        return this._state;
+    }
+
+    private set state(value: EncodingState) {
+        this._state = value;
+    }
+
+    private get ffprobePath(): string {
+        return this._ffprobePath;
+    }
+
+    private set ffprobePath(value: string) {
+        this._ffprobePath = value;
+    }
+
+    private get ffmpegPath(): string {
+        return this._ffmpegPath;
+    }
+
+    private set ffmpegPath(value: string) {
+        this._ffmpegPath = value;
+    }
+
+    private get inputFilePath(): string {
+        return this._inputFilePath;
+    }
+
+    private set inputFilePath(value: string) {
+        this._inputFilePath = value;
+    }
+
+    private get outputFilePath(): string {
+        return this._outputFilePath;
+    }
+
+    private set outputFilePath(value: string) {
+        this._outputFilePath = value;
+    }
+
+    private get h265(): boolean {
+        return this._h265;
+    }
+
+    private set h265(value: boolean) {
+        this._h265 = value;
+    }
+
+    private get tempDirectory(): string {
+        return this._tempDirectory;
+    }
+
+    private set tempDirectory(value: string) {
+        this._tempDirectory = value;
+    }
+
+    private get log(): string {
+        return this._log;
+    }
+
+    private set log(value: string) {
+        this._log = value;
+    }
+
+    private get fileSize(): number {
+        return this._fileSize;
+    }
+
+    private set fileSize(value: number) {
+        this._fileSize = value;
+    }
+
+    private get crfToVMAF(): CRFToVMAFMapping[] {
+        return this._crfToVMAF;
+    }
+
+    private set crfToVMAF(value: CRFToVMAFMapping[]) {
+        this._crfToVMAF = value;
+    }
+
+    private get encoder(): EncodeAndScoreEncoder | undefined {
+        return this._encoder;
+    }
+
+    private set encoder(value: EncodeAndScoreEncoder | undefined) {
+        this._encoder = value;
+    }
+
+    private get resolve(): ((value: void | PromiseLike<void>) => void) | undefined {
+        return this._resolve;
+    }
+
+    private set resolve(value: ((value: void | PromiseLike<void>) => void) | undefined) {
+        this._resolve = value;
     }
 }
