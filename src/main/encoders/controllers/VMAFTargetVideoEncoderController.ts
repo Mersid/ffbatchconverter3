@@ -203,7 +203,7 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
         return this._outputSubdirectory;
     }
 
-    public set outputSubdirectory(value: string) {
+    private set outputSubdirectory(value: string) {
         this._outputSubdirectory = value;
     }
 
@@ -211,7 +211,7 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
         return this._extension;
     }
 
-    public set extension(value: string) {
+    private set extension(value: string) {
         this._extension = value;
     }
 
@@ -219,7 +219,7 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
         return this._h265;
     }
 
-    public set h265(value: boolean) {
+    private set h265(value: boolean) {
         this._h265 = value;
     }
 
@@ -227,7 +227,7 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
         return this._targetVMAF;
     }
 
-    public set targetVMAF(value: number) {
+    private set targetVMAF(value: number) {
         this._targetVMAF = value;
     }
 
@@ -235,7 +235,7 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
         return this._ffmpegArguments;
     }
 
-    public set ffmpegArguments(value: string) {
+    private set ffmpegArguments(value: string) {
         this._ffmpegArguments = value;
     }
 
@@ -243,15 +243,16 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
         return this._concurrency;
     }
 
-    private set concurrency(value: number) {
+    public set concurrency(value: number) {
         this._concurrency = value;
+        this.processActions().then(_r => {});
     }
 
     public get tempDirectory(): string {
         return this._tempDirectory;
     }
 
-    public set tempDirectory(value: string) {
+    private set tempDirectory(value: string) {
         this._tempDirectory = value;
     }
 
@@ -267,7 +268,7 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
         return this._controllerId;
     }
 
-    public set controllerId(value: string) {
+    private set controllerId(value: string) {
         this._controllerId = value;
     }
 
@@ -275,7 +276,7 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
         return this._ffprobePath;
     }
 
-    public set ffprobePath(value: string) {
+    private set ffprobePath(value: string) {
         this._ffprobePath = value;
     }
 
@@ -283,7 +284,7 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
         return this._ffmpegPath;
     }
 
-    public set ffmpegPath(value: string) {
+    private set ffmpegPath(value: string) {
         this._ffmpegPath = value;
     }
 
@@ -291,7 +292,7 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
         return this._isEncoding;
     }
 
-    public set isEncoding(value: boolean) {
+    private set isEncoding(value: boolean) {
         this._isEncoding = value;
     }
 }

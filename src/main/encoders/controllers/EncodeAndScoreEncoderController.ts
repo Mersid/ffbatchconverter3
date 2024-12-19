@@ -178,6 +178,12 @@ export class EncodeAndScoreEncoderController extends Emitter<Events> {
             return;
         }
 
+        // Note: There is a potential race condition here. Observe that there is an await between getting an encoder
+        // and starting it, which will set its state. As such, it is possible that in the await mkdir call,
+        // we process another encoder, which will find the same encoder. As such, we end up with two encoders
+        // in the same critical section. To remedy this, the encoder.start() call contains an internal check
+        // to allow the encoder to proceed only if it is in the "Pending" state. If we omit this call,
+        // we end up with multiple ffmpeg processes encoding the same video.
         const encoder = this._encoders.find(e => e.state == "Pending");
         if (encoder == undefined) {
             return;
@@ -223,11 +229,12 @@ export class EncodeAndScoreEncoderController extends Emitter<Events> {
         return this._concurrency;
     }
 
-    private set concurrency(value: number) {
+    public set concurrency(value: number) {
         this._concurrency = value;
+        this.processActions().then(_r => {});
     }
 
-    private get controllerId(): string {
+    public get controllerId(): string {
         return this._controllerId;
     }
 
@@ -251,11 +258,11 @@ export class EncodeAndScoreEncoderController extends Emitter<Events> {
         this._ffmpegPath = value;
     }
 
-    private get isEncoding(): boolean {
+    public get isEncoding(): boolean {
         return this._isEncoding;
     }
 
-    private set isEncoding(value: boolean) {
+    public set isEncoding(value: boolean) {
         this._isEncoding = value;
     }
 

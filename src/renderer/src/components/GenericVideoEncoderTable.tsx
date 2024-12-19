@@ -227,7 +227,7 @@ export default function GenericVideoEncoderTable() {
                         }
 
                         const lastSelectedEncoderId = table.getSelectedRowModel().rowsById[lastSelected].original.encoderId;
-                        window.api.send.copyLogsToClipboard({
+                        window.api.send.genericVideoEncoderCopyLogsToClipboard({
                             controllerId: controllerId,
                             encoderId: lastSelectedEncoderId
                         });
@@ -239,7 +239,7 @@ export default function GenericVideoEncoderTable() {
                     id={"openLog"}
                     onClick={() => {
                         const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
-                        window.api.send.openLogs({
+                        window.api.send.genericVideoEncoderOpenLogs({
                             controllerId: controllerId,
                             encoderIds: selectedEncoderIds
                         });
@@ -252,7 +252,7 @@ export default function GenericVideoEncoderTable() {
                     id={"remove"}
                     onClick={() => {
                         const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
-                        window.api.send.deleteEncoders({
+                        window.api.send.genericVideoEncoderDeleteEncoders({
                             controllerId: controllerId,
                             encoderIds: selectedEncoderIds
                         });
@@ -266,7 +266,7 @@ export default function GenericVideoEncoderTable() {
                     id={"reset"}
                     onClick={() => {
                         const selectedEncoderIds = table.getSelectedRowModel().rows.map(row => row.original.encoderId);
-                        window.api.send.resetEncoders({
+                        window.api.send.genericVideoEncoderResetEncoders({
                             controllerId: controllerId,
                             encoderIds: selectedEncoderIds
                         });

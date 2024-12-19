@@ -259,6 +259,9 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
 
         this.currentDuration = 0;
         this.state = "Pending";
+        this.crfToVMAF = [];
+        this.encoder = undefined;
+        this.resolve = undefined;
 
         this.emit("update");
         return true;

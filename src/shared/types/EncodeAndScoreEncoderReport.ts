@@ -1,4 +1,5 @@
 import { EncodingState } from "@shared/types/EncodingState";
+import { EncodeAndScoreEncoderPhase } from "@shared/types/EncodeAndScoreEncoderPhase";
 
 /**
  * An update report sent from the main process to the renderer to indicate that a encode and score encoder has been created
@@ -9,6 +10,7 @@ export type EncodeAndScoreEncoderReport = {
     controllerId: string;
     encoderId: string;
     encodingState: EncodingState;
+    encodingPhase: EncodeAndScoreEncoderPhase;
     inputFilePath: string;
 
     /**
@@ -17,4 +19,9 @@ export type EncodeAndScoreEncoderReport = {
     fileSize: number;
     currentDuration: number;
     duration: number;
+
+    /**
+     * Undefined if we don't have a score yet.
+     */
+    vmafScore?: number;
 }

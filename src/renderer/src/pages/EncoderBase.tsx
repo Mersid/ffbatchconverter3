@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@renderer/redux/Store";
 import GenericVideoEncoderPage from "@renderer/pages/GenericVideoEncoderPage";
 import NotImplementedPage from "@renderer/pages/NotImplementedPage";
+import EncodeAndScoreEncoderPage from "@renderer/pages/EncodeAndScoreEncoderPage";
 
 export default function EncoderBase(): ReactElement {
     const params = useParams();
@@ -26,7 +27,10 @@ export default function EncoderBase(): ReactElement {
         }
         if (creationData.taskType == 1) {
             return <GenericVideoEncoderPage />;
+        } else if (creationData.taskType == 2) {
+            return <EncodeAndScoreEncoderPage />;
         }
+
         return <NotImplementedPage />;
     };
 

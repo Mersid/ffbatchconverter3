@@ -9,6 +9,7 @@ import { Tab } from "@renderer/misc/Tab";
 import { addEncoderMap } from "@renderer/redux/EncoderMapDataSlice";
 import { setEncoderStatus } from "@renderer/redux/EncoderStatusSlice";
 import { setGenericVideoEncoderSettings } from "@renderer/redux/GenericVideoEncoderSettingsSlice";
+import { setEncodeAndScoreEncoderSettings } from "@renderer/redux/EncodeAndScoreEncoderSettingsSlice";
 
 export default function EncoderCreationPage() {
     const params = useParams();
@@ -150,6 +151,34 @@ export default function EncoderCreationPage() {
                             );
 
                             // Add an entry to mark the encoder as not active.
+                            dispatch(
+                                setEncoderStatus({
+                                    controllerId,
+                                    encoderActive: false
+                                })
+                            );
+                        } else if (taskType == 2) {
+                            // Encode and score
+                            const controllerId = await window.api.fetch.createEncodeAndScoreEncoder({
+                                ffmpegPath,
+                                ffprobePath
+                            });
+
+                            dispatch(addEncoderMap({
+                                pageId: params.id as string,
+                                controllerId: controllerId
+                            }));
+
+                            dispatch(setEncodeAndScoreEncoderSettings({
+                                controllerId,
+                                extension: "mkv",
+                                ffmpegArguments: "-c:v libx265 -c:a aac",
+                                concurrency: 1,
+                                subdirectory: "FFBatch",
+                                encoder: "x265",
+                                crf: 23
+                            }));
+
                             dispatch(
                                 setEncoderStatus({
                                     controllerId,

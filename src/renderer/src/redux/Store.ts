@@ -5,6 +5,8 @@ import { encoderMapDataSlice } from "@renderer/redux/EncoderMapDataSlice";
 import { genericVideoEncoderReportsSlice } from "./GenericVideoEncoderReportsSlice";
 import { encoderStatusSlice } from "@renderer/redux/EncoderStatusSlice";
 import { genericVideoEncoderSettingsSlice } from "@renderer/redux/GenericVideoEncoderSettingsSlice";
+import { encodeAndScoreEncoderSettingsSlice } from "./EncodeAndScoreEncoderSettingsSlice";
+import { encodeAndScoreEncoderReportsSlice } from "./EncodeAndScoreEncoderReportsSlice";
 
 export type RootState = ReturnType<typeof store.getState>;
 
@@ -13,8 +15,10 @@ export const store = configureStore({
         tabs: tabSlice.reducer,
         encoderCreationData: encoderCreationDataSlice.reducer,
         encoderMapData: encoderMapDataSlice.reducer,
-        genericVideoEncoderReports: genericVideoEncoderReportsSlice.reducer,
         encoderStatus: encoderStatusSlice.reducer,
-        genericVideoEncoderSettings: genericVideoEncoderSettingsSlice.reducer
+        genericVideoEncoderReports: genericVideoEncoderReportsSlice.reducer,
+        genericVideoEncoderSettings: genericVideoEncoderSettingsSlice.reducer,
+        encodeAndScoreEncoderReports: encodeAndScoreEncoderReportsSlice.reducer,
+        encodeAndScoreEncoderSettings: encodeAndScoreEncoderSettingsSlice.reducer,
     }
 });

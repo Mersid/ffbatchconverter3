@@ -6,6 +6,7 @@ import { Emitter } from "strict-event-emitter";
 import { EncodingState } from "@shared/types/EncodingState";
 import { v4 as uuid4 } from "uuid";
 import { EncodeAndScoreEncoderReport } from "@shared/types/EncodeAndScoreEncoderReport";
+import { EncodeAndScoreEncoderPhase } from "@shared/types/EncodeAndScoreEncoderPhase";
 
 type Events = {
     log: [data: string, internal: boolean];
@@ -41,10 +42,10 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
     private _duration: number = 0;
     private _state: EncodingState = "Pending";
     /**
-     * The VMAF score of the encoded video. This is zero until the scoring is complete.
+     * The VMAF score of the encoded video. This is undefined until the scoring is complete.
      * @private
      */
-    private _vmafScore: number = 0;
+    private _vmafScore?: number = undefined;
 
     private constructor(ffprobePath: string, ffmpegPath: string, inputFilePath: string) {
         super();
@@ -83,11 +84,19 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
     }
 
     public async start(ffmpegArguments: string, outputFilePath: string): Promise<void> {
+        if (this.state != "Pending") {
+            console.log(">> This is not pending!")
+            return;
+        }
+
         this._outputFilePath = outputFilePath;
+        this.state = "Encoding";
 
         this._encoder = await GenericVideoEncoder.createNew(this._ffprobePath, this._ffmpegPath, this._inputFilePath);
         this._encoder.on("update", () => this.onChildUpdate());
         this._encoder.on("log", (data, internal) => this.onChildLog(data, internal));
+
+        console.log(">> Hello world!")
 
         await this._encoder.start(ffmpegArguments, outputFilePath);
 
@@ -127,6 +136,10 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
 
         this.currentDuration = 0;
         this.state = "Pending";
+        this.resolve = undefined;
+        this.encoder = undefined;
+        this.scorer = undefined;
+        this.vmafScore = undefined;
 
         this.emit("update");
         return true;
@@ -193,11 +206,11 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
         this._state = value;
     }
 
-    public get vmafScore(): number {
+    public get vmafScore(): number | undefined {
         return this._vmafScore;
     }
 
-    private set vmafScore(value: number) {
+    private set vmafScore(value: number | undefined) {
         this._vmafScore = value;
     }
 
@@ -209,7 +222,9 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
             fileSize: this._fileSize,
             currentDuration: this.currentDuration,
             duration: this.duration,
-            encodingState: this.state
+            encodingState: this.state,
+            encodingPhase: this.encodingPhase,
+            vmafScore: this.vmafScore
         };
     }
 
@@ -283,5 +298,17 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
 
     private set inputFilePath(value: string) {
         this._inputFilePath = value;
+    }
+
+    public get encodingPhase(): EncodeAndScoreEncoderPhase {
+        if (this.state == "Success") {
+            return "Done";
+        }
+
+        if (this.scorer != undefined) {
+            return "Scoring";
+        }
+
+        return "Encoding";
     }
 }

@@ -14,120 +14,187 @@ import { GenericVideoEncoderOpenLogsInfo } from "@shared/types/GenericVideoEncod
 import { clipboard } from "electron";
 import { openLog } from "./LogHelper";
 import { GenericVideoEncoderResetEncodersInfo } from "@shared/types/GenericVideoEncoderResetEncodersInfo";
+import { EncodeAndScoreEncoderController } from "../controllers/EncodeAndScoreEncoderController";
+import { VMAFTargetVideoEncoderController } from "../controllers/VMAFTargetVideoEncoderController";
 
 const genericVideoEncoders = new Map<string, GenericVideoEncoderController>();
+const encodeAndScoreEncoders = new Map<string, EncodeAndScoreEncoderController>();
+const vmafTargetVideoEncoders = new Map<string, VMAFTargetVideoEncoderController>();
 
 export const lord = {
-    createNewGenericVideoEncoderController,
-    addPathsToGenericVideoEncoder,
-    setEncoderActive,
-    setEncoderSettings,
-    copyLogsToClipboard,
-    openLogs,
-    resetEncoders,
-    deleteEncoders
+    /**
+     * Creates a new GenericVideoEncoderController and registers it. The ID of the controller is returned.
+     */
+    createNewGenericVideoEncoderController: async ({ ffprobePath, ffmpegPath }: ExternalLibraryPathsInfo): Promise<string> => {
+        const controller = await GenericVideoEncoderController.createNew(ffprobePath, ffmpegPath);
+        controller.on("update", reportId => {
+            sendToRenderer("genericVideoEncoderUpdate", controller.getReportFor(reportId));
+        });
+
+        const id = controller.controllerId;
+        genericVideoEncoders.set(id, controller);
+        return id;
+    },
+    genericVideoEncoderAddPaths: async (info: GenericVideoEncoderPathUpdateInfo): Promise<void> => {
+        const controller = getGenericVideoEncoderControllerById(info.controllerId);
+
+        const reports = await controller.addEncoders(info.paths);
+        // Send the initial reports to the renderer. This allows the UI to generate initial rows for the encoders.
+        reports.forEach(report => {
+            sendToRenderer("genericVideoEncoderUpdate", report);
+        });
+    },
+    genericVideoEncoderDeleteEncoders: async (info: GenericVideoEncoderResetEncodersInfo) => {
+        const controller = getGenericVideoEncoderControllerById(info.controllerId);
+
+        const removedIds = controller.deleteEncoders(info.encoderIds);
+
+        const deleteInfo: GenericVideoEncoderResetEncodersInfo = {
+            controllerId: info.controllerId,
+            encoderIds: removedIds
+        };
+
+        sendToRenderer("genericVideoEncoderDelete", deleteInfo);
+    },
+    genericVideoEncoderUpdateSettings: async (settings: GenericVideoEncoderSettings): Promise<void> => {
+        const controller = getGenericVideoEncoderControllerById(settings.controllerId);
+
+        controller.concurrency = settings.concurrency;
+        controller.outputSubdirectory = settings.subdirectory;
+        controller.extension = settings.extension;
+        controller.ffmpegArguments = settings.ffmpegArguments;
+    },
+    genericVideoEncoderResetEncoders: async (info: GenericVideoEncoderResetEncodersInfo) => {
+        const controller = getGenericVideoEncoderControllerById(info.controllerId);
+
+        controller.resetEncoders(info.encoderIds);
+    },
+    genericVideoEncoderCopyLogsToClipboard: async (info: GenericVideoEncoderCopyLogsToClipboardInfo) => {
+        const controller = getGenericVideoEncoderControllerById(info.controllerId);
+
+        const logs = controller.getLogsFor(info.encoderId);
+        clipboard.write({ text: logs });
+    },
+    genericVideoEncoderOpenLogs: async (info: GenericVideoEncoderOpenLogsInfo) => {
+        const controller = getGenericVideoEncoderControllerById(info.controllerId);
+
+        for (const encoderId of info.encoderIds) {
+            const logs = controller.getLogsFor(encoderId);
+            openLog(logs).then(() => {});
+        }
+    },
+    genericVideoEncoderSetEncoderActive: async (status: EncoderStatus): Promise<EncoderStatus> => {
+        const controller = getGenericVideoEncoderControllerById(status.controllerId);
+
+        if (status.encoderActive) {
+            await controller.startEncoding();
+        } else {
+            await controller.stopEncoding();
+        }
+
+        return {
+            controllerId: controller.controllerId,
+            encoderActive: controller.isEncoding
+        };
+    },
+
+    createNewEncodeAndScoreEncoderController: async ({ ffprobePath, ffmpegPath }: ExternalLibraryPathsInfo): Promise<string> => {
+        const controller = await EncodeAndScoreEncoderController.createNew(ffprobePath, ffmpegPath);
+        controller.on("update", reportId => {
+            sendToRenderer("encodeAndScoreEncoderUpdate", controller.getReportFor(reportId));
+        });
+
+        const id = controller.controllerId;
+        encodeAndScoreEncoders.set(id, controller);
+        return id;
+    },
+    encodeAndScoreEncoderAddPaths: async (info: GenericVideoEncoderPathUpdateInfo): Promise<void> => {
+        const controller = getEncodeAndScoreEncoderControllerById(info.controllerId);
+
+        const reports = await controller.addEncoders(info.paths);
+        // Send the initial reports to the renderer. This allows the UI to generate initial rows for the encoders.
+        reports.forEach(report => {
+            sendToRenderer("encodeAndScoreEncoderUpdate", report);
+        });
+    },
+    encodeAndScoreEncoderDeleteEncoders: async (info: GenericVideoEncoderResetEncodersInfo) => {
+        const controller = getEncodeAndScoreEncoderControllerById(info.controllerId);
+
+        const removedIds = controller.deleteEncoders(info.encoderIds);
+
+        const deleteInfo: GenericVideoEncoderResetEncodersInfo = {
+            controllerId: info.controllerId,
+            encoderIds: removedIds
+        };
+
+        sendToRenderer("encodeAndScoreEncoderDelete", deleteInfo);
+    },
+    encodeAndScoreEncoderUpdateSettings: async (settings: GenericVideoEncoderSettings): Promise<void> => {
+        const controller = getEncodeAndScoreEncoderControllerById(settings.controllerId);
+
+        controller.concurrency = settings.concurrency;
+        controller.outputSubdirectory = settings.subdirectory;
+        controller.extension = settings.extension;
+        controller.ffmpegArguments = settings.ffmpegArguments;
+    },
+    encodeAndScoreEncoderResetEncoders: async (info: GenericVideoEncoderResetEncodersInfo) => {
+        const controller = getEncodeAndScoreEncoderControllerById(info.controllerId);
+
+        controller.resetEncoders(info.encoderIds);
+    },
+    encodeAndScoreEncoderCopyLogsToClipboard: async (info: GenericVideoEncoderCopyLogsToClipboardInfo) => {
+        const controller = getEncodeAndScoreEncoderControllerById(info.controllerId);
+
+        const logs = controller.getLogsFor(info.encoderId);
+        clipboard.write({ text: logs });
+    },
+    encodeAndScoreEncoderOpenLogs: async (info: GenericVideoEncoderOpenLogsInfo) => {
+        const controller = getEncodeAndScoreEncoderControllerById(info.controllerId);
+
+        for (const encoderId of info.encoderIds) {
+            const logs = controller.getLogsFor(encoderId);
+            openLog(logs).then(() => {});
+        }
+    },
+    encodeAndScoreEncoderSetEncoderActive: async (status: EncoderStatus): Promise<EncoderStatus> => {
+        const controller = getEncodeAndScoreEncoderControllerById(status.controllerId);
+
+        if (status.encoderActive) {
+            await controller.startEncoding();
+        } else {
+            await controller.stopEncoding();
+        }
+
+        return {
+            controllerId: controller.controllerId,
+            encoderActive: controller.isEncoding
+        };
+    }
 };
 
-/**
- * Creates a new GenericVideoEncoderController and registers it. The ID of the controller is returned.
- */
-async function createNewGenericVideoEncoderController({ ffprobePath, ffmpegPath }: ExternalLibraryPathsInfo): Promise<string> {
-    const controller = await GenericVideoEncoderController.createNew(ffprobePath, ffmpegPath);
-    controller.on("update", reportId => {
-        sendToRenderer("genericVideoEncoderUpdate", controller.getReportFor(reportId));
-    });
+function getGenericVideoEncoderControllerById(id: string): GenericVideoEncoderController {
+    const controller = genericVideoEncoders.get(id);
+    if (!controller) {
+        throw new Error(`No controller with ID ${id} found.`);
+    }
 
-    const id = controller.controllerId;
-    genericVideoEncoders.set(id, controller);
-    return id;
+    return controller;
 }
 
-async function addPathsToGenericVideoEncoder(info: GenericVideoEncoderPathUpdateInfo): Promise<void> {
-    const controller = genericVideoEncoders.get(info.controllerId);
+function getEncodeAndScoreEncoderControllerById(id: string): EncodeAndScoreEncoderController {
+    const controller = encodeAndScoreEncoders.get(id);
     if (!controller) {
-        throw new Error(`No controller with ID ${info.controllerId} found.`);
+        throw new Error(`No controller with ID ${id} found.`);
     }
 
-    const reports = await controller.addEncoders(info.paths);
-    // Send the initial reports to the renderer. This allows the UI to generate initial rows for the encoders.
-    reports.forEach(report => {
-        sendToRenderer("genericVideoEncoderUpdate", report);
-    });
+    return controller;
 }
 
-async function setEncoderActive(status: EncoderStatus): Promise<EncoderStatus> {
-    const controller = genericVideoEncoders.get(status.controllerId);
+function getVMAFTargetVideoEncoderControllerById(id: string): VMAFTargetVideoEncoderController {
+    const controller = vmafTargetVideoEncoders.get(id);
     if (!controller) {
-        throw new Error(`No controller with ID ${status.controllerId} found.`);
+        throw new Error(`No controller with ID ${id} found.`);
     }
 
-    if (status.encoderActive) {
-        await controller.startEncoding();
-    } else {
-        await controller.stopEncoding();
-    }
-
-    return {
-        controllerId: controller.controllerId,
-        encoderActive: controller.isEncoding
-    };
-}
-
-async function setEncoderSettings(settings: GenericVideoEncoderSettings): Promise<void> {
-    const controller = genericVideoEncoders.get(settings.controllerId);
-    if (!controller) {
-        throw new Error(`No controller with ID ${settings.controllerId} found.`);
-    }
-
-    controller.concurrency = settings.concurrency;
-    controller.outputSubdirectory = settings.subdirectory;
-    controller.extension = settings.extension;
-    controller.ffmpegArguments = settings.ffmpegArguments;
-}
-
-async function copyLogsToClipboard(info: GenericVideoEncoderCopyLogsToClipboardInfo) {
-    const controller = genericVideoEncoders.get(info.controllerId);
-    if (!controller) {
-        throw new Error(`No controller with ID ${info.controllerId} found.`);
-    }
-
-    const logs = controller.getLogsFor(info.encoderId);
-    clipboard.write({ text: logs });
-}
-
-async function openLogs(info: GenericVideoEncoderOpenLogsInfo) {
-    const controller = genericVideoEncoders.get(info.controllerId);
-    if (!controller) {
-        throw new Error(`No controller with ID ${info.controllerId} found.`);
-    }
-
-    for (const encoderId of info.encoderIds) {
-        const logs = controller.getLogsFor(encoderId);
-        openLog(logs).then(() => {});
-    }
-}
-
-async function resetEncoders(info: GenericVideoEncoderResetEncodersInfo) {
-    const controller = genericVideoEncoders.get(info.controllerId);
-    if (!controller) {
-        throw new Error(`No controller with ID ${info.controllerId} found.`);
-    }
-
-    controller.resetEncoders(info.encoderIds);
-}
-
-async function deleteEncoders(info: GenericVideoEncoderResetEncodersInfo) {
-    const controller = genericVideoEncoders.get(info.controllerId);
-    if (!controller) {
-        throw new Error(`No controller with ID ${info.controllerId} found.`);
-    }
-
-    const removedIds = controller.deleteEncoders(info.encoderIds);
-
-    const deleteInfo: GenericVideoEncoderResetEncodersInfo = {
-        controllerId: info.controllerId,
-        encoderIds: removedIds
-    };
-
-    sendToRenderer("genericVideoEncoderDelete", deleteInfo);
+    return controller;
 }

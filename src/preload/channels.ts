@@ -7,6 +7,15 @@ import { GenericVideoEncoderCopyLogsToClipboardInfo } from "@shared/types/Generi
 import { GenericVideoEncoderOpenLogsInfo } from "@shared/types/GenericVideoEncoderOpenLogsInfo";
 import { GenericVideoEncoderResetEncodersInfo } from "@shared/types/GenericVideoEncoderResetEncodersInfo";
 import { GenericVideoEncoderDeleteEncodersInfo } from "@shared/types/GenericVideoEncoderDeleteEncodersInfo";
+import { EncodeAndScoreEncoderPathUpdateInfo } from "@shared/types/EncodeAndScoreEncoderPathUpdateInfo";
+import { EncodeAndScoreEncoderDeleteEncodersInfo } from "@shared/types/EncodeAndScoreEncoderDeleteEncodersInfo";
+import { EncodeAndScoreEncoderSettings } from "@shared/types/EncodeAndScoreEncoderSettings";
+import { EncodeAndScoreEncoderResetEncodersInfo } from "@shared/types/EncodeAndScoreEncoderResetEncodersInfo";
+import {
+    EncodeAndScoreEncoderCopyLogsToClipboardInfo
+} from "@shared/types/EncodeAndScoreEncoderCopyLogsToClipboardInfo";
+import { EncodeAndScoreEncoderOpenLogsInfo } from "@shared/types/EncodeAndScoreEncoderOpenLogsInfo";
+import { EncodeAndScoreEncoderReport } from "@shared/types/EncodeAndScoreEncoderReport";
 
 /**
  * Declares the names of channels that can be used to send messages from the renderer to the main process.
@@ -19,12 +28,28 @@ export type SendChannel = keyof SendChannelTypes;
 type SendChannelTypes = {
     ping: void;
     log: unknown;
+
     genericVideoEncoderAddPaths: GenericVideoEncoderPathUpdateInfo;
+    genericVideoEncoderDeleteEncoders: GenericVideoEncoderDeleteEncodersInfo;
     genericVideoEncoderUpdateSettings: GenericVideoEncoderSettings;
+    genericVideoEncoderResetEncoders: GenericVideoEncoderResetEncodersInfo;
     genericVideoEncoderCopyLogsToClipboard: GenericVideoEncoderCopyLogsToClipboardInfo;
     genericVideoEncoderOpenLogs: GenericVideoEncoderOpenLogsInfo;
-    genericVideoEncoderResetEncoders: GenericVideoEncoderResetEncodersInfo;
-    genericVideoEncoderDeleteEncoders: GenericVideoEncoderDeleteEncodersInfo;
+
+    encodeAndScoreEncoderAddPaths: EncodeAndScoreEncoderPathUpdateInfo;
+    encodeAndScoreEncoderDeleteEncoders: EncodeAndScoreEncoderDeleteEncodersInfo;
+    encodeAndScoreEncoderUpdateSettings: EncodeAndScoreEncoderSettings;
+    encodeAndScoreEncoderResetEncoders: EncodeAndScoreEncoderResetEncodersInfo;
+    encodeAndScoreEncoderCopyLogsToClipboard: EncodeAndScoreEncoderCopyLogsToClipboardInfo;
+    encodeAndScoreEncoderOpenLogs: EncodeAndScoreEncoderOpenLogsInfo;
+
+    vmafTargetVideoEncoderAddPaths: never;
+    vmafTargetVideoEncoderDeleteEncoders: never;
+    vmafTargetVideoEncoderUpdateSettings: never;
+    vmafTargetVideoEncoderResetEncoders: never;
+    vmafTargetVideoEncoderCopyLogsToClipboard: never;
+    vmafTargetVideoEncoderOpenLogs: never;
+
 };
 
 export type SendChannelArgumentsType<T extends SendChannel> = SendChannelTypes[T];
@@ -37,6 +62,12 @@ export type EventChannel = keyof EventChannelTypes;
 type EventChannelTypes = {
     genericVideoEncoderUpdate: GenericVideoEncoderReport;
     genericVideoEncoderDelete: GenericVideoEncoderDeleteEncodersInfo;
+
+    encodeAndScoreEncoderUpdate: EncodeAndScoreEncoderReport;
+    encodeAndScoreEncoderDelete: EncodeAndScoreEncoderDeleteEncodersInfo;
+
+    vmafTargetVideoEncoderUpdate: never;
+    vmafTargetVideoEncoderDelete: never;
 };
 
 export type EventChannelArgumentsType<T extends EventChannel> = EventChannelTypes[T];
@@ -48,8 +79,14 @@ export type FetchChannel = keyof FetchChannelTypes;
 
 type FetchChannelTypes = {
     getExternalLibraryPaths: [void, ExternalLibraryPathsInfo];
+
     createGenericVideoEncoder: [ExternalLibraryPathsInfo, string];
-    setEncoderActive: [EncoderStatus, EncoderStatus];
+    createEncodeAndScoreEncoder: [ExternalLibraryPathsInfo, string];
+    createVmafTargetVideoEncoder: never;
+
+    genericVideoEncoderSetEncoderActive: [EncoderStatus, EncoderStatus];
+    encodeAndScoreEncoderSetEncoderActive: [EncoderStatus, EncoderStatus];
+    vmafTargetVideoEncoderSetEncoderActive: [EncoderStatus, EncoderStatus];
 };
 
 export type FetchChannelRequestArgumentsType<T extends FetchChannel> = FetchChannelTypes[T][0];
