@@ -6,6 +6,7 @@ import { RootState } from "@renderer/redux/Store";
 import GenericVideoEncoderPage from "@renderer/pages/GenericVideoEncoderPage";
 import NotImplementedPage from "@renderer/pages/NotImplementedPage";
 import EncodeAndScoreEncoderPage from "@renderer/pages/EncodeAndScoreEncoderPage";
+import VMAFTargetVideoEncoderPage from "@renderer/pages/VMAFTargetVideoEncoderPage";
 
 export default function EncoderBase(): ReactElement {
     const params = useParams();
@@ -29,6 +30,8 @@ export default function EncoderBase(): ReactElement {
             return <GenericVideoEncoderPage />;
         } else if (creationData.taskType == 2) {
             return <EncodeAndScoreEncoderPage />;
+        } else if (creationData.taskType == 3) {
+            return <VMAFTargetVideoEncoderPage />;
         }
 
         return <NotImplementedPage />;

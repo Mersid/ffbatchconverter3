@@ -2,6 +2,10 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { addGenericVideoEncoderReport, removeGenericVideoEncoderReport } from "@renderer/redux/GenericVideoEncoderReportsSlice";
 import { addEncodeAndScoreEncoderReport, removeEncodeAndScoreEncoderReport } from "@renderer/redux/EncodeAndScoreEncoderReportsSlice";
+import {
+    addVMAFTargetVideoEncoderReport,
+    removeVMAFTargetVideoEncoderReport
+} from "@renderer/redux/VMAFTargetVideoEncoderReportsSlice";
 
 export default function EncoderUpdateListener() {
     const dispatch = useDispatch();
@@ -26,7 +30,7 @@ export default function EncoderUpdateListener() {
         });
 
         window.api.events.encodeAndScoreEncoderUpdate((_event, args) => {
-            // window.api.send.log(`Received encoder update: ${JSON.stringify(args)}`);
+            window.api.send.log(`Received encoder update: ${JSON.stringify(args)}`);
             dispatch(addEncodeAndScoreEncoderReport(args));
         });
 
@@ -36,6 +40,24 @@ export default function EncoderUpdateListener() {
             for (const encoderId of args.encoderIds) {
                 dispatch(
                     removeEncodeAndScoreEncoderReport({
+                        controllerId: args.controllerId,
+                        encoderId
+                    })
+                );
+            }
+        });
+
+        window.api.events.vmafTargetVideoEncoderUpdate((_event, args) => {
+            window.api.send.log(`Received VMAF encoder update: ${JSON.stringify(args)}`);
+            dispatch(addVMAFTargetVideoEncoderReport(args));
+        });
+
+        window.api.events.vmafTargetVideoEncoderDelete((_event, args) => {
+            window.api.send.log(`Received VMAF encoder delete: ${JSON.stringify(args)}`);
+
+            for (const encoderId of args.encoderIds) {
+                dispatch(
+                    removeVMAFTargetVideoEncoderReport({
                         controllerId: args.controllerId,
                         encoderId
                     })

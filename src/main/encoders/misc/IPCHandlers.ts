@@ -48,6 +48,25 @@ export function registerIPCHandlers(): void {
         await lord.encodeAndScoreEncoderOpenLogs(args);
     });
 
+    registerReceive("vmafTargetVideoEncoderAddPaths", async (_event, args) => {
+        return await lord.vmafTargetVideoEncoderAddPaths(args);
+    });
+    registerReceive("vmafTargetVideoEncoderDeleteEncoders", async (_event, args) => {
+        await lord.vmafTargetVideoEncoderDeleteEncoders(args);
+    });
+    registerReceive("vmafTargetVideoEncoderUpdateSettings", async (_event, args) => {
+        return await lord.vmafTargetVideoEncoderUpdateSettings(args);
+    });
+    registerReceive("vmafTargetVideoEncoderResetEncoders", async (_event, args) => {
+        await lord.vmafTargetVideoEncoderResetEncoders(args);
+    });
+    registerReceive("vmafTargetVideoEncoderCopyLogsToClipboard", async (_event, args) => {
+        await lord.vmafTargetVideoEncoderCopyLogsToClipboard(args);
+    });
+    registerReceive("vmafTargetVideoEncoderOpenLogs", async (_event, args) => {
+        await lord.vmafTargetVideoEncoderOpenLogs(args);
+    });
+
     registerFetch("getExternalLibraryPaths", async (_event, _args) => {
         return {
             ffmpegPath: getFFmpegPath() ?? "",
@@ -61,11 +80,17 @@ export function registerIPCHandlers(): void {
     registerFetch("createEncodeAndScoreEncoder", async (_event, args) => {
         return await lord.createNewEncodeAndScoreEncoderController(args);
     });
+    registerFetch("createVmafTargetVideoEncoder", async (_event, args) => {
+        return await lord.createNewVMAFTargetVideoEncoderController(args);
+    });
 
     registerFetch("genericVideoEncoderSetEncoderActive", async (_event, args) => {
         return await lord.genericVideoEncoderSetEncoderActive(args);
     });
     registerFetch("encodeAndScoreEncoderSetEncoderActive", async (_event, args) => {
         return await lord.encodeAndScoreEncoderSetEncoderActive(args);
+    });
+    registerFetch("vmafTargetVideoEncoderSetEncoderActive", async (_event, args) => {
+        return await lord.vmafTargetVideoEncoderSetEncoderActive(args);
     });
 }

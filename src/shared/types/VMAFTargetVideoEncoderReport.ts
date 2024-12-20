@@ -1,4 +1,5 @@
 import { EncodingState } from "@shared/types/EncodingState";
+import { EncodeAndScoreEncoderPhase } from "@shared/types/EncodeAndScoreEncoderPhase";
 
 /**
  * An update report sent from the main process to the renderer to indicate that a VMAF target video encoder has been created
@@ -9,6 +10,7 @@ export type VMAFTargetVideoEncoderReport = {
     controllerId: string;
     encoderId: string;
     encodingState: EncodingState;
+    encodingPhase: EncodeAndScoreEncoderPhase;
     inputFilePath: string;
 
     /**
@@ -17,4 +19,14 @@ export type VMAFTargetVideoEncoderReport = {
     fileSize: number;
     currentDuration: number;
     duration: number;
+
+    /**
+     * Undefined if we don't have a score yet.
+     */
+    vmafScore?: number;
+
+    minCRF: number;
+    maxCRF: number;
+    crf: number;
+
 }

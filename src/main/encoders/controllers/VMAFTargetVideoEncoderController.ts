@@ -203,7 +203,7 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
         return this._outputSubdirectory;
     }
 
-    private set outputSubdirectory(value: string) {
+    public set outputSubdirectory(value: string) {
         this._outputSubdirectory = value;
     }
 
@@ -211,7 +211,7 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
         return this._extension;
     }
 
-    private set extension(value: string) {
+    public set extension(value: string) {
         this._extension = value;
     }
 
@@ -235,7 +235,7 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
         return this._ffmpegArguments;
     }
 
-    private set ffmpegArguments(value: string) {
+    public set ffmpegArguments(value: string) {
         this._ffmpegArguments = value;
     }
 

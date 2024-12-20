@@ -113,6 +113,7 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
             if (this._encoder.state == "Error") {
                 this.logLine("Could not create the encoder. Exiting.");
                 this.state = "Error";
+                this.emit("update");
                 return;
             }
 
@@ -125,6 +126,7 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
                     // If the VMAF score is less than the target, we can't find a CRF that will work.
                     this.logLine(`VMAF with CRF 0 is ${this._encoder.vmafScore}. It needs to be greater than ${targetVMAF}.`);
                     this.state = "Error";
+                    this.emit("update");
                     return;
                 }
 
@@ -144,6 +146,7 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
                     // If the VMAF score is greater than the target, we can't find a CRF that will work.
                     this.logLine(`VMAF with CRF 51 is ${this._encoder.vmafScore}. It needs to be less than ${targetVMAF}.`);
                     this.state = "Error";
+                    this.emit("update");
                     return;
                 }
 

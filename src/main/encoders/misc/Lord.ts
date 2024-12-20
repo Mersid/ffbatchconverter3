@@ -16,6 +16,19 @@ import { openLog } from "./LogHelper";
 import { GenericVideoEncoderResetEncodersInfo } from "@shared/types/GenericVideoEncoderResetEncodersInfo";
 import { EncodeAndScoreEncoderController } from "../controllers/EncodeAndScoreEncoderController";
 import { VMAFTargetVideoEncoderController } from "../controllers/VMAFTargetVideoEncoderController";
+import { EncodeAndScoreEncoderPathUpdateInfo } from "@shared/types/EncodeAndScoreEncoderPathUpdateInfo";
+import { EncodeAndScoreEncoderResetEncodersInfo } from "@shared/types/EncodeAndScoreEncoderResetEncodersInfo";
+import { GenericVideoEncoderDeleteEncodersInfo } from "@shared/types/GenericVideoEncoderDeleteEncodersInfo";
+import { EncodeAndScoreEncoderDeleteEncodersInfo } from "@shared/types/EncodeAndScoreEncoderDeleteEncodersInfo";
+import { EncodeAndScoreEncoderSettings } from "@shared/types/EncodeAndScoreEncoderSettings";
+import { EncodeAndScoreEncoderCopyLogsToClipboardInfo } from "@shared/types/EncodeAndScoreEncoderCopyLogsToClipboardInfo";
+import { EncodeAndScoreEncoderOpenLogsInfo } from "@shared/types/EncodeAndScoreEncoderOpenLogsInfo";
+import { VMAFTargetVideoEncoderPathUpdateInfo } from "@shared/types/VMAFTargetVideoEncoderPathUpdateInfo";
+import { VMAFTargetVideoEncoderDeleteEncodersInfo } from "@shared/types/VMAFTargetVideoEncoderDeleteEncodersInfo";
+import { VMAFTargetVideoEncoderSettings } from "@shared/types/VMAFTargetVideoEncoderSettings";
+import { VMAFTargetVideoEncoderResetEncodersInfo } from "@shared/types/VMAFTargetVideoEncoderResetEncodersInfo";
+import { VMAFTargetVideoEncoderCopyLogsToClipboardInfo } from "@shared/types/VMAFTargetVideoEncoderCopyLogsToClipboardInfo";
+import { VMAFTargetVideoEncoderOpenLogsInfo } from "@shared/types/VMAFTargetVideoEncoderOpenLogsInfo";
 
 const genericVideoEncoders = new Map<string, GenericVideoEncoderController>();
 const encodeAndScoreEncoders = new Map<string, EncodeAndScoreEncoderController>();
@@ -44,7 +57,7 @@ export const lord = {
             sendToRenderer("genericVideoEncoderUpdate", report);
         });
     },
-    genericVideoEncoderDeleteEncoders: async (info: GenericVideoEncoderResetEncodersInfo) => {
+    genericVideoEncoderDeleteEncoders: async (info: GenericVideoEncoderDeleteEncodersInfo) => {
         const controller = getGenericVideoEncoderControllerById(info.controllerId);
 
         const removedIds = controller.deleteEncoders(info.encoderIds);
@@ -108,7 +121,7 @@ export const lord = {
         encodeAndScoreEncoders.set(id, controller);
         return id;
     },
-    encodeAndScoreEncoderAddPaths: async (info: GenericVideoEncoderPathUpdateInfo): Promise<void> => {
+    encodeAndScoreEncoderAddPaths: async (info: EncodeAndScoreEncoderPathUpdateInfo): Promise<void> => {
         const controller = getEncodeAndScoreEncoderControllerById(info.controllerId);
 
         const reports = await controller.addEncoders(info.paths);
@@ -117,7 +130,7 @@ export const lord = {
             sendToRenderer("encodeAndScoreEncoderUpdate", report);
         });
     },
-    encodeAndScoreEncoderDeleteEncoders: async (info: GenericVideoEncoderResetEncodersInfo) => {
+    encodeAndScoreEncoderDeleteEncoders: async (info: EncodeAndScoreEncoderDeleteEncodersInfo) => {
         const controller = getEncodeAndScoreEncoderControllerById(info.controllerId);
 
         const removedIds = controller.deleteEncoders(info.encoderIds);
@@ -129,7 +142,7 @@ export const lord = {
 
         sendToRenderer("encodeAndScoreEncoderDelete", deleteInfo);
     },
-    encodeAndScoreEncoderUpdateSettings: async (settings: GenericVideoEncoderSettings): Promise<void> => {
+    encodeAndScoreEncoderUpdateSettings: async (settings: EncodeAndScoreEncoderSettings): Promise<void> => {
         const controller = getEncodeAndScoreEncoderControllerById(settings.controllerId);
 
         controller.concurrency = settings.concurrency;
@@ -137,18 +150,18 @@ export const lord = {
         controller.extension = settings.extension;
         controller.ffmpegArguments = settings.ffmpegArguments;
     },
-    encodeAndScoreEncoderResetEncoders: async (info: GenericVideoEncoderResetEncodersInfo) => {
+    encodeAndScoreEncoderResetEncoders: async (info: EncodeAndScoreEncoderResetEncodersInfo) => {
         const controller = getEncodeAndScoreEncoderControllerById(info.controllerId);
 
         controller.resetEncoders(info.encoderIds);
     },
-    encodeAndScoreEncoderCopyLogsToClipboard: async (info: GenericVideoEncoderCopyLogsToClipboardInfo) => {
+    encodeAndScoreEncoderCopyLogsToClipboard: async (info: EncodeAndScoreEncoderCopyLogsToClipboardInfo) => {
         const controller = getEncodeAndScoreEncoderControllerById(info.controllerId);
 
         const logs = controller.getLogsFor(info.encoderId);
         clipboard.write({ text: logs });
     },
-    encodeAndScoreEncoderOpenLogs: async (info: GenericVideoEncoderOpenLogsInfo) => {
+    encodeAndScoreEncoderOpenLogs: async (info: EncodeAndScoreEncoderOpenLogsInfo) => {
         const controller = getEncodeAndScoreEncoderControllerById(info.controllerId);
 
         for (const encoderId of info.encoderIds) {
@@ -158,6 +171,80 @@ export const lord = {
     },
     encodeAndScoreEncoderSetEncoderActive: async (status: EncoderStatus): Promise<EncoderStatus> => {
         const controller = getEncodeAndScoreEncoderControllerById(status.controllerId);
+
+        if (status.encoderActive) {
+            await controller.startEncoding();
+        } else {
+            await controller.stopEncoding();
+        }
+
+        return {
+            controllerId: controller.controllerId,
+            encoderActive: controller.isEncoding
+        };
+    },
+
+    createNewVMAFTargetVideoEncoderController: async ({ ffprobePath, ffmpegPath }: ExternalLibraryPathsInfo): Promise<string> => {
+        // TODO: Make temp dir user configurable
+        const controller = await VMAFTargetVideoEncoderController.createNew(ffprobePath, ffmpegPath, "./temp");
+        controller.on("update", reportId => {
+            sendToRenderer("vmafTargetVideoEncoderUpdate", controller.getReportFor(reportId));
+        });
+
+        const id = controller.controllerId;
+        vmafTargetVideoEncoders.set(id, controller);
+        return id;
+    },
+    vmafTargetVideoEncoderAddPaths: async (info: VMAFTargetVideoEncoderPathUpdateInfo): Promise<void> => {
+        const controller = getVMAFTargetVideoEncoderControllerById(info.controllerId);
+
+        const reports = await controller.addEncoders(info.paths);
+        // Send the initial reports to the renderer. This allows the UI to generate initial rows for the encoders.
+        reports.forEach(report => {
+            sendToRenderer("vmafTargetVideoEncoderUpdate", report);
+        });
+    },
+    vmafTargetVideoEncoderDeleteEncoders: async (info: VMAFTargetVideoEncoderDeleteEncodersInfo) => {
+        const controller = getVMAFTargetVideoEncoderControllerById(info.controllerId);
+
+        const removedIds = controller.deleteEncoders(info.encoderIds);
+
+        const deleteInfo: GenericVideoEncoderResetEncodersInfo = {
+            controllerId: info.controllerId,
+            encoderIds: removedIds
+        };
+
+        sendToRenderer("vmafTargetVideoEncoderDelete", deleteInfo);
+    },
+    vmafTargetVideoEncoderUpdateSettings: async (settings: VMAFTargetVideoEncoderSettings): Promise<void> => {
+        const controller = getVMAFTargetVideoEncoderControllerById(settings.controllerId);
+
+        controller.concurrency = settings.concurrency;
+        controller.outputSubdirectory = settings.subdirectory;
+        controller.extension = settings.extension;
+        controller.ffmpegArguments = settings.ffmpegArguments;
+    },
+    vmafTargetVideoEncoderResetEncoders: async (info: VMAFTargetVideoEncoderResetEncodersInfo) => {
+        const controller = getVMAFTargetVideoEncoderControllerById(info.controllerId);
+
+        controller.resetEncoders(info.encoderIds);
+    },
+    vmafTargetVideoEncoderCopyLogsToClipboard: async (info: VMAFTargetVideoEncoderCopyLogsToClipboardInfo) => {
+        const controller = getVMAFTargetVideoEncoderControllerById(info.controllerId);
+
+        const logs = controller.getLogsFor(info.encoderId);
+        clipboard.write({ text: logs });
+    },
+    vmafTargetVideoEncoderOpenLogs: async (info: VMAFTargetVideoEncoderOpenLogsInfo) => {
+        const controller = getVMAFTargetVideoEncoderControllerById(info.controllerId);
+
+        for (const encoderId of info.encoderIds) {
+            const logs = controller.getLogsFor(encoderId);
+            openLog(logs).then(() => {});
+        }
+    },
+    vmafTargetVideoEncoderSetEncoderActive: async (status: EncoderStatus): Promise<EncoderStatus> => {
+        const controller = getVMAFTargetVideoEncoderControllerById(status.controllerId);
 
         if (status.encoderActive) {
             await controller.startEncoding();

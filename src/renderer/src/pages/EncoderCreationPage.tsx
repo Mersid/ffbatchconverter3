@@ -10,6 +10,7 @@ import { addEncoderMap } from "@renderer/redux/EncoderMapDataSlice";
 import { setEncoderStatus } from "@renderer/redux/EncoderStatusSlice";
 import { setGenericVideoEncoderSettings } from "@renderer/redux/GenericVideoEncoderSettingsSlice";
 import { setEncodeAndScoreEncoderSettings } from "@renderer/redux/EncodeAndScoreEncoderSettingsSlice";
+import { setVMAFTargetVideoEncoderSettings } from "@renderer/redux/VMAFTargetVideoEncoderSettingsSlice";
 
 export default function EncoderCreationPage() {
     const params = useParams();
@@ -177,6 +178,34 @@ export default function EncoderCreationPage() {
                                 subdirectory: "FFBatch",
                                 encoder: "x265",
                                 crf: 23
+                            }));
+
+                            dispatch(
+                                setEncoderStatus({
+                                    controllerId,
+                                    encoderActive: false
+                                })
+                            );
+                        } else if (taskType == 3) {
+                            // Target VMAF
+                            const controllerId = await window.api.fetch.createVmafTargetVideoEncoder({
+                                ffmpegPath,
+                                ffprobePath
+                            });
+
+                            dispatch(addEncoderMap({
+                                pageId: params.id as string,
+                                controllerId: controllerId
+                            }));
+
+                            dispatch(setVMAFTargetVideoEncoderSettings({
+                                controllerId,
+                                extension: "mkv",
+                                ffmpegArguments: "-c:v libx265 -c:a aac",
+                                concurrency: 1,
+                                subdirectory: "FFBatch",
+                                encoder: "x265",
+                                vmafTarget: 86
                             }));
 
                             dispatch(

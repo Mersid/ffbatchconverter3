@@ -16,6 +16,15 @@ import {
 } from "@shared/types/EncodeAndScoreEncoderCopyLogsToClipboardInfo";
 import { EncodeAndScoreEncoderOpenLogsInfo } from "@shared/types/EncodeAndScoreEncoderOpenLogsInfo";
 import { EncodeAndScoreEncoderReport } from "@shared/types/EncodeAndScoreEncoderReport";
+import {
+    VMAFTargetVideoEncoderCopyLogsToClipboardInfo
+} from "@shared/types/VMAFTargetVideoEncoderCopyLogsToClipboardInfo";
+import { VMAFTargetVideoEncoderDeleteEncodersInfo } from "@shared/types/VMAFTargetVideoEncoderDeleteEncodersInfo";
+import { VMAFTargetVideoEncoderOpenLogsInfo } from "@shared/types/VMAFTargetVideoEncoderOpenLogsInfo";
+import { VMAFTargetVideoEncoderReport } from "@shared/types/VMAFTargetVideoEncoderReport";
+import { VMAFTargetVideoEncoderResetEncodersInfo } from "@shared/types/VMAFTargetVideoEncoderResetEncodersInfo";
+import { VMAFTargetVideoEncoderPathUpdateInfo } from "@shared/types/VMAFTargetVideoEncoderPathUpdateInfo";
+import { VMAFTargetVideoEncoderSettings } from "@shared/types/VMAFTargetVideoEncoderSettings";
 
 /**
  * Declares the names of channels that can be used to send messages from the renderer to the main process.
@@ -43,13 +52,12 @@ type SendChannelTypes = {
     encodeAndScoreEncoderCopyLogsToClipboard: EncodeAndScoreEncoderCopyLogsToClipboardInfo;
     encodeAndScoreEncoderOpenLogs: EncodeAndScoreEncoderOpenLogsInfo;
 
-    vmafTargetVideoEncoderAddPaths: never;
-    vmafTargetVideoEncoderDeleteEncoders: never;
-    vmafTargetVideoEncoderUpdateSettings: never;
-    vmafTargetVideoEncoderResetEncoders: never;
-    vmafTargetVideoEncoderCopyLogsToClipboard: never;
-    vmafTargetVideoEncoderOpenLogs: never;
-
+    vmafTargetVideoEncoderAddPaths: VMAFTargetVideoEncoderPathUpdateInfo;
+    vmafTargetVideoEncoderDeleteEncoders: VMAFTargetVideoEncoderDeleteEncodersInfo;
+    vmafTargetVideoEncoderUpdateSettings: VMAFTargetVideoEncoderSettings;
+    vmafTargetVideoEncoderResetEncoders: VMAFTargetVideoEncoderResetEncodersInfo;
+    vmafTargetVideoEncoderCopyLogsToClipboard: VMAFTargetVideoEncoderCopyLogsToClipboardInfo;
+    vmafTargetVideoEncoderOpenLogs: VMAFTargetVideoEncoderOpenLogsInfo;
 };
 
 export type SendChannelArgumentsType<T extends SendChannel> = SendChannelTypes[T];
@@ -66,8 +74,8 @@ type EventChannelTypes = {
     encodeAndScoreEncoderUpdate: EncodeAndScoreEncoderReport;
     encodeAndScoreEncoderDelete: EncodeAndScoreEncoderDeleteEncodersInfo;
 
-    vmafTargetVideoEncoderUpdate: never;
-    vmafTargetVideoEncoderDelete: never;
+    vmafTargetVideoEncoderUpdate: VMAFTargetVideoEncoderReport;
+    vmafTargetVideoEncoderDelete: VMAFTargetVideoEncoderDeleteEncodersInfo;
 };
 
 export type EventChannelArgumentsType<T extends EventChannel> = EventChannelTypes[T];
@@ -82,7 +90,7 @@ type FetchChannelTypes = {
 
     createGenericVideoEncoder: [ExternalLibraryPathsInfo, string];
     createEncodeAndScoreEncoder: [ExternalLibraryPathsInfo, string];
-    createVmafTargetVideoEncoder: never;
+    createVmafTargetVideoEncoder: [ExternalLibraryPathsInfo, string];
 
     genericVideoEncoderSetEncoderActive: [EncoderStatus, EncoderStatus];
     encodeAndScoreEncoderSetEncoderActive: [EncoderStatus, EncoderStatus];

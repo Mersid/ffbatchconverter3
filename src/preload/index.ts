@@ -46,6 +46,7 @@ const fetch = {
 
     genericVideoEncoderSetEncoderActive: registerFetch("genericVideoEncoderSetEncoderActive"),
     encodeAndScoreEncoderSetEncoderActive: registerFetch("encodeAndScoreEncoderSetEncoderActive"),
+    vmafTargetVideoEncoderSetEncoderActive: registerFetch("vmafTargetVideoEncoderSetEncoderActive"),
 
     createGenericVideoEncoder: registerFetch("createGenericVideoEncoder"),
     createEncodeAndScoreEncoder: registerFetch("createEncodeAndScoreEncoder"),
