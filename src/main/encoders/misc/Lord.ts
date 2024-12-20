@@ -148,7 +148,7 @@ export const lord = {
         controller.concurrency = settings.concurrency;
         controller.outputSubdirectory = settings.subdirectory;
         controller.extension = settings.extension;
-        controller.ffmpegArguments = settings.ffmpegArguments;
+        controller.ffmpegArguments = settings.ffmpegArguments + (settings.encoder == "x265" ? " -c:v libx265 " : " -c:v libx264 ") + `-crf ${settings.crf}`;
     },
     encodeAndScoreEncoderResetEncoders: async (info: EncodeAndScoreEncoderResetEncodersInfo) => {
         const controller = getEncodeAndScoreEncoderControllerById(info.controllerId);
@@ -222,7 +222,8 @@ export const lord = {
         controller.concurrency = settings.concurrency;
         controller.outputSubdirectory = settings.subdirectory;
         controller.extension = settings.extension;
-        controller.ffmpegArguments = settings.ffmpegArguments;
+        controller.ffmpegArguments = settings.ffmpegArguments + (settings.encoder == "x265" ? " -c:v libx265 " : " -c:v libx264 ");
+        controller.targetVMAF = settings.vmafTarget;
     },
     vmafTargetVideoEncoderResetEncoders: async (info: VMAFTargetVideoEncoderResetEncodersInfo) => {
         const controller = getVMAFTargetVideoEncoderControllerById(info.controllerId);

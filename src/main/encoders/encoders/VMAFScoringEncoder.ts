@@ -6,9 +6,10 @@ import { Emitter } from "strict-event-emitter";
 import { EncodingState } from "@shared/types/EncodingState";
 import { stat } from "node:fs/promises";
 import { v4 as uuid4 } from "uuid";
+import { log } from "../misc/Logger";
 
 type Events = {
-    log: [data: string, internal: boolean];
+    log: [tag: string, data: string, internal: boolean];
 
     /**
      * Event that is emitted whenever the encoder receives new information. This is a good time for listeners to check the state.
@@ -66,7 +67,7 @@ export class VMAFScoringEncoder extends Emitter<Events> {
             return encoder;
         }
 
-        encoder.logInternal(probeData + "\n");
+        encoder.logInternal(probeData);
 
         const json = JSON.parse(probeData);
         const duration = json.format?.duration as string | undefined;
@@ -93,8 +94,12 @@ export class VMAFScoringEncoder extends Emitter<Events> {
             throw new Error(`Cannot start encoding when the state is not pending. Current state: ${this.state}`);
         }
 
+        const ffmpegCommand = `"${this._ffmpegPath}" -y -i "${this._referenceFilePath}" -i "${this._distortedFilePath}" -filter_complex "[0:v]setpts=PTS-STARTPTS[reference]; [1:v]setpts=PTS-STARTPTS[distorted]; [distorted][reference]libvmaf=model=version=vmaf_v0.6.1:n_threads=30" -f null -`;
+
+        this.logLine(`Starting encoding with command: ${ffmpegCommand}`);
+
         this._process = spawn(
-            `"${this._ffmpegPath}" -y -i "${this._referenceFilePath}" -i "${this._distortedFilePath}" -filter_complex "[0:v]setpts=PTS-STARTPTS[reference]; [1:v]setpts=PTS-STARTPTS[distorted]; [distorted][reference]libvmaf=model=version=vmaf_v0.6.1:n_threads=30" -f null -"`,
+            ffmpegCommand,
             {
                 shell: true
             }
@@ -163,8 +168,9 @@ export class VMAFScoringEncoder extends Emitter<Events> {
      * @private
      */
     private logLine(data: string): void {
-        this._log += `>> ${data}\n`;
-        this.emit("log", data, false);
+        const tag = "VMAF Scoring Encoder/Log";
+        this.log += log.custom(tag, data);
+        this.emit("log", tag, data, false);
     }
 
     /**
@@ -173,8 +179,9 @@ export class VMAFScoringEncoder extends Emitter<Events> {
      * @private
      */
     private logInternal(data: string): void {
-        this._log += data;
-        this.emit("log", data, true);
+        const tag = "VMAF Scoring Encoder/FFmpeg";
+        this.log += log.custom(tag, data);
+        this.emit("log", tag, data, true);
     }
 
     public get currentDuration(): number {

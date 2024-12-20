@@ -7,9 +7,10 @@ import { EncodingState } from "@shared/types/EncodingState";
 import { v4 as uuid4 } from "uuid";
 import { EncodeAndScoreEncoderReport } from "@shared/types/EncodeAndScoreEncoderReport";
 import { EncodeAndScoreEncoderPhase } from "@shared/types/EncodeAndScoreEncoderPhase";
+import { log } from "../misc/Logger";
 
 type Events = {
-    log: [data: string, internal: boolean];
+    log: [tag: string, data: string, internal: boolean];
 
     /**
      * Event that is emitted whenever the encoder receives new information. This is a good time for listeners to check the state.
@@ -68,7 +69,7 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
             return encoder;
         }
 
-        encoder._log += probeData + "\n";
+        encoder.logLine(probeData);
 
         const json = JSON.parse(probeData);
         const duration = json.format?.duration as string | undefined;
@@ -94,25 +95,25 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
 
         this._encoder = await GenericVideoEncoder.createNew(this._ffprobePath, this._ffmpegPath, this._inputFilePath);
         this._encoder.on("update", () => this.onChildUpdate());
-        this._encoder.on("log", (data, internal) => this.onChildLog(data, internal));
-
-        console.log(">> Hello world!")
+        this._encoder.on("log", (tag, data, internal) => this.onChildLog(tag, data, internal));
 
         await this._encoder.start(ffmpegArguments, outputFilePath);
 
         if (this._encoder.state != "Success") {
             this.state = "Error";
+            this.logLine("Encoding failed.");
             return;
         }
 
-        this._scorer = await VMAFScoringEncoder.createNew(this._ffprobePath, this._ffmpegPath, outputFilePath);
-        this._scorer.on("log", (data, internal) => this.onChildLog(data, internal));
+        this._scorer = await VMAFScoringEncoder.createNew(this._ffprobePath, this._ffmpegPath, this.inputFilePath);
+        this._scorer.on("log", (tag, data, internal) => this.onChildLog(tag, data, internal));
         this._scorer.on("update", () => this.onChildUpdate());
 
-        await this._scorer.start(this._inputFilePath);
+        await this._scorer.start(this.outputFilePath);
 
         if (this._scorer.state != "Success") {
             this.state = "Error";
+            this.logLine("Scoring failed.");
             return;
         }
 
@@ -141,6 +142,7 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
         this.scorer = undefined;
         this.vmafScore = undefined;
 
+        this.logLine("Reset encoder to pending state.");
         this.emit("update");
         return true;
     }
@@ -150,32 +152,40 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
         this.emit("update");
     }
 
-    private onChildLog(data: string, internal: boolean) {
+    private onChildLog(tag: string, data: string, internal: boolean) {
         if (internal) {
-            this.logInternal(data);
+            this.logInternal(data, tag);
         } else {
-            this.logLine(data);
+            this.logLine(data, tag);
         }
     }
 
     /**
      * Logs a line to the log. Use this for log data that does not come from ffmpeg or ffprobe.
      * @param data Data to log.
+     * @param tag Tag to use for the log. A default one will be set if this is undefined.
      * @private
      */
-    private logLine(data: string): void {
-        this._log += `>> ${data}\n`;
-        this.emit("log", data, false);
+    private logLine(data: string, tag: string | undefined = undefined): void {
+        if (tag == undefined) {
+            tag = "Encode and Score Encoder/Log";
+        }
+        this.log += log.custom(tag, data);
+        this.emit("log", tag, data, false);
     }
 
     /**
      * Logs data to the log. Use this for log data that comes from ffmpeg or ffprobe.
      * @param data Data to log.
+     * @param tag Tag to use for the log. A default one will be set if this is undefined.
      * @private
      */
-    private logInternal(data: string): void {
-        this._log += data;
-        this.emit("log", data, true);
+    private logInternal(data: string, tag: string | undefined = undefined): void {
+        if (tag == undefined) {
+            tag = "Encode and Score Encoder/FFmpeg";
+        }
+        this.log += log.custom(tag, data);
+        this.emit("log", tag, data, true);
     }
 
     get encoderId(): string {
@@ -204,6 +214,13 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
 
     private set state(value: EncodingState) {
         this._state = value;
+    }
+
+    /**
+     * Gets the VMAF score, but returns 0 if the score is undefined.
+     */
+    public get vmafScoreZero(): number {
+        return this._vmafScore ?? 0;
     }
 
     public get vmafScore(): number | undefined {

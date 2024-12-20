@@ -7,9 +7,10 @@ import { v4 as uuid4 } from "uuid";
 import { GenericVideoEncoderReport } from "@shared/types/GenericVideoEncoderReport";
 import { EncodingState } from "@shared/types/EncodingState";
 import { stat } from "node:fs/promises";
+import { log } from "../misc/Logger";
 
 type Events = {
-    log: [data: string, internal: boolean];
+    log: [tag: string, data: string, internal: boolean];
 
     /**
      * Event that is emitted whenever the encoder receives new information. This is a good time for listeners to check the state.
@@ -58,7 +59,7 @@ export class GenericVideoEncoder extends Emitter<Events> {
             return encoder;
         }
 
-        encoder.logInternal(probeData + "\n");
+        encoder.logInternal(probeData);
 
         const json = JSON.parse(probeData);
         const duration = json.format?.duration as string | undefined;
@@ -89,7 +90,11 @@ export class GenericVideoEncoder extends Emitter<Events> {
             throw new Error(`Cannot start encoding when the state is not pending. Current state: ${this.state}`);
         }
 
-        this._process = spawn(`"${this._ffmpegPath}" -y -i "${this._inputFilePath}" ${ffmpegArguments} "${outputFilePath}"`, {
+        const ffmpegCommand = `"${this._ffmpegPath}" -y -i "${this._inputFilePath}" ${ffmpegArguments} "${outputFilePath}"`;
+
+        this.logLine(`Starting encoding with command: ${ffmpegCommand}`);
+
+        this._process = spawn(ffmpegCommand, {
             shell: true
         });
 
@@ -118,6 +123,7 @@ export class GenericVideoEncoder extends Emitter<Events> {
         this.currentDuration = 0;
         this.state = "Pending";
 
+        this.logLine("Reset encoder to pending state.");
         this.emit("update");
     }
 
@@ -152,8 +158,9 @@ export class GenericVideoEncoder extends Emitter<Events> {
      * @private
      */
     private logLine(data: string): void {
-        this.log += `[Generic Encoder/Log] ${data}\n`;
-        this.emit("log", data, false);
+        const tag = "Generic Encoder/Log";
+        this.log += log.custom(tag, data);
+        this.emit("log", tag, data, false);
     }
 
     /**
@@ -162,8 +169,9 @@ export class GenericVideoEncoder extends Emitter<Events> {
      * @private
      */
     private logInternal(data: string): void {
-        this.log += `[Generic Encoder/FFmpeg] ${data}\n`;
-        this.emit("log", data, true);
+        const tag = "Generic Encoder/FFmpeg";
+        this.log += log.custom(tag, data);
+        this.emit("log", tag, data, true);
     }
 
     public get currentDuration(): number {

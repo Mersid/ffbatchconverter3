@@ -7,9 +7,10 @@ import { CRFToVMAFMapping } from "../misc/CRFToVMAFMapping";
 import { EncodingState } from "@shared/types/EncodingState";
 import { v4 as uuidv4 } from "uuid";
 import { VMAFTargetVideoEncoderReport } from "@shared/types/VMAFTargetVideoEncoderReport";
+import { log } from "../misc/Logger";
 
 type Events = {
-    log: [data: string, internal: boolean];
+    log: [tag: string, data: string, internal: boolean];
     /**
      * Called when update data is received from a process or child encoder.
      */
@@ -107,7 +108,7 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
             // If we have a previous encoder, remove all listeners to avoid memory leaks.
             this._encoder?.removeAllListeners();
             this._encoder = await EncodeAndScoreEncoder.createNew(this._ffprobePath, this._ffmpegPath, this._inputFilePath);
-            this._encoder.on("log", (data, internal) => this.onChildLog(data, internal));
+            this._encoder.on("log", (tag, data, internal) => this.onChildLog(tag, data, internal));
             this._encoder.on("update", () => this.onChildUpdate());
 
             if (this._encoder.state == "Error") {
@@ -121,8 +122,9 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
             if (stage == "ValidateUpperBound") {
                 // Step 0. Run with CRF 0 to get upper range of VMAF score.
                 thisCrf = 0;
+                this.logLine("Executing step 0: Validate upper bound.");
                 const tempFile = await this.encodeVideoWithCRF(ffmpegArguments, thisCrf);
-                if (this._encoder.vmafScore < targetVMAF) {
+                if (this._encoder.vmafScoreZero < targetVMAF) {
                     // If the VMAF score is less than the target, we can't find a CRF that will work.
                     this.logLine(`VMAF with CRF 0 is ${this._encoder.vmafScore}. It needs to be greater than ${targetVMAF}.`);
                     this.state = "Error";
@@ -133,16 +135,17 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
                 this._crfToVMAF.push({
                     filePath: tempFile,
                     crf: thisCrf,
-                    vmaf: this._encoder.vmafScore
+                    vmaf: this._encoder.vmafScoreZero
                 });
 
-                lastVMAF = this._encoder.vmafScore;
+                lastVMAF = this._encoder.vmafScoreZero;
                 stage = "ValidateLowerBound";
             } else if (stage == "ValidateLowerBound") {
                 // Step 1. Run with max CRF to get lower range of VMAF score.
                 thisCrf = 51;
+                this.logLine("Executing step 1: Validate lower bound.");
                 const tempFile = await this.encodeVideoWithCRF(ffmpegArguments, thisCrf);
-                if (targetVMAF < this._encoder.vmafScore) {
+                if (targetVMAF < this._encoder.vmafScoreZero) {
                     // If the VMAF score is greater than the target, we can't find a CRF that will work.
                     this.logLine(`VMAF with CRF 51 is ${this._encoder.vmafScore}. It needs to be less than ${targetVMAF}.`);
                     this.state = "Error";
@@ -153,14 +156,15 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
                 this._crfToVMAF.push({
                     filePath: tempFile,
                     crf: thisCrf,
-                    vmaf: this._encoder.vmafScore
+                    vmaf: this._encoder.vmafScoreZero
                 });
 
-                lastVMAF = this._encoder.vmafScore;
+                lastVMAF = this._encoder.vmafScoreZero;
                 stage = "NarrowDown";
             } else if (stage == "NarrowDown") {
                 // Step 2. Narrow down the range to about 4 CRF values.
                 const crfRange = highCRF - lowCRF;
+                this.logLine(`Executing step 2: Narrow down. High CRF: ${highCRF}, Low CRF: ${lowCRF}, Range: ${crfRange}.`);
 
                 // The narrowing algorithm does a binary search to find the correct CRF.
                 // It doesn't quite work if the range is less than 4.
@@ -176,7 +180,7 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
 
                 const tempFile = await this.encodeVideoWithCRF(ffmpegArguments, thisCrf);
                 // TODO: Test this.
-                if (this._encoder.vmafScore > targetVMAF) {
+                if (this._encoder.vmafScoreZero > targetVMAF) {
                     // Too high. Decrease VMAF, increase CRF range.
                     lowCRF = thisCrf - 1;
                 } else {
@@ -187,11 +191,12 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
                 this._crfToVMAF.push({
                     filePath: tempFile,
                     crf: thisCrf,
-                    vmaf: this._encoder.vmafScore
+                    vmaf: this._encoder.vmafScoreZero
                 });
-                lastVMAF = this._encoder.vmafScore;
+                lastVMAF = this._encoder.vmafScoreZero;
             } else if (stage == "IterateSubset") {
                 // Step 3. Iterate over the subset of CRF values found in step 2 to find the best one.
+                this.logLine("Executing step 3: Iterate subset.");
                 if (thisCrf > highCRF) {
                     // We've iterated over the subset and was unable to find a match. Move to the next stage.
                     stage = "LinearWalk";
@@ -203,13 +208,14 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
                 this._crfToVMAF.push({
                     filePath: tempFile,
                     crf: thisCrf,
-                    vmaf: this._encoder.vmafScore
+                    vmaf: this._encoder.vmafScoreZero
                 });
 
-                lastVMAF = this._encoder.vmafScore;
+                lastVMAF = this._encoder.vmafScoreZero;
                 thisCrf++;
             } else if (stage == "LinearWalk") {
                 // Step 4. Walk linearly over the CRF values to find the best one.
+                this.logLine("Executing step 4: Linear walk.");
                 if (lastVMAF < targetVMAF) {
                     thisCrf--;
                 } else {
@@ -221,10 +227,10 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
                 this._crfToVMAF.push({
                     filePath: tempFile,
                     crf: thisCrf,
-                    vmaf: this._encoder.vmafScore
+                    vmaf: this._encoder.vmafScoreZero
                 });
 
-                lastVMAF = this._encoder.vmafScore;
+                lastVMAF = this._encoder.vmafScoreZero;
             }
 
             // We did an encoding. Check the table to see if we have a good match.
@@ -266,6 +272,7 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
         this.encoder = undefined;
         this.resolve = undefined;
 
+        this.logLine("Reset encoder to pending state.");
         this.emit("update");
         return true;
     }
@@ -318,32 +325,40 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
         this.emit("update");
     }
 
-    private onChildLog(data: string, internal: boolean) {
+    private onChildLog(tag: string, data: string, internal: boolean) {
         if (internal) {
-            this.logInternal(data);
+            this.logInternal(data, tag);
         } else {
-            this.logLine(data);
+            this.logLine(data, tag);
         }
     }
 
     /**
      * Logs a line to the log. Use this for log data that does not come from ffmpeg or ffprobe.
      * @param data Data to log.
+     * @param tag Tag to use for the log. A default one will be set if this is undefined.
      * @private
      */
-    private logLine(data: string): void {
-        this._log += `>> ${data}\n`;
-        this.emit("log", data, false);
+    private logLine(data: string, tag: string | undefined = undefined): void {
+        if (tag == undefined) {
+            tag = "VMAF Target Encoder/Log";
+        }
+        this.log += log.custom(tag, data);
+        this.emit("log", tag, data, false);
     }
 
     /**
      * Logs data to the log. Use this for log data that comes from ffmpeg or ffprobe.
      * @param data Data to log.
+     * @param tag Tag to use for the log. A default one will be set if this is undefined.
      * @private
      */
-    private logInternal(data: string): void {
-        this._log += data;
-        this.emit("log", data, true);
+    private logInternal(data: string, tag: string | undefined = undefined): void {
+        if (tag == undefined) {
+            tag = "VMAF Target Encoder/FFmpeg";
+        }
+        this.log += log.custom(tag, data);
+        this.emit("log", tag, data, true);
     }
 
     public get encoderId(): string {
@@ -386,7 +401,8 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
             fileSize: this._fileSize,
             currentDuration: this.currentDuration,
             duration: this.duration,
-            encodingState: this.state
+            encodingState: this.state,
+
         };
     }
 
