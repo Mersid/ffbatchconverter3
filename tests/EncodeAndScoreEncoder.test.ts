@@ -5,7 +5,7 @@ import { EncodeAndScoreEncoder } from "../src/main/encoders/encoders/EncodeAndSc
 describe("Test encode and score encoder", async () => {
     test("Test that the encode and score encoder can encode and score a sample video.", { timeout: 10000 }, async () => {
         const tempDir = tmpdir();
-        const encoder = await EncodeAndScoreEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpat.webm", () => {});
+        const encoder = await EncodeAndScoreEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpat.webm");
         await encoder.start("-c:v libx264 -c:a aac", `${tempDir}/peepoheadpat_encodeandscore.mp4`);
 
         expect(encoder.state).toBe("Success");
@@ -22,7 +22,7 @@ describe("Test encode and score encoder", async () => {
         const tempDir = tmpdir();
 
         // Notice that the requested file doesn't actually exist.
-        const encoder = await EncodeAndScoreEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpatbutitsnotvalid.webm", () => {});
+        const encoder = await EncodeAndScoreEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpatbutitsnotvalid.webm");
 
         // Since the above video is not valid, it should be in an error state.
         expect(encoder.state).toBe("Error");
@@ -39,7 +39,7 @@ describe("Test encode and score encoder", async () => {
         const tempDir = tmpdir();
 
         // Notice that the requested file doesn't actually exist.
-        const encoder = await EncodeAndScoreEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpat.webm", () => {});
+        const encoder = await EncodeAndScoreEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpat.webm");
 
         expect(encoder.state).toBe("Pending");
 

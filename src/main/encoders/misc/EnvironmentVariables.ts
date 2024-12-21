@@ -1,1 +1,4 @@
-export const sampleVal = process.env.SAMPLEVAL;
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+export const tempDir = process.env.TEMPDIR ?? join(tmpdir(), "FFBatchConverter3");

@@ -227,7 +227,7 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
         return this._targetVMAF;
     }
 
-    private set targetVMAF(value: number) {
+    public set targetVMAF(value: number) {
         this._targetVMAF = value;
     }
 

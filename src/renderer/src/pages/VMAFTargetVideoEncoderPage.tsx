@@ -29,17 +29,18 @@ const columns = [
         cell: props => <p>{(props.getValue() / (1024 * 1024)).toFixed(2)} MiB</p>,
         size: 100
     }),
-    columnHelper.accessor(row => (row.minRange, row.maxRange), {
+    columnHelper.accessor(row => row.lowCRF, {
         header: "Range",
-        cell: props => <p>{props.getValue()}</p>,
+        // https://github.com/TanStack/table/discussions/4148#discussion-4216514
+        cell: props => <p>{props.cell.row.original.lowCRF} - {props.cell.row.original.highCRF}</p>,
         size: 100
     }),
-    columnHelper.accessor(row => row.size, {
+    columnHelper.accessor(row => row.thisCRF, {
         header: "CRF",
         cell: props => <p>{props.getValue()}</p>,
         size: 100
     }),
-    columnHelper.accessor(row => row.vmafScore, {
+    columnHelper.accessor(row => row.lastVMAF, {
         header: "VMAF",
         // The null check should catch undefined values, but for some reason the compiler complains still...
         cell: props => <p>{props.getValue() == undefined ? "-" : props.getValue()?.toFixed(3)}</p>,
@@ -63,11 +64,11 @@ type VMAFTargetVideoEncoderRow = {
     duration: number;
     size: number;
 
-    minRange: number;
-    maxRange: number;
+    lowCRF: number;
+    highCRF: number;
 
-    crf: number;
-    vmafScore?: number;
+    thisCRF: number;
+    lastVMAF?: number;
 
     phase: EncodeAndScoreEncoderPhase;
     status: string;
@@ -98,12 +99,12 @@ export default function VMAFTargetVideoEncoderPage() {
                     fileName: data.inputFilePath,
                     duration: data.duration,
                     size: data.fileSize,
-                    vmafScore: data.vmafScore,
+                    lastVMAF: data.lastVMAF,
                     phase: data.encodingPhase,
                     status: data.encodingState == "Encoding" ? ((data.currentDuration / data.duration) * 100).toFixed(2) + "%" : data.encodingState,
-                    minRange: data.minCRF,
-                    maxRange: data.maxCRF,
-                    crf: data.crf
+                    lowCRF: data.lowCRF,
+                    highCRF: data.highCRF,
+                    thisCRF: data.thisCRF
 
             } as VMAFTargetVideoEncoderRow})
     , [storeData]);

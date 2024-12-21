@@ -49,6 +49,11 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
     private _duration: number = 0;
     private _state: EncodingState = "Pending";
 
+    private _lastVMAF: number = 0;
+    private _lowCRF: number = 0;
+    private _highCRF: number = 51;
+    private _thisCRF: number = 0;
+
     private constructor(ffprobePath: string, ffmpegPath: string, inputFilePath: string, tempDirectory: string) {
         super();
         this._encoderId = uuidv4();
@@ -97,10 +102,10 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
 
         this.state = "Encoding";
 
-        let lowCRF = 0;
-        let highCRF = 51;
-        let thisCrf = 0;
-        let lastVMAF = 0;
+        this.lowCRF = 0;
+        this.highCRF = 51;
+        this.thisCRF = 0;
+        this.lastVMAF = 0;
         let stage: Stage = "ValidateUpperBound";
 
         // eslint-disable-next-line no-constant-condition
@@ -121,9 +126,9 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
             // Run an encode based on our algorithm.
             if (stage == "ValidateUpperBound") {
                 // Step 0. Run with CRF 0 to get upper range of VMAF score.
-                thisCrf = 0;
+                this.thisCRF = 0;
                 this.logLine("Executing step 0: Validate upper bound.");
-                const tempFile = await this.encodeVideoWithCRF(ffmpegArguments, thisCrf);
+                const tempFile = await this.encodeVideoWithCRF(ffmpegArguments, this.thisCRF);
                 if (this._encoder.vmafScoreZero < targetVMAF) {
                     // If the VMAF score is less than the target, we can't find a CRF that will work.
                     this.logLine(`VMAF with CRF 0 is ${this._encoder.vmafScore}. It needs to be greater than ${targetVMAF}.`);
@@ -134,17 +139,17 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
 
                 this._crfToVMAF.push({
                     filePath: tempFile,
-                    crf: thisCrf,
+                    crf: this.thisCRF,
                     vmaf: this._encoder.vmafScoreZero
                 });
 
-                lastVMAF = this._encoder.vmafScoreZero;
+                this.lastVMAF = this._encoder.vmafScoreZero;
                 stage = "ValidateLowerBound";
             } else if (stage == "ValidateLowerBound") {
                 // Step 1. Run with max CRF to get lower range of VMAF score.
-                thisCrf = 51;
+                this.thisCRF = 51;
                 this.logLine("Executing step 1: Validate lower bound.");
-                const tempFile = await this.encodeVideoWithCRF(ffmpegArguments, thisCrf);
+                const tempFile = await this.encodeVideoWithCRF(ffmpegArguments, this.thisCRF);
                 if (targetVMAF < this._encoder.vmafScoreZero) {
                     // If the VMAF score is greater than the target, we can't find a CRF that will work.
                     this.logLine(`VMAF with CRF 51 is ${this._encoder.vmafScore}. It needs to be less than ${targetVMAF}.`);
@@ -155,82 +160,82 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
 
                 this._crfToVMAF.push({
                     filePath: tempFile,
-                    crf: thisCrf,
+                    crf: this.thisCRF,
                     vmaf: this._encoder.vmafScoreZero
                 });
 
-                lastVMAF = this._encoder.vmafScoreZero;
+                this.lastVMAF = this._encoder.vmafScoreZero;
                 stage = "NarrowDown";
             } else if (stage == "NarrowDown") {
                 // Step 2. Narrow down the range to about 4 CRF values.
-                const crfRange = highCRF - lowCRF;
-                this.logLine(`Executing step 2: Narrow down. High CRF: ${highCRF}, Low CRF: ${lowCRF}, Range: ${crfRange}.`);
+                const crfRange = this.highCRF - this.lowCRF;
+                this.logLine(`Executing step 2: Narrow down. High CRF: ${this.highCRF}, Low CRF: ${this.lowCRF}, Range: ${crfRange}.`);
 
                 // The narrowing algorithm does a binary search to find the correct CRF.
                 // It doesn't quite work if the range is less than 4.
                 // If we get to that point, do a linear scan in the next stage.
                 if (crfRange <= 4) {
                     stage = "IterateSubset";
-                    thisCrf = lowCRF;
+                    this.thisCRF = this.lowCRF;
                     continue;
                 }
 
                 // Also previously called midCrf.
-                thisCrf = Math.floor((highCRF + lowCRF) / 2);
+                this.thisCRF = Math.floor((this.highCRF + this.lowCRF) / 2);
 
-                const tempFile = await this.encodeVideoWithCRF(ffmpegArguments, thisCrf);
-                // TODO: Test this.
+                const tempFile = await this.encodeVideoWithCRF(ffmpegArguments, this.thisCRF);
+                this.logLine(`VMAF with CRF ${this.thisCRF} is ${this._encoder.vmafScoreZero}.`);
                 if (this._encoder.vmafScoreZero > targetVMAF) {
                     // Too high. Decrease VMAF, increase CRF range.
-                    lowCRF = thisCrf - 1;
+                    this.lowCRF = this.thisCRF - 1;
                 } else {
                     // Too low. Increase VMAF, decrease CRF range.
-                    highCRF = thisCrf;
+                    this.highCRF = this.thisCRF;
                 }
 
                 this._crfToVMAF.push({
                     filePath: tempFile,
-                    crf: thisCrf,
+                    crf: this.thisCRF,
                     vmaf: this._encoder.vmafScoreZero
                 });
-                lastVMAF = this._encoder.vmafScoreZero;
+                this.lastVMAF = this._encoder.vmafScoreZero;
             } else if (stage == "IterateSubset") {
                 // Step 3. Iterate over the subset of CRF values found in step 2 to find the best one.
                 this.logLine("Executing step 3: Iterate subset.");
-                if (thisCrf > highCRF) {
+                if (this.thisCRF > this.highCRF) {
                     // We've iterated over the subset and was unable to find a match. Move to the next stage.
                     stage = "LinearWalk";
                     continue;
                 }
 
-                const tempFile = await this.encodeVideoWithCRF(ffmpegArguments, thisCrf);
-
+                const tempFile = await this.encodeVideoWithCRF(ffmpegArguments, this.thisCRF);
+                this.logLine(`VMAF with CRF ${this.thisCRF} is ${this._encoder.vmafScoreZero}.`);
                 this._crfToVMAF.push({
                     filePath: tempFile,
-                    crf: thisCrf,
+                    crf: this.thisCRF,
                     vmaf: this._encoder.vmafScoreZero
                 });
 
-                lastVMAF = this._encoder.vmafScoreZero;
-                thisCrf++;
+                this.lastVMAF = this._encoder.vmafScoreZero;
+                this.thisCRF++;
             } else if (stage == "LinearWalk") {
                 // Step 4. Walk linearly over the CRF values to find the best one.
                 this.logLine("Executing step 4: Linear walk.");
-                if (lastVMAF < targetVMAF) {
-                    thisCrf--;
+                if (this.lastVMAF < targetVMAF) {
+                    this.thisCRF--;
                 } else {
-                    thisCrf++;
+                    this.thisCRF++;
                 }
 
-                const tempFile = await this.encodeVideoWithCRF(ffmpegArguments, thisCrf);
-
+                const tempFile = await this.encodeVideoWithCRF(ffmpegArguments, this.thisCRF);
+                this.logLine(`VMAF with CRF ${this.thisCRF} is ${this._encoder.vmafScoreZero}.`);
                 this._crfToVMAF.push({
                     filePath: tempFile,
-                    crf: thisCrf,
+                    crf: this.thisCRF,
                     vmaf: this._encoder.vmafScoreZero
                 });
 
-                lastVMAF = this._encoder.vmafScoreZero;
+                this.lastVMAF = this._encoder.vmafScoreZero;
             }
 
             // We did an encoding. Check the table to see if we have a good match.
@@ -244,11 +249,13 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
                     // Found the boundary. Should also note that there's an inverse relationship between CRF and VMAF.
                     const target = this._crfToVMAF[i - 1];
 
+                    this.logLine(`Found the boundary. CRF: ${target.crf}, VMAF: ${target.vmaf}.`);
+
                     // This call should overwrite any existing file.
                     await copyFile(target.filePath, outputFilePath);
                     this.state = "Success";
-                    lastVMAF = target.vmaf;
-                    thisCrf = target.crf;
+                    this.lastVMAF = target.vmaf;
+                    this.thisCRF = target.crf;
                     this.emit("update");
                     return; // TODO: Cleanup!
                 }
@@ -271,6 +278,11 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
         this.crfToVMAF = [];
         this.encoder = undefined;
         this.resolve = undefined;
+
+        this.lastVMAF = 0;
+        this.lowCRF = 0;
+        this.highCRF = 51;
+        this.thisCRF = 0;
 
         this.logLine("Reset encoder to pending state.");
         this.emit("update");
@@ -361,6 +373,38 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
         this.emit("log", tag, data, true);
     }
 
+    public get lastVMAF(): number {
+        return this._lastVMAF;
+    }
+
+    private set lastVMAF(value: number) {
+        this._lastVMAF = value;
+    }
+
+    public get lowCRF(): number {
+        return this._lowCRF;
+    }
+
+    private set lowCRF(value: number) {
+        this._lowCRF = value;
+    }
+
+    public get highCRF(): number {
+        return this._highCRF;
+    }
+
+    private set highCRF(value: number) {
+        this._highCRF = value;
+    }
+
+    public get thisCRF(): number {
+        return this._thisCRF;
+    }
+
+    private set thisCRF(value: number) {
+        this._thisCRF = value;
+    }
+
     public get encoderId(): string {
         return this._encoderId;
     }
@@ -402,8 +446,28 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
             currentDuration: this.currentDuration,
             duration: this.duration,
             encodingState: this.state,
-
+            thisCRF: this.thisCRF,
+            lowCRF: this.lowCRF,
+            highCRF: this.highCRF,
+            lastVMAF: this.lastVMAF,
+            encodingPhase: this.encoder?.encodingPhase ?? "Encoding"
         };
+    }
+
+    public get inputFilePath(): string {
+        return this._inputFilePath;
+    }
+
+    private set inputFilePath(value: string) {
+        this._inputFilePath = value;
+    }
+
+    public get log(): string {
+        return this._log;
+    }
+
+    private set log(value: string) {
+        this._log = value;
     }
 
     private get ffprobePath(): string {
@@ -420,14 +484,6 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
 
     private set ffmpegPath(value: string) {
         this._ffmpegPath = value;
-    }
-
-    public get inputFilePath(): string {
-        return this._inputFilePath;
-    }
-
-    private set inputFilePath(value: string) {
-        this._inputFilePath = value;
     }
 
     private get outputFilePath(): string {
@@ -452,14 +508,6 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
 
     private set tempDirectory(value: string) {
         this._tempDirectory = value;
-    }
-
-    public get log(): string {
-        return this._log;
-    }
-
-    private set log(value: string) {
-        this._log = value;
     }
 
     private get fileSize(): number {

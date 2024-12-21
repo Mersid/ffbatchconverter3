@@ -3,6 +3,8 @@ import { toCustomDateFormatMillis } from "./TimeFormatter";
 
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
+type Loggable = string | unknown;
+
 export const log =  {
     log: logInternal,
     error,
@@ -12,23 +14,23 @@ export const log =  {
     custom
 }
 
-function debug(message: string): void {
+function debug(message: Loggable): void {
     logInternal("debug", message);
 }
 
-function info(message: string): void {
+function info(message: Loggable): void {
     logInternal("info", message);
 }
 
-function warn(message: string): void {
+function warn(message: Loggable): void {
     logInternal("warn", message);
 }
 
-function error(message: string): void {
+function error(message: Loggable): void {
     logInternal("error", message);
 }
 
-function logInternal(logLevel: LogLevel, message: string): void {
+function logInternal(logLevel: LogLevel, message: Loggable): void {
     const date = new Date();
     const logMessageConsole = format(date, logLevel, message, true);
 
@@ -48,7 +50,7 @@ function logInternal(logLevel: LogLevel, message: string): void {
     logFunction()(logMessageConsole);
 }
 
-function format(date: Date, logLevel: LogLevel, message: string, color: boolean): string {
+function format(date: Date, logLevel: LogLevel, message: Loggable, color: boolean): string {
     // This function is used to color the log message based on the log level. If color is false,
     // we don't color the message. In this case, the function is the identity function.
     const severityColor = () => {

@@ -5,7 +5,7 @@ import icon from "../../resources/icon.png?asset";
 import { installExtension, REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from "electron-extension-installer";
 import { registerIPCHandlers } from "./encoders/misc/IPCHandlers";
 import { log } from "./encoders/misc/Logger";
-import { sampleVal } from "./encoders/misc/EnvironmentVariables";
+import { tempDir } from "./encoders/misc/EnvironmentVariables";
 
 export let webContents: WebContents;
 
@@ -23,8 +23,6 @@ async function createWindow(): Promise<void> {
         }
     });
 
-    log.warn("This is a warning message");
-    log.info(sampleVal!);
     webContents = mainWindow.webContents;
 
     mainWindow.on("ready-to-show", () => {

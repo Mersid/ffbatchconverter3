@@ -1,13 +1,14 @@
 import { registerFetch, registerReceive } from "../../../preload/registerMain";
 import { getFFmpegPath, getFFprobePath } from "./Helpers";
+import { log } from "./Logger";
 import { lord } from "./Lord";
 
 export function registerIPCHandlers(): void {
     registerReceive("ping", (_event, _args) => {
-        console.log("Pong!");
+        log.info("Pong!");
     });
     registerReceive("log", (_event, args) => {
-        console.log(args);
+        log.info(args);
     });
 
     registerReceive("genericVideoEncoderAddPaths", async (_event, args) => {

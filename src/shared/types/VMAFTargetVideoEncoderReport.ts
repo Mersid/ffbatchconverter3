@@ -23,10 +23,10 @@ export type VMAFTargetVideoEncoderReport = {
     /**
      * Undefined if we don't have a score yet.
      */
-    vmafScore?: number;
+    lastVMAF?: number;
 
-    minCRF: number;
-    maxCRF: number;
-    crf: number;
+    lowCRF: number;
+    highCRF: number;
+    thisCRF: number;
 
 }
