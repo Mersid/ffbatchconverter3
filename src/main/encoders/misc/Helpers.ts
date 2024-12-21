@@ -1,6 +1,7 @@
 import { Stats } from "fs";
 import { spawn, spawnSync } from "node:child_process";
 import { readdir, stat } from "node:fs/promises";
+import { dirname, isAbsolute, join, parse } from "node:path";
 
 export function getFFmpegPath(): string | undefined {
     return findCommand("ffmpeg");
@@ -92,4 +93,53 @@ export async function getFilesRecursive(filePath: string): Promise<string[]> {
     }
 
     return files;
+}
+
+export type OutputPathInfo = {
+    /**
+     * The directory that the output file should be placed in.
+     */
+    absoluteContainingDirectory: string;
+
+    /**
+     * The full path to the output file. This is the absolute containing directory, plus the file name.
+     */
+    absoluteFilePath: string;
+};
+
+/**
+ * Given an absolute path to a video file and a desired output directory, computes the output paths.
+ * @param videoInputFilePath The absolute file path of the video file to compute the outputs for. The behaviour is undefined
+ * if a relative path is given.
+ * @param desiredOutputDir The desired output directory. If this is a relative file path, it is relative to the input file.
+ * If it is an absolute file path, it is used as is.
+ * @param extension The desired output file extension, without the dot.
+ */
+export function computeOutputPaths(videoInputFilePath: string, desiredOutputDir: string, extension: string): OutputPathInfo {
+    const absolute = isAbsolute(desiredOutputDir);
+
+    // For an example directory C:\Users\User\Videos\asdf.mp4:
+    // root = C:\
+    // dir = C:\Users\User\Videos
+    // base = asdf.mp4
+    // ext = .mp4
+    // name = asdf
+    const pathInfo = parse(videoInputFilePath);
+
+
+    if (absolute) {
+        return {
+            absoluteContainingDirectory: desiredOutputDir,
+            absoluteFilePath: join(desiredOutputDir, `${pathInfo.name}.${extension}`),
+        };
+    }
+
+    // desiredOutputDir is a relative path.
+    const outputSubdirectory = join(pathInfo.dir, desiredOutputDir); // This is now absolute.
+    const newFilePath = join(outputSubdirectory, `${pathInfo.name}.${extension}`);
+
+    return {
+        absoluteContainingDirectory: outputSubdirectory,
+        absoluteFilePath: newFilePath,
+    };
 }

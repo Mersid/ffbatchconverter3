@@ -1,7 +1,7 @@
 import { Emitter } from "strict-event-emitter";
 import { v4 as uuid4 } from "uuid";
 import { VMAFTargetVideoEncoder } from "../encoders/VMAFTargetVideoEncoder";
-import { getFilesRecursive } from "../misc/Helpers";
+import { computeOutputPaths, getFilesRecursive } from "../misc/Helpers";
 import { VMAFTargetVideoEncoderReport } from "@shared/types/VMAFTargetVideoEncoderReport";
 import path from "node:path";
 import { mkdir } from "node:fs/promises";
@@ -173,7 +173,6 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
      * @private
      */
     private async processActions() {
-        // TODO: Verify this
         if (!this._isEncoding) {
             return;
         }
@@ -186,17 +185,16 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
         if (encoder == undefined) {
             return;
         }
-        const directory = path.dirname(encoder.inputFilePath);
-        const outputSubdirectory = path.join(directory, this.outputSubdirectory);
-        const fileName = path.parse(encoder.inputFilePath).name;
-        const newFilePath = path.join(outputSubdirectory, `${fileName}.${this.extension}`);
+
+        const outputDirInfo = computeOutputPaths(encoder.inputFilePath, this.outputSubdirectory, this.extension);
+
 
         // Create output directory if it doesn't exist
-        await mkdir(outputSubdirectory, { recursive: true });
+        await mkdir(outputDirInfo.absoluteContainingDirectory, { recursive: true });
 
         // We don't need to wait for this to finish before finishing this function.
         // If we do it breaks the start/stop encoding calls, as it hangs until an encoder is done.
-        encoder.start(this.ffmpegArguments, this.h265, this.targetVMAF, newFilePath).then(_ => {});
+        encoder.start(this.ffmpegArguments, this.h265, this.targetVMAF, outputDirInfo.absoluteFilePath).then(_ => {});
     }
 
     public get outputSubdirectory(): string {
