@@ -165,20 +165,24 @@ export default function EncoderCreationPage() {
                                 ffprobePath
                             });
 
-                            dispatch(addEncoderMap({
-                                pageId: params.id as string,
-                                controllerId: controllerId
-                            }));
+                            dispatch(
+                                addEncoderMap({
+                                    pageId: params.id as string,
+                                    controllerId: controllerId
+                                })
+                            );
 
-                            dispatch(setEncodeAndScoreEncoderSettings({
-                                controllerId,
-                                extension: "mkv",
-                                ffmpegArguments: "-c:v libx265 -c:a aac",
-                                concurrency: 1,
-                                subdirectory: "FFBatch",
-                                encoder: "x265",
-                                crf: 23
-                            }));
+                            dispatch(
+                                setEncodeAndScoreEncoderSettings({
+                                    controllerId,
+                                    extension: "mkv",
+                                    ffmpegArguments: "-c:v libx265 -c:a aac",
+                                    concurrency: 1,
+                                    subdirectory: "FFBatch",
+                                    encoder: "x265",
+                                    crf: 23
+                                })
+                            );
 
                             dispatch(
                                 setEncoderStatus({
@@ -193,20 +197,24 @@ export default function EncoderCreationPage() {
                                 ffprobePath
                             });
 
-                            dispatch(addEncoderMap({
-                                pageId: params.id as string,
-                                controllerId: controllerId
-                            }));
+                            dispatch(
+                                addEncoderMap({
+                                    pageId: params.id as string,
+                                    controllerId: controllerId
+                                })
+                            );
 
-                            dispatch(setVMAFTargetVideoEncoderSettings({
-                                controllerId,
-                                extension: "mkv",
-                                ffmpegArguments: "-c:v libx265 -c:a aac",
-                                concurrency: 1,
-                                subdirectory: "FFBatch",
-                                encoder: "x265",
-                                vmafTarget: 86
-                            }));
+                            dispatch(
+                                setVMAFTargetVideoEncoderSettings({
+                                    controllerId,
+                                    extension: "mkv",
+                                    ffmpegArguments: "-c:v libx265 -c:a aac",
+                                    concurrency: 1,
+                                    subdirectory: "FFBatch",
+                                    encoder: "x265",
+                                    vmafTarget: 86
+                                })
+                            );
 
                             dispatch(
                                 setEncoderStatus({

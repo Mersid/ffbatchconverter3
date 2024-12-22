@@ -1,18 +1,18 @@
-import pc from "picocolors"
+import pc from "picocolors";
 import { toCustomDateFormatMillis } from "./TimeFormatter";
 
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
 type Loggable = string | unknown;
 
-export const log =  {
+export const log = {
     log: logInternal,
     error,
     warn,
     info,
     debug,
     custom
-}
+};
 
 function debug(message: Loggable): void {
     logInternal("debug", message);
@@ -73,7 +73,7 @@ function format(date: Date, logLevel: LogLevel, message: Loggable, color: boolea
     const dateString = toCustomDateFormatMillis(date);
 
     // To make all the tags five characters (minus the [])
-    const severityTag =`[${severityColor()(logLevel.toUpperCase())}]` + (["warn", "info"].includes(logLevel) ? " " : "");
+    const severityTag = `[${severityColor()(logLevel.toUpperCase())}]` + (["warn", "info"].includes(logLevel) ? " " : "");
     return `[${timestampColor(dateString)}] ${severityTag} ${message}`;
 }
 

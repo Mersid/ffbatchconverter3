@@ -24,4 +24,4 @@ export type EncodeAndScoreEncoderReport = {
      * Undefined if we don't have a score yet.
      */
     vmafScore?: number;
-}
+};

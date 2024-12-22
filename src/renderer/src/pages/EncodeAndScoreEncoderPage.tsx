@@ -45,7 +45,7 @@ const columns = [
         cell: props => <p>{props.getValue()}</p>,
         size: 100
     })
-]
+];
 
 type EncodeAndScoreEncoderRow = {
     encoderId: string;
@@ -58,7 +58,7 @@ type EncodeAndScoreEncoderRow = {
 
     phase: EncodeAndScoreEncoderPhase;
     status: string;
-}
+};
 
 export default function EncodeAndScoreEncoderPage() {
     const params = useParams();
@@ -76,20 +76,23 @@ export default function EncodeAndScoreEncoderPage() {
     const [ffmpegArguments, setFFmpegArguments] = useState(settings ? settings.ffmpegArguments : "-c:v libx265 -c:a aac");
 
     const storeData = useSelector((state: RootState) => state.encodeAndScoreEncoderReports).filter(data => data.controllerId === controllerId);
-    const data = useMemo(() =>
-        storeData
-            .filter(data => data.controllerId === controllerId)
-            .map(data => {
-                return {
-                    encoderId: data.encoderId,
-                    fileName: data.inputFilePath,
-                    duration: data.duration,
-                    size: data.fileSize,
-                    vmafScore: data.vmafScore,
-                    phase: data.encodingPhase,
-                    status: data.encodingState == "Encoding" ? ((data.currentDuration / data.duration) * 100).toFixed(2) + "%" : data.encodingState
-            } as EncodeAndScoreEncoderRow})
-    , [storeData]);
+    const data = useMemo(
+        () =>
+            storeData
+                .filter(data => data.controllerId === controllerId)
+                .map(data => {
+                    return {
+                        encoderId: data.encoderId,
+                        fileName: data.inputFilePath,
+                        duration: data.duration,
+                        size: data.fileSize,
+                        vmafScore: data.vmafScore,
+                        phase: data.encodingPhase,
+                        status: data.encodingState == "Encoding" ? ((data.currentDuration / data.duration) * 100).toFixed(2) + "%" : data.encodingState
+                    } as EncodeAndScoreEncoderRow;
+                }),
+        [storeData]
+    );
 
     const handleDrop = (event: DragEvent<HTMLDivElement>) => {
         event.preventDefault();

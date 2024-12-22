@@ -1,7 +1,7 @@
 import { Stats } from "fs";
 import { spawn, spawnSync } from "node:child_process";
 import { readdir, stat } from "node:fs/promises";
-import { dirname, isAbsolute, join, parse } from "node:path";
+import { isAbsolute, join, parse } from "node:path";
 
 export function getFFmpegPath(): string | undefined {
     return findCommand("ffmpeg");
@@ -126,11 +126,10 @@ export function computeOutputPaths(videoInputFilePath: string, desiredOutputDir:
     // name = asdf
     const pathInfo = parse(videoInputFilePath);
 
-
     if (absolute) {
         return {
             absoluteContainingDirectory: desiredOutputDir,
-            absoluteFilePath: join(desiredOutputDir, `${pathInfo.name}.${extension}`),
+            absoluteFilePath: join(desiredOutputDir, `${pathInfo.name}.${extension}`)
         };
     }
 
@@ -140,6 +139,6 @@ export function computeOutputPaths(videoInputFilePath: string, desiredOutputDir:
 
     return {
         absoluteContainingDirectory: outputSubdirectory,
-        absoluteFilePath: newFilePath,
+        absoluteFilePath: newFilePath
     };
 }

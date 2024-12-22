@@ -8,4 +8,4 @@ export type EncodeAndScoreEncoderSettings = {
     encoder: EncodeAndScoreEncoderSelection;
     crf: number;
     ffmpegArguments: string;
-}
+};

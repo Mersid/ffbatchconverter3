@@ -3,7 +3,6 @@ import { Emitter } from "strict-event-emitter";
 import { computeOutputPaths, getFilesRecursive } from "../misc/Helpers";
 import { EncodeAndScoreEncoder } from "../encoders/EncodeAndScoreEncoder";
 import { EncodeAndScoreEncoderReport } from "@shared/types/EncodeAndScoreEncoderReport";
-import path from "node:path";
 import { mkdir } from "node:fs/promises";
 
 type Events = {
@@ -239,6 +238,14 @@ export class EncodeAndScoreEncoderController extends Emitter<Events> {
         this._controllerId = value;
     }
 
+    public get isEncoding(): boolean {
+        return this._isEncoding;
+    }
+
+    public set isEncoding(value: boolean) {
+        this._isEncoding = value;
+    }
+
     private get ffprobePath(): string {
         return this._ffprobePath;
     }
@@ -253,14 +260,6 @@ export class EncodeAndScoreEncoderController extends Emitter<Events> {
 
     private set ffmpegPath(value: string) {
         this._ffmpegPath = value;
-    }
-
-    public get isEncoding(): boolean {
-        return this._isEncoding;
-    }
-
-    public set isEncoding(value: boolean) {
-        this._isEncoding = value;
     }
 
     private get encoders(): EncodeAndScoreEncoder[] {

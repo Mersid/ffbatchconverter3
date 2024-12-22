@@ -28,5 +28,4 @@ export type VMAFTargetVideoEncoderReport = {
     lowCRF: number;
     highCRF: number;
     thisCRF: number;
-
-}
+};

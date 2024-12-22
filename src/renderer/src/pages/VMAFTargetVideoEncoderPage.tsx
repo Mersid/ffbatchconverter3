@@ -32,7 +32,11 @@ const columns = [
     columnHelper.accessor(row => row.lowCRF, {
         header: "Range",
         // https://github.com/TanStack/table/discussions/4148#discussion-4216514
-        cell: props => <p>{props.cell.row.original.lowCRF} - {props.cell.row.original.highCRF}</p>,
+        cell: props => (
+            <p>
+                {props.cell.row.original.lowCRF} - {props.cell.row.original.highCRF}
+            </p>
+        ),
         size: 100
     }),
     columnHelper.accessor(row => row.thisCRF, {
@@ -56,7 +60,7 @@ const columns = [
         cell: props => <p>{props.getValue()}</p>,
         size: 100
     })
-]
+];
 
 type VMAFTargetVideoEncoderRow = {
     encoderId: string;
@@ -72,7 +76,7 @@ type VMAFTargetVideoEncoderRow = {
 
     phase: EncodeAndScoreEncoderPhase;
     status: string;
-}
+};
 
 export default function VMAFTargetVideoEncoderPage() {
     const params = useParams();
@@ -90,24 +94,26 @@ export default function VMAFTargetVideoEncoderPage() {
     const [ffmpegArguments, setFFmpegArguments] = useState(settings ? settings.ffmpegArguments : "-c:v libx265 -c:a aac");
 
     const storeData = useSelector((state: RootState) => state.vmafTargetVideoEncoderReports).filter(data => data.controllerId === controllerId);
-    const data = useMemo(() =>
-        storeData
-            .filter(data => data.controllerId === controllerId)
-            .map(data => {
-                return {
-                    encoderId: data.encoderId,
-                    fileName: data.inputFilePath,
-                    duration: data.duration,
-                    size: data.fileSize,
-                    lastVMAF: data.lastVMAF,
-                    phase: data.encodingPhase,
-                    status: data.encodingState == "Encoding" ? ((data.currentDuration / data.duration) * 100).toFixed(2) + "%" : data.encodingState,
-                    lowCRF: data.lowCRF,
-                    highCRF: data.highCRF,
-                    thisCRF: data.thisCRF
-
-            } as VMAFTargetVideoEncoderRow})
-    , [storeData]);
+    const data = useMemo(
+        () =>
+            storeData
+                .filter(data => data.controllerId === controllerId)
+                .map(data => {
+                    return {
+                        encoderId: data.encoderId,
+                        fileName: data.inputFilePath,
+                        duration: data.duration,
+                        size: data.fileSize,
+                        lastVMAF: data.lastVMAF,
+                        phase: data.encodingPhase,
+                        status: data.encodingState == "Encoding" ? ((data.currentDuration / data.duration) * 100).toFixed(2) + "%" : data.encodingState,
+                        lowCRF: data.lowCRF,
+                        highCRF: data.highCRF,
+                        thisCRF: data.thisCRF
+                    } as VMAFTargetVideoEncoderRow;
+                }),
+        [storeData]
+    );
 
     const handleDrop = (event: DragEvent<HTMLDivElement>) => {
         event.preventDefault();

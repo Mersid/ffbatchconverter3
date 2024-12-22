@@ -5,7 +5,7 @@ export type VMAFTargetVideoEncoderSettings = {
     concurrency: number;
     subdirectory: string;
     extension: string;
-    encoder: EncodeAndScoreEncoderSelection
+    encoder: EncodeAndScoreEncoderSelection;
     vmafTarget: number;
     ffmpegArguments: string;
-}
+};

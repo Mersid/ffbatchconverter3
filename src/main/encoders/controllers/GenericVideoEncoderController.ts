@@ -1,7 +1,6 @@
 import { GenericVideoEncoder } from "../encoders/GenericVideoEncoder";
 import { computeOutputPaths, getFilesRecursive } from "../misc/Helpers";
 import { mkdir } from "node:fs/promises";
-import path from "node:path";
 import { v4 as uuid4 } from "uuid";
 import { Emitter } from "strict-event-emitter";
 import { GenericVideoEncoderReport } from "@shared/types/GenericVideoEncoderReport";

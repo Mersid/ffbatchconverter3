@@ -2,10 +2,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { addGenericVideoEncoderReport, removeGenericVideoEncoderReport } from "@renderer/redux/GenericVideoEncoderReportsSlice";
 import { addEncodeAndScoreEncoderReport, removeEncodeAndScoreEncoderReport } from "@renderer/redux/EncodeAndScoreEncoderReportsSlice";
-import {
-    addVMAFTargetVideoEncoderReport,
-    removeVMAFTargetVideoEncoderReport
-} from "@renderer/redux/VMAFTargetVideoEncoderReportsSlice";
+import { addVMAFTargetVideoEncoderReport, removeVMAFTargetVideoEncoderReport } from "@renderer/redux/VMAFTargetVideoEncoderReportsSlice";
 
 export default function EncoderUpdateListener() {
     const dispatch = useDispatch();

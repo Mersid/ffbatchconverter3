@@ -98,12 +98,9 @@ export class VMAFScoringEncoder extends Emitter<Events> {
 
         this.logLine(`Starting encoding with command: ${ffmpegCommand}`);
 
-        this._process = spawn(
-            ffmpegCommand,
-            {
-                shell: true
-            }
-        );
+        this._process = spawn(ffmpegCommand, {
+            shell: true
+        });
 
         this.state = "Encoding";
 

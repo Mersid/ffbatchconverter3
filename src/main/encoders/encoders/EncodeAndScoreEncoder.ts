@@ -86,7 +86,7 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
 
     public async start(ffmpegArguments: string, outputFilePath: string): Promise<void> {
         if (this.state != "Pending") {
-            console.log(">> This is not pending!")
+            console.log(">> This is not pending!");
             return;
         }
 
@@ -252,6 +252,26 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
         this._log = value;
     }
 
+    public get inputFilePath(): string {
+        return this._inputFilePath;
+    }
+
+    private set inputFilePath(value: string) {
+        this._inputFilePath = value;
+    }
+
+    public get encodingPhase(): EncodeAndScoreEncoderPhase {
+        if (this.state == "Success") {
+            return "Done";
+        }
+
+        if (this.scorer != undefined) {
+            return "Scoring";
+        }
+
+        return "Encoding";
+    }
+
     private get outputFilePath(): string {
         return this._outputFilePath;
     }
@@ -306,25 +326,5 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
 
     private set ffmpegPath(value: string) {
         this._ffmpegPath = value;
-    }
-
-    public get inputFilePath(): string {
-        return this._inputFilePath;
-    }
-
-    private set inputFilePath(value: string) {
-        this._inputFilePath = value;
-    }
-
-    public get encodingPhase(): EncodeAndScoreEncoderPhase {
-        if (this.state == "Success") {
-            return "Done";
-        }
-
-        if (this.scorer != undefined) {
-            return "Scoring";
-        }
-
-        return "Encoding";
     }
 }

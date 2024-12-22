@@ -3,7 +3,6 @@ import { v4 as uuid4 } from "uuid";
 import { VMAFTargetVideoEncoder } from "../encoders/VMAFTargetVideoEncoder";
 import { computeOutputPaths, getFilesRecursive } from "../misc/Helpers";
 import { VMAFTargetVideoEncoderReport } from "@shared/types/VMAFTargetVideoEncoderReport";
-import path from "node:path";
 import { mkdir } from "node:fs/promises";
 
 type Events = {
@@ -187,7 +186,6 @@ export class VMAFTargetVideoEncoderController extends Emitter<Events> {
         }
 
         const outputDirInfo = computeOutputPaths(encoder.inputFilePath, this.outputSubdirectory, this.extension);
-
 
         // Create output directory if it doesn't exist
         await mkdir(outputDirInfo.absoluteContainingDirectory, { recursive: true });
