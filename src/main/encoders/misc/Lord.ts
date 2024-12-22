@@ -29,6 +29,7 @@ import { VMAFTargetVideoEncoderSettings } from "@shared/types/VMAFTargetVideoEnc
 import { VMAFTargetVideoEncoderResetEncodersInfo } from "@shared/types/VMAFTargetVideoEncoderResetEncodersInfo";
 import { VMAFTargetVideoEncoderCopyLogsToClipboardInfo } from "@shared/types/VMAFTargetVideoEncoderCopyLogsToClipboardInfo";
 import { VMAFTargetVideoEncoderOpenLogsInfo } from "@shared/types/VMAFTargetVideoEncoderOpenLogsInfo";
+import { tempDir } from "./EnvironmentVariables";
 
 const genericVideoEncoders = new Map<string, GenericVideoEncoderController>();
 const encodeAndScoreEncoders = new Map<string, EncodeAndScoreEncoderController>();
@@ -185,8 +186,7 @@ export const lord = {
     },
 
     createNewVMAFTargetVideoEncoderController: async ({ ffprobePath, ffmpegPath }: ExternalLibraryPathsInfo): Promise<string> => {
-        // TODO: Make temp dir user configurable
-        const controller = await VMAFTargetVideoEncoderController.createNew(ffprobePath, ffmpegPath, "./temp");
+        const controller = await VMAFTargetVideoEncoderController.createNew(ffprobePath, ffmpegPath, tempDir);
         controller.on("update", reportId => {
             sendToRenderer("vmafTargetVideoEncoderUpdate", controller.getReportFor(reportId));
         });

@@ -130,7 +130,6 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
      * @returns True if the encoder was reset; false if the encoder is currently encoding and will not be reset.
      */
     public reset(): boolean {
-        // TODO: Verify that the reset works!!!
         if (this.state == "Encoding") {
             return false;
         }

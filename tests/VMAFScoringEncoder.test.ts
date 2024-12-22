@@ -1,10 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { tmpdir } from "os";
 import { VMAFScoringEncoder } from "../src/main/encoders/encoders/VMAFScoringEncoder";
 
 describe("Test VMAF scoring encoder", async () => {
     test("Test that the VMAF scoring encoder can score a sample video.", { timeout: 10000 }, async () => {
-        const tempDir = tmpdir();
         const encoder = await VMAFScoringEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpat.webm");
         await encoder.start("./tests/resources/distorted peepoheadpat.mp4");
 
@@ -19,8 +17,6 @@ describe("Test VMAF scoring encoder", async () => {
     });
 
     test("Test that the VMAF scoring encoder can gracefully exit from an invalid video.", async () => {
-        const tempDir = tmpdir();
-
         // Notice that the requested file doesn't actually exist.
         const encoder = await VMAFScoringEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpatbutitsnotvalid.webm");
 

@@ -257,7 +257,7 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
                     this.lastVMAF = target.vmaf;
                     this.thisCRF = target.crf;
                     this.emit("update");
-                    return; // TODO: Cleanup!
+                    return;
                 }
             }
         }
@@ -268,7 +268,6 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
      * @returns True if the encoder was reset; false if the encoder is currently encoding and will not be reset.
      */
     public reset(): boolean {
-        // TODO: Verify that the reset works!!!
         if (this.state == "Encoding") {
             return false;
         }

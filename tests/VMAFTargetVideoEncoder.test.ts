@@ -1,14 +1,13 @@
 import { describe, expect, test } from "vitest";
-import { tmpdir } from "os";
 import { VMAFTargetVideoEncoder } from "../src/main/encoders/encoders/VMAFTargetVideoEncoder";
+import { join } from "node:path";
+import { tempDir } from "../src/main/encoders/misc/EnvironmentVariables";
 
 describe("Test encode and score encoder", async () => {
-    const tempDir = `${tmpdir()}/ffbatchconverter3_test`;
-
     test("Test that the encode and score encoder can encode and score a sample video.", { timeout: 30000 }, async () => {
         const encoder = await VMAFTargetVideoEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpat.webm", tempDir);
-        await encoder.start("-c:a aac", false, 60, `${tempDir}/peepoheadpat_targeted.mp4`);
-
+        await encoder.start("-c:a aac", false, 60, join(tempDir, "peepoheadpat_targeted.mp4"));
+        ;
         expect(encoder.state).toBe("Success");
 
         // This tests that the duration isn't broken and stuck at 0.
@@ -25,7 +24,7 @@ describe("Test encode and score encoder", async () => {
 
         await expect(async () => {
             // And attempting to start an invalid video should throw an error.
-            await encoder.start("-c:a aac", false, 60, `${tempDir}/butitsnotvalid_encodeandscore.mp4`);
+            await encoder.start("-c:a aac", false, 60, join(tempDir, "butitsnotvalid_encodeandscore.mp4"));
         }).rejects.toThrowError();
 
         expect(encoder.state).toBe("Error");
@@ -37,21 +36,21 @@ describe("Test encode and score encoder", async () => {
 
         expect(encoder.state).toBe("Pending");
 
-        await encoder.start("-c:a aacbutitsnotvalid --someinvalidparam helloworld", false, 60, `${tempDir}/butitsnotvalid_encodeandscore.mp4`);
+        await encoder.start("-c:a aacbutitsnotvalid --someinvalidparam helloworld", false, 60, join(tempDir, "butitsnotvalid_encodeandscore.mp4"));
 
         expect(encoder.state).toBe("Error");
     });
 
     test("Test that the target encoder fails appropriately when a CRF of 0 still produces a VMAF score below the target threshold.", async () => {
         const encoder = await VMAFTargetVideoEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpat.webm", tempDir);
-        await encoder.start("-c:a aac", false, 99, `${tempDir}/peepoheadpat_targeted_0.mp4`);
+        await encoder.start("-c:a aac", false, 99, join(tempDir, "peepoheadpat_targeted_0.mp4"));
 
         expect(encoder.state).toBe("Error");
     });
 
     test("Test that the target encoder fails appropriately when a CRF of 51 still produces a VMAF score above the target threshold.", async () => {
         const encoder = await VMAFTargetVideoEncoder.createNew("ffprobe", "ffmpeg", "./tests/resources/peepoheadpat.webm", tempDir);
-        await encoder.start("-c:a aac", false, 1, `${tempDir}/peepoheadpat_targeted_51.mp4`);
+        await encoder.start("-c:a aac", false, 1, join(tempDir, "peepoheadpat_targeted_51.mp4"));
 
         expect(encoder.state).toBe("Error");
     });
