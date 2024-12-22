@@ -91,7 +91,7 @@ export default function VMAFTargetVideoEncoderPage() {
     const [extension, setExtension] = useState(settings ? settings.extension : "mkv");
     const [encoder, setEncoder] = useState(settings ? settings.encoder : "x265");
     const [vmaf, setVmaf] = useState(settings ? settings.vmafTarget.toString() : "86");
-    const [ffmpegArguments, setFFmpegArguments] = useState(settings ? settings.ffmpegArguments : "-c:v libx265 -c:a aac");
+    const [ffmpegArguments, setFFmpegArguments] = useState(settings ? settings.ffmpegArguments : "-c:a aac");
 
     const storeData = useSelector((state: RootState) => state.vmafTargetVideoEncoderReports).filter(data => data.controllerId === controllerId);
     const data = useMemo(
@@ -313,11 +313,11 @@ export default function VMAFTargetVideoEncoderPage() {
                             </div>
                         </div>
                     </div>
-                    <div className={"bg-green-300 w-full flex flex-col-reverse justify-end items-end"}>
-                        <button className={"bg-white hover:bg-gray-300 py-0 px-2 rounded"}>Add folders</button>
-                        <button className={"bg-white hover:bg-gray-300 py-0 px-2 rounded"}>Add files</button>
+                    <div className={"w-full flex flex-col justify-end items-end"}>
+                        {/*<button className={"bg-white hover:bg-gray-300 py-0 px-2 rounded"}>Add folders</button>*/}
+                        {/*<button className={"bg-white hover:bg-gray-300 py-0 px-2 rounded"}>Add files</button>*/}
                         <button
-                            className={"bg-white hover:bg-gray-300 py-0 px-2 rounded"}
+                            className={"bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded mx-2 my-2"}
                             onClick={async () => {
                                 const result = await window.api.fetch.vmafTargetVideoEncoderSetEncoderActive({
                                     controllerId,

@@ -247,11 +247,11 @@ export default function GenericVideoEncoderPage() {
                             </div>
                         </div>
                     </div>
-                    <div className={"bg-green-300 w-full flex flex-col-reverse justify-end items-end"}>
-                        <button className={"bg-white hover:bg-gray-300 py-0 px-2 rounded"}>Add folders</button>
-                        <button className={"bg-white hover:bg-gray-300 py-0 px-2 rounded"}>Add files</button>
+                    <div className={"w-full flex flex-col justify-end items-end"}>
+                        {/*<button className={"bg-white hover:bg-gray-300 py-0 px-2 rounded"}>Add folders</button>*/}
+                        {/*<button className={"bg-white hover:bg-gray-300 py-0 px-2 rounded"}>Add files</button>*/}
                         <button
-                            className={"bg-white hover:bg-gray-300 py-0 px-2 rounded"}
+                            className={"bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded mx-2 my-2"}
                             onClick={async () => {
                                 const result = await window.api.fetch.genericVideoEncoderSetEncoderActive({
                                     controllerId,

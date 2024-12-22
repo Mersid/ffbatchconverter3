@@ -1,7 +1,7 @@
 import { Emitter } from "strict-event-emitter";
 import { EncodeAndScoreEncoder } from "./EncodeAndScoreEncoder";
 import { probe } from "../misc/Helpers";
-import { copyFile, mkdir, stat } from "node:fs/promises";
+import { copyFile, mkdir, stat, rm } from "node:fs/promises";
 import path from "node:path";
 import { CRFToVMAFMapping } from "../misc/CRFToVMAFMapping";
 import { EncodingState } from "@shared/types/EncodingState";
@@ -256,6 +256,14 @@ export class VMAFTargetVideoEncoder extends Emitter<Events> {
                     this.state = "Success";
                     this.lastVMAF = target.vmaf;
                     this.thisCRF = target.crf;
+
+                    // Cleanup the temporary files.
+                    for (const mapping of this.crfToVMAF) {
+                        await rm(mapping.filePath, {
+                            force: true
+                        });
+                    }
+
                     this.emit("update");
                     return;
                 }

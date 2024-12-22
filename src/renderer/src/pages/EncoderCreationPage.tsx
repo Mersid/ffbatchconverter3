@@ -176,7 +176,7 @@ export default function EncoderCreationPage() {
                                 setEncodeAndScoreEncoderSettings({
                                     controllerId,
                                     extension: "mkv",
-                                    ffmpegArguments: "-c:v libx265 -c:a aac",
+                                    ffmpegArguments: "-c:a aac",
                                     concurrency: 1,
                                     subdirectory: "FFBatch",
                                     encoder: "x265",
@@ -208,7 +208,7 @@ export default function EncoderCreationPage() {
                                 setVMAFTargetVideoEncoderSettings({
                                     controllerId,
                                     extension: "mkv",
-                                    ffmpegArguments: "-c:v libx265 -c:a aac",
+                                    ffmpegArguments: "-c:a aac",
                                     concurrency: 1,
                                     subdirectory: "FFBatch",
                                     encoder: "x265",
