@@ -5,12 +5,14 @@ directories:
 files:
   - '!**/.vscode/*'
   - '!src/*'
+  - '!tests/*'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
   - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
-asarUnpack:
-  - resources/**
+  - '!**/*.js.map'
+#asarUnpack:
+#  - resources/**
 win:
   executableName: ffbatchconverter3
 nsis:
