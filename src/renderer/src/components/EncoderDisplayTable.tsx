@@ -12,6 +12,7 @@ import {
 import React, { MouseEvent, ReactNode, useState } from "react";
 import { Menu, useContextMenu } from "react-contexify";
 import "react-contexify/ReactContexify.css";
+import { FaSortDown, FaSortUp } from "react-icons/fa";
 
 export type EncoderDisplayTableProps<TRowType> = {
     columns: AccessorFnColumnDef<TRowType, any>[];
@@ -35,7 +36,7 @@ export default function EncoderDisplayTable<TRowType>(props: EncoderDisplayTable
         onRowSelectionChange: setRowSelection,
         state: {
             sorting,
-            rowSelection
+            rowSelection,
         },
         columnResizeMode: "onChange"
     });
@@ -73,6 +74,19 @@ export default function EncoderDisplayTable<TRowType>(props: EncoderDisplayTable
         });
     }
 
+    const getSortIcon = (columnId: string) => {
+        const sortingState = sorting.find(sort => sort.id === columnId);
+        if (!sortingState) {
+            return <></>;
+        }
+
+        if (sortingState.desc) {
+            return <FaSortDown className={"inline"} />;
+        }
+
+        return <FaSortUp className={"inline"} />;
+    }
+
     return (
         // The overflow doesn't seem necessary.
         <div style={{ overflowX: "auto" }}>
@@ -80,6 +94,7 @@ export default function EncoderDisplayTable<TRowType>(props: EncoderDisplayTable
                 Sorting: {sorting[0]?.id}, desc {sorting[0]?.desc == true ? "true" : "false"}
                 Sort data: {JSON.stringify(table.getState().rowSelection)}
                 Last over: {lastSelected}
+                Raw: {JSON.stringify(sorting)}
             </p>
             {/* If we exclude the width style, the table will refuse to extend beyond the size of the screen. Took me way too long to discover! */}
             <table style={{ width: table.getCenterTotalSize() }} className={"table-fixed"} onContextMenu={handleContextMenu}>
@@ -96,7 +111,7 @@ export default function EncoderDisplayTable<TRowType>(props: EncoderDisplayTable
                                     className={"hover:cursor-pointer border-gray-400 relative border group select-none"}
                                 >
                                     <div onClick={header.column.getToggleSortingHandler()}>
-                                        {flexRender(header.column.columnDef.header, header.getContext())}
+                                        {flexRender(header.column.columnDef.header, header.getContext())} {getSortIcon(header.id)}
                                     </div>
 
                                     {/* The absolute, right, and top fixes the resizer div to the right and top of the <th> element containing the div. */}

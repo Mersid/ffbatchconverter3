@@ -24,7 +24,7 @@ export default function Sidebar(): ReactElement {
                 <header className={"pb-0.5 pl-2"}>
                     <div className={"flex"}>
                         <button
-                            className={"p-1"}
+                            className={"p-1 hover:bg-gray-200"}
                             onClick={async () => {
                                 const id = nextId;
                                 setNextId(() => id + 1);
@@ -36,7 +36,7 @@ export default function Sidebar(): ReactElement {
                             <FaPlus color={"#00dc00"} className={"block"} />
                         </button>
                         <button
-                            className={"p-1"}
+                            className={"p-1 hover:bg-gray-200"}
                             onClick={() => {
                                 if (selectedTabId != undefined) {
                                     dispatch(removeTitle(selectedTabId));
@@ -47,7 +47,7 @@ export default function Sidebar(): ReactElement {
                         >
                             <FaMinus color={"#FF0000"} className={"block"} />
                         </button>
-                        <button className={"p-1"}>
+                        <button className={"p-1 hover:bg-gray-200"}>
                             <FaEdit color={"#38c0ff"} className={"block"} />
                         </button>
                     </div>
