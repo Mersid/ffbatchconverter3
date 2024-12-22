@@ -25,10 +25,11 @@ describe("Test encode and score encoder", async () => {
         // Since the above video is not valid, it should be in an error state.
         expect(encoder.state).toBe("Error");
 
-        await expect(async () => {
-            // And attempting to start an invalid video should throw an error.
-            await encoder.start("-c:v libx264 -c:a aac", join(tempDir, "butitsnotvalid_encodeandscore.mp4"));
-        }).rejects.toThrowError();
+        // 2024-12-22: Removed this check as it now simply ignores the command.
+        // await expect(async () => {
+        //     // And attempting to start an invalid video should throw an error.
+        //     await encoder.start("-c:v libx264 -c:a aac", join(tempDir, "butitsnotvalid_encodeandscore.mp4"));
+        // }).rejects.toThrowError();
 
         expect(encoder.state).toBe("Error");
     });

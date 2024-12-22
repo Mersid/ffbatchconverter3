@@ -2,17 +2,14 @@ import { afterEach, describe, test } from "vitest";
 import { GenericVideoEncoderController } from "../src/main/encoders/controllers/GenericVideoEncoderController";
 import { cwd } from "node:process";
 import { rm } from "node:fs/promises";
+import { tempDir } from "../src/main/encoders/misc/EnvironmentVariables";
 
 describe("Test generic video encoder controller", { timeout: 0 }, async () => {
-    afterEach(async () => {
-        await rm(`${cwd()}/tests/resources/temp`, { recursive: true });
-    });
-
     test("Test that the encoder can encode videos correctly.", { timeout: 10000 }, async () => {
         const controller = await GenericVideoEncoderController.createNew("ffprobe", "ffmpeg");
         await controller.addEncoders([`${cwd()}/tests/resources/peepoheadpat.webm`, `${cwd()}/tests/resources/distorted peepoheadpat.mp4`]);
         controller.extension = "mkv";
-        controller.outputSubdirectory = "temp";
+        controller.outputSubdirectory = tempDir;
         controller.ffmpegArguments = "-c:v libx264 -c:a aac";
 
         await controller.startEncoding();

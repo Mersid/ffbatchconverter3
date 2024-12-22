@@ -86,7 +86,7 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
 
     public async start(ffmpegArguments: string, outputFilePath: string): Promise<void> {
         if (this.state != "Pending") {
-            console.log(">> This is not pending!");
+            log.info(`Encoder ${this.encoderId} is not in a pending state. Ignoring start command.`);
             return;
         }
 
