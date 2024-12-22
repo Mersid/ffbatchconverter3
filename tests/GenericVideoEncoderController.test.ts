@@ -19,7 +19,7 @@ describe("Test generic video encoder controller", { timeout: 0 }, async () => {
         const controller = await GenericVideoEncoderController.createNew("ffprobe", "ffmpeg");
         await controller.addEncoders([`${cwd()}/tests/resources/peepoheadpatbutitsnotvalid.webm`]);
         controller.extension = "mkv";
-        controller.outputSubdirectory = "temp";
+        controller.outputSubdirectory = tempDir;
         controller.ffmpegArguments = "-c:v libx264 -c:a aac";
 
         await controller.startEncoding();
