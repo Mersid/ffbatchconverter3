@@ -1,5 +1,5 @@
 import { ChildProcessWithoutNullStreams } from "child_process";
-import { probe } from "../misc/Helpers";
+import { probe, probeAsync } from "../misc/Helpers";
 import { spawn } from "node:child_process";
 import { formatFFmpegTimeToSeconds } from "../misc/TimeFormatter";
 import { Emitter } from "strict-event-emitter";
@@ -56,7 +56,7 @@ export class VMAFScoringEncoder extends Emitter<Events> {
     public static async createNew(ffprobePath: string, ffmpegPath: string, referenceFilePath: string) {
         const encoder = new VMAFScoringEncoder(ffprobePath, ffmpegPath, referenceFilePath);
 
-        const probeData = probe(ffprobePath, referenceFilePath);
+        const probeData = await probeAsync(ffprobePath, referenceFilePath);
 
         try {
             encoder._fileSize = (await stat(referenceFilePath)).size;

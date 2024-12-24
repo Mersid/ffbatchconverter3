@@ -1,4 +1,4 @@
-import { probe } from "../misc/Helpers";
+import { probe, probeAsync } from "../misc/Helpers";
 import { stat } from "node:fs/promises";
 import { GenericVideoEncoder } from "./GenericVideoEncoder";
 import { VMAFScoringEncoder } from "./VMAFScoringEncoder";
@@ -58,7 +58,7 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
 
     public static async createNew(ffprobePath: string, ffmpegPath: string, inputFilePath: string): Promise<EncodeAndScoreEncoder> {
         const encoder = new EncodeAndScoreEncoder(ffprobePath, ffmpegPath, inputFilePath);
-        const probeData = probe(ffprobePath, inputFilePath);
+        const probeData = await probeAsync(ffprobePath, inputFilePath);
 
         try {
             encoder._fileSize = (await stat(inputFilePath)).size;
@@ -84,6 +84,11 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
         return encoder;
     }
 
+    /**
+     * Starts encoding the video with the given ffmpeg arguments. The promise resolves when the encoding is complete or if it fails.
+     * @param ffmpegArguments
+     * @param outputFilePath
+     */
     public async start(ffmpegArguments: string, outputFilePath: string): Promise<void> {
         if (this.state != "Pending") {
             log.info(`Encoder ${this.encoderId} is not in a pending state. Ignoring start command.`);
@@ -102,6 +107,7 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
         if (this._encoder.state != "Success") {
             this.state = "Error";
             this.logLine("Encoding failed.");
+            this.emit("update");
             return;
         }
 
@@ -114,6 +120,7 @@ export class EncodeAndScoreEncoder extends Emitter<Events> {
         if (this._scorer.state != "Success") {
             this.state = "Error";
             this.logLine("Scoring failed.");
+            this.emit("update");
             return;
         }
 
