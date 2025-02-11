@@ -18,7 +18,8 @@ async function createWindow(): Promise<void> {
         webPreferences: {
             preload: join(__dirname, "../preload/index.js"),
             sandbox: false
-        }
+        },
+        title: "FFBatchConverter 3"
     });
 
     webContents = mainWindow.webContents;
@@ -52,7 +53,7 @@ app.whenReady().then(async () => {
     await installExtension(REDUX_DEVTOOLS);
 
     // Set app user model id for windows
-    electronApp.setAppUserModelId("com.electron");
+    electronApp.setAppUserModelId("com.mersid.ffbatchconverter3");
 
     // Default open or close DevTools by F12 in development
     // and ignore CommandOrControl + R in production.
